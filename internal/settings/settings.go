@@ -1,7 +1,6 @@
 package settings
 
 import (
-	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -21,7 +20,7 @@ func (s *Settings) AddRepo(name string, url string, tags []string) error {
 	repoIndex := s.findRepoIndex(name)
 
 	if repoIndex >= 0 {
-		return errors.New(fmt.Sprintf("repository %v already exists", name))
+		return fmt.Errorf("repository %v already exists", name)
 	}
 
 	repo := Repo{
@@ -45,7 +44,7 @@ func (s *Settings) RemoveRepo(name string) error {
 	repoIndex := s.findRepoIndex(name)
 
 	if repoIndex < 0 {
-		return errors.New(fmt.Sprintf("repository %v is not found", name))
+		return fmt.Errorf("repository %v is not found", name)
 	}
 
 	s.Repos = append(s.Repos[:repoIndex], s.Repos[repoIndex+1:]...)

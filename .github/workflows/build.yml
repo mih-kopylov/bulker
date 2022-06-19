@@ -1,0 +1,61 @@
+name: build
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v3
+      - name: Configure golang
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: "go.mod"
+      - name: Print go version
+        run: go version
+      - name: Verify dependencies
+        run: go mod verify
+      - name: Analyze with go vet
+        run: go vet ./...
+      - name: Run static analysis
+        uses: dominikh/staticcheck-action@v1.2.0
+        with:
+          install-go: false
+      - name: Install gox
+        run: go install github.com/mitchellh/gox@latest
+      - name: Build bulker binaries
+        run: gox -arch amd64 -output "bulker_{{.OS}}_{{.Arch}}" ./app
+      - name: Upload built artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: bulker
+          path: ./bulker_*
+      - name: Upload built artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: bulker_windows_amd64.exe
+          path: ./bulker_windows_amd64.exe
+      - name: Upload built artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: bulker_darwin_amd64
+          path: ./bulker_darwin_amd64
+      - name: Upload built artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: bulker_freebsd_amd64
+          path: ./bulker_freebsd_amd64
+      - name: Upload built artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: bulker_linux_amd64
+          path: ./bulker_linux_amd64
+      - name: Upload built artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: bulker_netbsd_amd64
+          path: ./bulker_netbsd_amd64
+      - name: Upload built artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: bulker_openbsd_amd64
+          path: ./bulker_openbsd_amd64
