@@ -4,7 +4,6 @@ import (
 	"github.com/mih-kopylov/bulker/internal/settings"
 	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 )
 
@@ -12,7 +11,7 @@ var RemoveCmd = &cobra.Command{
 	Use:   "remove",
 	Short: "Remove one repo from the supported list",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		settingsManager := settings.NewManager(afero.NewOsFs())
+		settingsManager := settings.NewManager(utils.GetConfiguredFS())
 
 		sets, err := settingsManager.Read()
 		if err != nil {

@@ -6,9 +6,18 @@ import (
 )
 
 type Config struct {
-	Debug            bool   `mapstructure:"debug"`
-	SettingsFileName string `mapstructure:"settings"`
+	Debug            bool     `mapstructure:"debug"`
+	SettingsFileName string   `mapstructure:"settings"`
+	ReposDirectory   string   `mapstructure:"reposDirectory"`
+	RunMode          RunModes `mapstructure:"runMode"`
 }
+
+type RunModes int
+
+const (
+	Parallel RunModes = iota
+	Sequential
+)
 
 func ReadConfig() *Config {
 	config := &Config{}
