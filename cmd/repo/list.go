@@ -16,7 +16,7 @@ var ListCmd = &cobra.Command{
 
 		err := newRunner.Run(
 			func(ctx context.Context, runContext *runner.RunContext) (runner.Result, error) {
-				return listResult{Message: runContext.Repo.Name}, nil
+				return runContext.Repo.Name, nil
 			},
 		)
 		if err != nil {
@@ -25,10 +25,6 @@ var ListCmd = &cobra.Command{
 
 		return nil
 	},
-}
-
-type listResult struct {
-	Message string
 }
 
 var listFilter = &runner.Filter{}

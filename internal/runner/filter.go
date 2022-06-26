@@ -2,6 +2,7 @@ package runner
 
 import (
 	"github.com/mih-kopylov/bulker/internal/settings"
+	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/slices"
 	"strings"
@@ -19,6 +20,12 @@ func (f *Filter) Matches(repo settings.Repo) bool {
 func (f *Filter) AddCommandFlags(command *cobra.Command) {
 	command.Flags().StringSliceVarP(&f.Names, "name", "n", []string{}, "Names of the repositories to process")
 	command.Flags().StringSliceVarP(&f.Tags, "tag", "t", []string{}, "Tags of the repositories to process")
+
+	command.PersistentFlags().String(
+		"run-mode", "par",
+		"Parallel (par) or sequential (seq) run mode for repositories processing",
+	)
+	utils.BindFlag(command.PersistentFlags().Lookup("run-mode"), "runMode")
 }
 
 const negatePrefix = "-"

@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/settings"
 	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/sirupsen/logrus"
@@ -11,7 +12,7 @@ var AddCmd = &cobra.Command{
 	Use:   "add",
 	Short: "Adds a new repository to the supported list",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		settingsManager := settings.NewManager(utils.GetConfiguredFS())
+		settingsManager := settings.NewManager(utils.GetConfiguredFS(), config.ReadConfig())
 
 		sets, err := settingsManager.Read()
 		if err != nil {
