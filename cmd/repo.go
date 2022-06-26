@@ -8,9 +8,6 @@ import (
 var repoCmd = &cobra.Command{
 	Use:   "repo",
 	Short: "Configures repositories that bulker works with",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return nil
-	},
 }
 
 func init() {
