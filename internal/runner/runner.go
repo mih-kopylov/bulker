@@ -22,7 +22,7 @@ type Runner struct {
 func NewRunner(fs afero.Fs, config *config.Config, filter *Filter) *Runner {
 	return &Runner{
 		fs:      fs,
-		manager: settings.NewManager(fs),
+		manager: settings.NewManager(fs, config),
 		config:  config,
 		filter:  filter,
 	}

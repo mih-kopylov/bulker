@@ -8,17 +8,19 @@ import (
 )
 
 type Manager struct {
-	fs afero.Fs
+	fs   afero.Fs
+	conf *config.Config
 }
 
-func NewManager(fs afero.Fs) *Manager {
+func NewManager(fs afero.Fs, conf *config.Config) *Manager {
 	return &Manager{
-		fs: fs,
+		fs:   fs,
+		conf: conf,
 	}
 }
 
 func (sm *Manager) Read() (*Settings, error) {
-	settingsFileName := config.ReadConfig().SettingsFileName
+	settingsFileName := sm.conf.SettingsFileName
 
 	fileContent, err := afero.ReadFile(sm.fs, settingsFileName)
 	if err != nil {
@@ -41,7 +43,7 @@ func (sm *Manager) Read() (*Settings, error) {
 }
 
 func (sm *Manager) Write(settings *Settings) error {
-	settingsFileName := config.ReadConfig().SettingsFileName
+	settingsFileName := sm.conf.SettingsFileName
 
 	fileContent, err := yaml.Marshal(settings)
 	if err != nil {

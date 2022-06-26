@@ -12,11 +12,11 @@ type Config struct {
 	RunMode          RunModes `mapstructure:"runMode"`
 }
 
-type RunModes int
+type RunModes string
 
 const (
-	Parallel RunModes = iota
-	Sequential
+	Parallel   RunModes = "par"
+	Sequential RunModes = "seq"
 )
 
 func ReadConfig() *Config {
