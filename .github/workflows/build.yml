@@ -27,11 +27,6 @@ jobs:
       - name: Upload built artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: bulker
-          path: ./bulker_*
-      - name: Upload built artifacts
-        uses: actions/upload-artifact@v3
-        with:
           name: bulker_windows_amd64.exe
           path: ./bulker_windows_amd64.exe
       - name: Upload built artifacts
