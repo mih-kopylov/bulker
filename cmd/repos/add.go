@@ -1,4 +1,4 @@
-package repo
+package repos
 
 import (
 	"github.com/mih-kopylov/bulker/internal/config"
@@ -8,9 +8,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var RemoveCmd = &cobra.Command{
-	Use:   "remove",
-	Short: "Remove one repo from the supported list",
+var AddCmd = &cobra.Command{
+	Use:   "add",
+	Short: "Adds a new repository to the supported list",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		settingsManager := settings.NewManager(utils.GetConfiguredFS(), config.ReadConfig())
 
@@ -19,7 +19,7 @@ var RemoveCmd = &cobra.Command{
 			return err
 		}
 
-		err = sets.RemoveRepo(removeFlags.name)
+		err = sets.AddRepo(addFlags.name, addFlags.url, addFlags.tags)
 		if err != nil {
 			return err
 		}
@@ -29,17 +29,24 @@ var RemoveCmd = &cobra.Command{
 			return err
 		}
 
-		logrus.WithField("repo", removeFlags.name).Info("repository removed")
+		logrus.WithField("repo", addFlags.name).Info("repository added")
 
 		return nil
 	},
 }
 
-var removeFlags struct {
+var addFlags struct {
 	name string
+	url  string
+	tags []string
 }
 
 func init() {
-	RemoveCmd.Flags().StringVar(&removeFlags.name, "name", "", "Name of the repository")
+	AddCmd.Flags().StringVar(&addFlags.name, "name", "", "Name of the repository")
 	utils.MarkFlagRequiredOrFail(AddCmd.Flags(), "name")
+
+	AddCmd.Flags().StringVar(&addFlags.url, "url", "", "URL of the repository")
+	utils.MarkFlagRequiredOrFail(AddCmd.Flags(), "url")
+
+	AddCmd.Flags().StringSliceVar(&addFlags.tags, "tags", []string{}, "Tags of the repository")
 }

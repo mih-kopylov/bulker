@@ -14,7 +14,7 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute() {
-	rootCmd.AddCommand(repoCmd)
+	rootCmd.AddCommand(reposCmd)
 	rootCmd.AddCommand(gitCmd)
 
 	err := rootCmd.Execute()
