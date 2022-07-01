@@ -23,12 +23,7 @@ jobs:
       - name: Install gox
         run: go install github.com/mitchellh/gox@latest
       - name: Build bulker binaries
-        run: gox -arch amd64 -output "bulker_{{.OS}}_{{.Arch}}" ./app
-      - name: Upload built artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: bulker
-          path: ./bulker_*
+        run: gox -arch amd64 -output "bulker_{{.OS}}_{{.Arch}}" ./app/bulker
       - name: Upload built artifacts
         uses: actions/upload-artifact@v3
         with:
