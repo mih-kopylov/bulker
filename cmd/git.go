@@ -5,11 +5,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var gitCmd = &cobra.Command{
-	Use:   "git",
-	Short: "Runs git operations on the repositories",
-}
+func CreateGitCommand() *cobra.Command {
+	var result = &cobra.Command{
+		Use:   "git",
+		Short: "Runs git operations on the repositories",
+	}
 
-func init() {
-	gitCmd.AddCommand(git.CloneCmd)
+	result.AddCommand(git.CreateCloneCommand())
+
+	return result
 }

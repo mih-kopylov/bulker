@@ -8,27 +8,29 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var ListCmd = &cobra.Command{
-	Use:   "list",
-	Short: "Prints a list of supported repositories",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		newRunner := runner.NewRunner(utils.GetConfiguredFS(), config.ReadConfig(), listFilter)
+func CreateListCommand() *cobra.Command {
+	var filter = &runner.Filter{}
 
-		err := newRunner.Run(
-			func(ctx context.Context, runContext *runner.RunContext) (runner.Result, error) {
-				return runContext.Repo.Name, nil
-			},
-		)
-		if err != nil {
-			return err
-		}
+	var result = &cobra.Command{
+		Use:   "list",
+		Short: "Prints a list of supported repositories",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			newRunner := runner.NewRunner(utils.GetConfiguredFS(), config.ReadConfig(), filter)
 
-		return nil
-	},
-}
+			err := newRunner.Run(
+				func(ctx context.Context, runContext *runner.RunContext) (runner.Result, error) {
+					return runContext.Repo.Name, nil
+				},
+			)
+			if err != nil {
+				return err
+			}
 
-var listFilter = &runner.Filter{}
+			return nil
+		},
+	}
 
-func init() {
-	listFilter.AddCommandFlags(ListCmd)
+	filter.AddCommandFlags(result)
+
+	return result
 }

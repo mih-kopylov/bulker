@@ -8,38 +8,40 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var RemoveCmd = &cobra.Command{
-	Use:   "remove",
-	Short: "Remove one repo from the supported list",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		settingsManager := settings.NewManager(utils.GetConfiguredFS(), config.ReadConfig())
+func CreateRemoveCommand() *cobra.Command {
+	var flags struct {
+		name string
+	}
 
-		sets, err := settingsManager.Read()
-		if err != nil {
-			return err
-		}
+	var result = &cobra.Command{
+		Use:   "remove",
+		Short: "Remove one repo from the supported list",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			settingsManager := settings.NewManager(utils.GetConfiguredFS(), config.ReadConfig())
 
-		err = sets.RemoveRepo(removeFlags.name)
-		if err != nil {
-			return err
-		}
+			sets, err := settingsManager.Read()
+			if err != nil {
+				return err
+			}
 
-		err = settingsManager.Write(sets)
-		if err != nil {
-			return err
-		}
+			err = sets.RemoveRepo(flags.name)
+			if err != nil {
+				return err
+			}
 
-		logrus.WithField("repo", removeFlags.name).Info("repository removed")
+			err = settingsManager.Write(sets)
+			if err != nil {
+				return err
+			}
 
-		return nil
-	},
-}
+			logrus.WithField("repo", flags.name).Info("repository removed")
 
-var removeFlags struct {
-	name string
-}
+			return nil
+		},
+	}
 
-func init() {
-	RemoveCmd.Flags().StringVar(&removeFlags.name, "name", "", "Name of the repository")
-	utils.MarkFlagRequiredOrFail(AddCmd.Flags(), "name")
+	result.Flags().StringVar(&flags.name, "name", "", "Name of the repository")
+	utils.MarkFlagRequiredOrFail(result.Flags(), "name")
+
+	return result
 }

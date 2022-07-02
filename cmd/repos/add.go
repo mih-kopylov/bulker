@@ -8,45 +8,47 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var AddCmd = &cobra.Command{
-	Use:   "add",
-	Short: "Adds a new repository to the supported list",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		settingsManager := settings.NewManager(utils.GetConfiguredFS(), config.ReadConfig())
+func CreateAddCommand() *cobra.Command {
+	var flags struct {
+		name string
+		url  string
+		tags []string
+	}
 
-		sets, err := settingsManager.Read()
-		if err != nil {
-			return err
-		}
+	var result = &cobra.Command{
+		Use:   "add",
+		Short: "Adds a new repository to the supported list",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			settingsManager := settings.NewManager(utils.GetConfiguredFS(), config.ReadConfig())
 
-		err = sets.AddRepo(addFlags.name, addFlags.url, addFlags.tags)
-		if err != nil {
-			return err
-		}
+			sets, err := settingsManager.Read()
+			if err != nil {
+				return err
+			}
 
-		err = settingsManager.Write(sets)
-		if err != nil {
-			return err
-		}
+			err = sets.AddRepo(flags.name, flags.url, flags.tags)
+			if err != nil {
+				return err
+			}
 
-		logrus.WithField("repo", addFlags.name).Info("repository added")
+			err = settingsManager.Write(sets)
+			if err != nil {
+				return err
+			}
 
-		return nil
-	},
-}
+			logrus.WithField("repo", flags.name).Info("repository added")
 
-var addFlags struct {
-	name string
-	url  string
-	tags []string
-}
+			return nil
+		},
+	}
 
-func init() {
-	AddCmd.Flags().StringVar(&addFlags.name, "name", "", "Name of the repository")
-	utils.MarkFlagRequiredOrFail(AddCmd.Flags(), "name")
+	result.Flags().StringVar(&flags.name, "name", "", "Name of the repository")
+	utils.MarkFlagRequiredOrFail(result.Flags(), "name")
 
-	AddCmd.Flags().StringVar(&addFlags.url, "url", "", "URL of the repository")
-	utils.MarkFlagRequiredOrFail(AddCmd.Flags(), "url")
+	result.Flags().StringVar(&flags.url, "url", "", "URL of the repository")
+	utils.MarkFlagRequiredOrFail(result.Flags(), "url")
 
-	AddCmd.Flags().StringSliceVar(&addFlags.tags, "tags", []string{}, "Tags of the repository")
+	result.Flags().StringSliceVar(&flags.tags, "tags", []string{}, "Tags of the repository")
+
+	return result
 }
