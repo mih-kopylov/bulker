@@ -5,13 +5,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var reposCmd = &cobra.Command{
-	Use:   "repos",
-	Short: "Configures repositories that bulker works with",
-}
+func CreateReposCommand() *cobra.Command {
+	var result = &cobra.Command{
+		Use:   "repos",
+		Short: "Configures repositories that bulker works with",
+	}
 
-func init() {
-	reposCmd.AddCommand(repos.ListCmd)
-	reposCmd.AddCommand(repos.AddCmd)
-	reposCmd.AddCommand(repos.RemoveCmd)
+	result.AddCommand(repos.CreateListCommand())
+	result.AddCommand(repos.CreateAddCommand())
+	result.AddCommand(repos.CreateRemoveCommand())
+
+	return result
 }

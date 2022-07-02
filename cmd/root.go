@@ -14,8 +14,8 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute() {
-	rootCmd.AddCommand(reposCmd)
-	rootCmd.AddCommand(gitCmd)
+	rootCmd.AddCommand(CreateReposCommand())
+	rootCmd.AddCommand(CreateGitCommand())
 
 	err := rootCmd.Execute()
 	if err != nil {
