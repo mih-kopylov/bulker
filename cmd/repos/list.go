@@ -18,8 +18,8 @@ func CreateListCommand() *cobra.Command {
 			newRunner := runner.NewRunner(utils.GetConfiguredFS(), config.ReadConfig(), filter)
 
 			err := newRunner.Run(
-				func(ctx context.Context, runContext *runner.RunContext) (runner.Result, error) {
-					return runContext.Repo.Name, nil
+				func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
+					return nil, nil
 				},
 			)
 			if err != nil {

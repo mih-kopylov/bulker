@@ -6,10 +6,11 @@ import (
 )
 
 type Config struct {
-	Debug            bool     `mapstructure:"debug"`
-	SettingsFileName string   `mapstructure:"settings"`
-	ReposDirectory   string   `mapstructure:"reposDirectory"`
-	RunMode          RunModes `mapstructure:"runMode"`
+	Debug            bool         `mapstructure:"debug"`
+	SettingsFileName string       `mapstructure:"settings"`
+	ReposDirectory   string       `mapstructure:"reposDirectory"`
+	RunMode          RunModes     `mapstructure:"runMode"`
+	Output           OutputFormat `mapstructure:"output"`
 }
 
 type RunModes string
@@ -17,6 +18,14 @@ type RunModes string
 const (
 	Parallel   RunModes = "par"
 	Sequential RunModes = "seq"
+)
+
+type OutputFormat string
+
+const (
+	JsonOutputFormat OutputFormat = "json"
+	LineOutputFormat OutputFormat = "line"
+	LogOutputFormat  OutputFormat = "log"
 )
 
 func ReadConfig() *Config {

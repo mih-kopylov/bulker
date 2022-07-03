@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -34,6 +35,14 @@ func init() {
 		"Settings file name, where list of repositories is stored",
 	)
 	utils.BindFlag(rootCmd.PersistentFlags().Lookup("settings"), "settings")
+
+	rootCmd.PersistentFlags().String(
+		"output", string(config.LogOutputFormat), fmt.Sprintf(
+			"Set commands output format. Available formats: %v, %v, %v", config.LogOutputFormat,
+			config.LineOutputFormat, config.JsonOutputFormat,
+		),
+	)
+	utils.BindFlag(rootCmd.PersistentFlags().Lookup("output"), "output")
 
 	configureLogrus()
 }

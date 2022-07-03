@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/model"
+	"github.com/mih-kopylov/bulker/internal/output"
 	"github.com/mih-kopylov/bulker/internal/settings"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -35,15 +36,12 @@ type RunContext struct {
 	Repo    *model.Repo
 }
 
-type Result interface {
-}
-
 type ProcessResult struct {
-	Result Result
+	Result interface{}
 	Error  error
 }
 
-type RepoHandler func(ctx context.Context, runContext *RunContext) (Result, error)
+type RepoHandler func(ctx context.Context, runContext *RunContext) (interface{}, error)
 
 func (r Runner) Run(handler RepoHandler) error {
 	sets, err := r.manager.Read()
@@ -91,22 +89,19 @@ func (r Runner) Run(handler RepoHandler) error {
 	}
 	wg.Wait()
 
-	var resultErrors []error
+	valueToLog := map[string]output.EntityInfo{}
 	for repoName, processResult := range allReposResult {
-		entry := logrus.WithField("repo", repoName)
-		if processResult.Result != nil {
-			entry.WithField("result", processResult.Result).Info()
-		}
-		if processResult.Error != nil {
-			entry.WithField("error", processResult.Error).Error()
-			resultErrors = append(resultErrors, processResult.Error)
+		valueToLog[repoName] = output.EntityInfo{
+			Result: processResult.Result,
+			Error:  processResult.Error,
 		}
 	}
 
-	logrus.WithField("count", len(allReposResult)).Info("processed repos")
+	logrus.WithField("count", len(allReposResult)).Debug("processed repos")
 
-	if len(resultErrors) > 0 {
-		return fmt.Errorf("errors found: %v", len(resultErrors))
+	err = output.Write("repo", valueToLog)
+	if err != nil {
+		return err
 	}
 
 	return nil
