@@ -2,9 +2,9 @@ package repos
 
 import (
 	"github.com/mih-kopylov/bulker/internal/config"
+	"github.com/mih-kopylov/bulker/internal/output"
 	"github.com/mih-kopylov/bulker/internal/settings"
 	"github.com/mih-kopylov/bulker/internal/utils"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -34,7 +34,15 @@ func CreateRemoveCommand() *cobra.Command {
 				return err
 			}
 
-			logrus.WithField("repo", flags.name).Info("repository removed")
+			err = output.Write(
+				"repo",
+				map[string]output.EntityInfo{
+					flags.name: {Result: "removed"},
+				},
+			)
+			if err != nil {
+				return err
+			}
 
 			return nil
 		},

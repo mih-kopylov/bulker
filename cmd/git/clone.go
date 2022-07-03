@@ -11,9 +11,6 @@ import (
 )
 
 func CreateCloneCommand() *cobra.Command {
-	type CloneResult struct {
-		Message string
-	}
 	var filter = &runner.Filter{}
 
 	var result = &cobra.Command{
@@ -23,17 +20,17 @@ func CreateCloneCommand() *cobra.Command {
 			newRunner := runner.NewRunner(utils.GetConfiguredFS(), config.ReadConfig(), filter)
 
 			err := newRunner.Run(
-				func(ctx context.Context, runContext *runner.RunContext) (runner.Result, error) {
+				func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
 					cloneResult, err := gitops.CloneRepo(runContext.FS, runContext.Repo)
 					if err != nil {
-						return nil, err
+						return nil, fmt.Errorf("failed to clone: %w", err)
 					}
 
 					switch cloneResult {
 					case gitops.ClonedSuccessfully:
-						return &CloneResult{"cloned successfully"}, nil
+						return "cloned successfully", nil
 					case gitops.AlreadyCloned:
-						return &CloneResult{"already cloned"}, nil
+						return "already cloned", nil
 					default:
 						return nil, fmt.Errorf("unsupported clone status: status=%v", cloneResult)
 					}
