@@ -1,0 +1,26 @@
+name: upgrade-dependencies
+on:
+  schedule:
+    - cron: '0 5 * * *'
+  workflow_dispatch: {}
+jobs:
+  upgrade-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v3
+      - name: Configure golang
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: "go.mod"
+      - name: Upgrade dependencies
+        run: |
+          go get -u -t ./...
+          go mod tidy
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          commit-message: "[CI] Upgrade dependencies"
+          branch: upgrade-dependencies
+          delete-branch: true
+          title: "[CI] Upgrade dependencies"
