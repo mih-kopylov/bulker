@@ -20,6 +20,8 @@ jobs:
         uses: dominikh/staticcheck-action@v1.2.0
         with:
           install-go: false
+      - name: Run tests
+        run: go test ./...
       - name: Install gox
         run: go install github.com/mitchellh/gox@latest
       - name: Build bulker binaries
