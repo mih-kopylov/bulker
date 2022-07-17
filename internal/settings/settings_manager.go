@@ -140,7 +140,7 @@ func prepareResult(existingModel *exportModel, modelToExport *exportModel) map[s
 		if existingModel.Version != modelToExport.Version {
 			result[repoName] = ExportStatusExported
 		} else {
-			existingRepo := exportModelDataV1Repo{}
+			existingRepo := modelDataV1Repo{}
 			for existingRepoIterName, existingRepoIter := range existingModel.Data.Repos {
 				if existingRepoIterName == repoName {
 					existingRepo = existingRepoIter
@@ -160,28 +160,36 @@ func readExistingModel(exportFileName string) (*exportModel, error) {
 	fileBytes, err := ioutil.ReadFile(exportFileName)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return &exportModel{1, exportModelDataV1{Repos: map[string]exportModelDataV1Repo{}}}, nil
+			return &exportModel{1, modelDataV1{Repos: map[string]modelDataV1Repo{}}}, nil
 		}
 
 		return nil, err
 	}
 
-	var readVersionModel importModel
+	var readVersionModel map[string]any
 	err = yaml.Unmarshal(fileBytes, &readVersionModel)
 	if err != nil {
 		return nil, err
 	}
 
-	switch readVersionModel.Version {
+	version := readVersionModel["version"].(int)
+
+	data := readVersionModel["data"]
+	dataBytes, err := yaml.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+
+	switch version {
 	case 1:
-		var result exportModel
-		err := yaml.Unmarshal(fileBytes, &result)
+		var resultData modelDataV1
+		err := yaml.Unmarshal(dataBytes, &resultData)
 		if err != nil {
 			return nil, err
 		}
 
-		return &result, nil
+		return &exportModel{Version: version, Data: resultData}, nil
 	default:
-		return nil, fmt.Errorf("version %v is not supported", readVersionModel.Version)
+		return nil, fmt.Errorf("version %v is not supported", version)
 	}
 }
