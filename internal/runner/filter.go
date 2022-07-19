@@ -30,7 +30,7 @@ func (f *Filter) AddCommandFlags(command *cobra.Command) {
 
 const negatePrefix = "-"
 
-//matchesName repoName should match any of filterNames
+// matchesName repoName should match any of filterNames
 func matchesName(repoName string, filterNames []string) bool {
 	if len(filterNames) == 0 {
 		return true

@@ -14,6 +14,8 @@ func CreateReposCommand() *cobra.Command {
 	result.AddCommand(repos.CreateListCommand())
 	result.AddCommand(repos.CreateAddCommand())
 	result.AddCommand(repos.CreateRemoveCommand())
+	result.AddCommand(repos.CreateExportCommand())
+	result.AddCommand(repos.CreateImportCommand())
 
 	return result
 }

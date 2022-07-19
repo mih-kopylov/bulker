@@ -7,7 +7,7 @@ import (
 	"reflect"
 )
 
-//LogWriter Writes the information with a regular logging
+// LogWriter Writes the information with a regular logging
 type LogWriter struct {
 	entityName string
 }
