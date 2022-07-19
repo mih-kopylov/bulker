@@ -15,7 +15,7 @@ type EntityInfo struct {
 	Error  error
 }
 
-//Write consumes a map with keys are usually repository names, or any other entity names, like groups
+// Write consumes a map with keys are usually repository names, or any other entity names, like groups
 // and values are containers with either structures or errors
 func Write(entityName string, value map[string]EntityInfo) error {
 	writer, err := createWriter(entityName)

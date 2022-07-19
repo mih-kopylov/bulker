@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 )
 
@@ -28,6 +29,12 @@ func NewManager(fs afero.Fs, conf *config.Config) *Manager {
 
 func (sm *Manager) Read() (*Settings, error) {
 	settingsFileName := sm.conf.SettingsFileName
+
+	settingsDirectory := filepath.Dir(settingsFileName)
+	err := sm.fs.MkdirAll(settingsDirectory, 0777)
+	if err != nil {
+		return nil, err
+	}
 
 	fileContent, err := afero.ReadFile(sm.fs, settingsFileName)
 	if err != nil {
@@ -61,37 +68,29 @@ func (sm *Manager) Write(settings *Settings) error {
 	return err
 }
 
-func (sm *Manager) Export(remoteRepoUrl string) (map[string]ExportStatus, error) {
+func (sm *Manager) Export(remoteRepoUrl string) (map[string]ExportImportStatus, error) {
 	logrus.WithField("remote", remoteRepoUrl).Debug("exporting repositories")
 	settings, err := sm.Read()
 	if err != nil {
 		return nil, err
 	}
 
-	repoDir, err := os.MkdirTemp("", "bulker_remote_repo_*")
-	if err != nil {
-		return nil, err
+	repoDir, cleanupFunc, err := sm.cloneRepo(remoteRepoUrl)
+	if cleanupFunc != nil {
+		defer cleanupFunc()
 	}
-	defer func() {
-		err := os.RemoveAll(repoDir)
-		if err != nil {
-			logrus.Warnf("can't remove temp directory %v: %v", repoDir, err)
-		}
-	}()
-
-	_, err = shell.RunCommand(repoDir, "git", "clone", remoteRepoUrl, ".")
 	if err != nil {
 		return nil, err
 	}
 
-	modelToExport := fromSettings(settings)
-	jsonBytes, err := yaml.Marshal(modelToExport)
+	settingsModel := fromSettings(settings)
+	jsonBytes, err := yaml.Marshal(settingsModel)
 	if err != nil {
 		return nil, err
 	}
 
-	exportFileName := path.Join(repoDir, "repos.yaml")
-	existingModel, err := readExistingModel(exportFileName)
+	exportFileName := path.Join(repoDir, exportImportFileName)
+	fileModel, err := readExistingModel(exportFileName)
 	if err != nil {
 		return nil, err
 	}
@@ -112,9 +111,9 @@ func (sm *Manager) Export(remoteRepoUrl string) (map[string]ExportStatus, error)
 	}
 
 	if strings.Contains(statusOutput, "nothing to commit") {
-		result := map[string]ExportStatus{}
+		result := map[string]ExportImportStatus{}
 		for _, repo := range settings.Repos {
-			result[repo.Name] = ExportStatusUpToDate
+			result[repo.Name] = ExportImportStatusUpToDate
 		}
 		return result, nil
 	}
@@ -129,27 +128,84 @@ func (sm *Manager) Export(remoteRepoUrl string) (map[string]ExportStatus, error)
 		return nil, err
 	}
 
-	result := prepareResult(existingModel, modelToExport)
+	result := prepareResult(fileModel, settingsModel)
 
 	return result, nil
 }
 
-func prepareResult(existingModel *exportModel, modelToExport *exportModel) map[string]ExportStatus {
-	result := map[string]ExportStatus{}
-	for repoName, repo := range modelToExport.Data.Repos {
-		if existingModel.Version != modelToExport.Version {
-			result[repoName] = ExportStatusExported
+func (sm *Manager) Import(remoteRepoUrl string) (map[string]ExportImportStatus, error) {
+	logrus.WithField("remote", remoteRepoUrl).Debug("importing repositories")
+	settings, err := sm.Read()
+	if err != nil {
+		return nil, err
+	}
+
+	repoDir, cleanupFunc, err := sm.cloneRepo(remoteRepoUrl)
+	if cleanupFunc != nil {
+		defer cleanupFunc()
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	settingsModel := fromSettings(settings)
+	importFileName := path.Join(repoDir, exportImportFileName)
+	fileModel, err := readExistingModel(importFileName)
+	if err != nil {
+		return nil, err
+	}
+
+	importedSettings, err := toSettings(fileModel)
+	if err != nil {
+		return nil, err
+	}
+
+	err = sm.Write(importedSettings)
+	if err != nil {
+		return nil, err
+	}
+	result := prepareResult(settingsModel, fileModel)
+
+	return result, nil
+}
+
+const exportImportFileName = "repos.yaml"
+
+func (sm *Manager) cloneRepo(remoteRepoUrl string) (repoDir string, cleanupFunc func(), err error) {
+	repoDir, err = os.MkdirTemp("", "bulker_remote_repo_*")
+	if err != nil {
+		return "", nil, err
+	}
+	cleanupFunc = func() {
+		err := os.RemoveAll(repoDir)
+		if err != nil {
+			logrus.Warnf("can't remove temp directory %v: %v", repoDir, err)
+		}
+	}
+
+	_, err = shell.RunCommand(repoDir, "git", "clone", remoteRepoUrl, ".")
+	if err != nil {
+		return "", cleanupFunc, nil
+	}
+	return repoDir, cleanupFunc, err
+}
+
+func prepareResult(previousModel *exportModel, newModel *exportModel) map[string]ExportImportStatus {
+	result := map[string]ExportImportStatus{}
+	for repoName, repo := range newModel.Data.Repos {
+		if previousModel.Version != newModel.Version {
+			result[repoName] = ExportImportStatusCompleted
 		} else {
 			existingRepo := modelDataV1Repo{}
-			for existingRepoIterName, existingRepoIter := range existingModel.Data.Repos {
+			for existingRepoIterName, existingRepoIter := range previousModel.Data.Repos {
 				if existingRepoIterName == repoName {
 					existingRepo = existingRepoIter
 				}
 			}
 			if existingRepo.Equals(repo) {
-				result[repoName] = ExportStatusUpToDate
+				result[repoName] = ExportImportStatusUpToDate
 			} else {
-				result[repoName] = ExportStatusExported
+				result[repoName] = ExportImportStatusCompleted
 			}
 		}
 	}

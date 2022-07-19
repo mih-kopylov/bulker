@@ -30,7 +30,7 @@ func (s *Settings) AddRepo(name string, url string, tags []string) error {
 	}
 	s.Repos = append(s.Repos, repo)
 
-	//make sure repos are sorted alphabetically
+	// make sure repos are sorted alphabetically
 	sort.Slice(
 		s.Repos, func(i, j int) bool {
 			return strings.Compare(s.Repos[i].Name, s.Repos[j].Name) > 0

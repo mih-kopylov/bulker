@@ -19,7 +19,7 @@ func TestFilter_Matches(t *testing.T) {
 		repo   settings.Repo
 		want   bool
 	}{
-		//names
+		// names
 		{
 			name: "all", filter: Filter{
 				Names: nil,
@@ -68,7 +68,7 @@ func TestFilter_Matches(t *testing.T) {
 			repo: newRepo("qwe"),
 			want: true,
 		},
-		//tags
+		// tags
 		{
 			name: "matches tag", filter: Filter{
 				Names: nil,
@@ -125,7 +125,7 @@ func TestFilter_Matches(t *testing.T) {
 			repo: newRepoWithTags("qwe", []string{"t1", "t2"}),
 			want: false,
 		},
-		//both names and tags
+		// both names and tags
 		{
 			name: "name and tag", filter: Filter{
 				Names: []string{"qwe"},

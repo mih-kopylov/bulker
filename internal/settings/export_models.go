@@ -2,11 +2,13 @@ package settings
 
 import "golang.org/x/exp/slices"
 
-type ExportStatus int
+type ExportImportStatus int
 
 const (
-	ExportStatusExported ExportStatus = iota
-	ExportStatusUpToDate
+	// ExportImportStatusCompleted means the operation completed successfully
+	ExportImportStatusCompleted ExportImportStatus = iota
+	// ExportImportStatusUpToDate means there was no change
+	ExportImportStatusUpToDate
 )
 
 type exportModel struct {
@@ -38,4 +40,16 @@ func fromSettings(settings *Settings) *exportModel {
 	}
 
 	return &exportModel{1, data}
+}
+
+func toSettings(em *exportModel) (*Settings, error) {
+	result := Settings{[]Repo{}}
+	for repoName, repoData := range em.Data.Repos {
+		err := result.AddRepo(repoName, repoData.Url, repoData.Tags)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &result, nil
 }

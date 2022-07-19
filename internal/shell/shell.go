@@ -6,8 +6,8 @@ import (
 	"os/exec"
 )
 
-//RunCommand Runs a shell command in commandRootDirectory. If the commandRootDirectory is empty,
-//runs the command from the current working directory
+// RunCommand Runs a shell command in commandRootDirectory. If the commandRootDirectory is empty,
+// runs the command from the current working directory
 func RunCommand(commandRootDirectory string, command string, arguments ...string) (string, error) {
 	var errorOutput bytes.Buffer
 
