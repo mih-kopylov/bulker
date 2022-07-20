@@ -1,5 +1,10 @@
 name: build
-on: [push]
+
+on:
+  push:
+    branches:
+      - "**"
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -25,34 +30,19 @@ jobs:
       - name: Install gox
         run: go install github.com/mitchellh/gox@latest
       - name: Build bulker binaries
-        run: gox -arch amd64 -output "bulker_{{.OS}}_{{.Arch}}" ./app/bulker
+        run: gox -arch amd64 -os "windows linux darwin" -output "dist/bulker_{{.OS}}_{{.Arch}}" ./app/bulker
       - name: Upload built artifacts
         uses: actions/upload-artifact@v3
         with:
           name: bulker_windows_amd64.exe
-          path: ./bulker_windows_amd64.exe
+          path: ./dist/bulker_windows_amd64.exe
       - name: Upload built artifacts
         uses: actions/upload-artifact@v3
         with:
           name: bulker_darwin_amd64
-          path: ./bulker_darwin_amd64
-      - name: Upload built artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: bulker_freebsd_amd64
-          path: ./bulker_freebsd_amd64
+          path: ./dist/bulker_darwin_amd64
       - name: Upload built artifacts
         uses: actions/upload-artifact@v3
         with:
           name: bulker_linux_amd64
-          path: ./bulker_linux_amd64
-      - name: Upload built artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: bulker_netbsd_amd64
-          path: ./bulker_netbsd_amd64
-      - name: Upload built artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: bulker_openbsd_amd64
-          path: ./bulker_openbsd_amd64
+          path: ./dist/bulker_linux_amd64
