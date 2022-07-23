@@ -17,9 +17,12 @@ func CreateCloneCommand() *cobra.Command {
 		Use:   "clone",
 		Short: "Clones the configured repositories out if they have not been yet",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			newRunner := runner.NewRunner(utils.GetConfiguredFS(), config.ReadConfig(), filter)
+			newRunner, err := runner.NewRunner(utils.GetConfiguredFS(), config.ReadConfig(), filter)
+			if err != nil {
+				return err
+			}
 
-			err := newRunner.Run(
+			err = newRunner.Run(
 				func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
 					cloneResult, err := gitops.CloneRepo(runContext.FS, runContext.Repo)
 					if err != nil {
