@@ -24,7 +24,7 @@ func (r SequentialRunner) Run(handler RepoHandler) error {
 	ctx := context.Background()
 
 	allReposResult := map[string]ProcessResult{}
-	logrus.WithField("mode", r.config.RunMode).Debug("processing repositories sequentially")
+	logrus.WithField("mode", r.config.RunMode).Debug("processing repositories")
 	for _, repo := range sets.Repos {
 		if !r.filter.Matches(repo) {
 			continue

@@ -9,13 +9,13 @@ import (
 )
 
 func CreateListCommand() *cobra.Command {
-	var filter = &runner.Filter{}
+	var filter = runner.Filter{}
 
 	var result = &cobra.Command{
 		Use:   "list",
 		Short: "Prints a list of supported repositories",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			newRunner, err := runner.NewRunner(utils.GetConfiguredFS(), config.ReadConfig(), filter)
+			newRunner, err := runner.NewRunner(utils.GetConfiguredFS(), config.ReadConfig(), &filter)
 			if err != nil {
 				return err
 			}

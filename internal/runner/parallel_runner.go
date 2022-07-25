@@ -32,7 +32,7 @@ func (r ParallelRunner) Run(handler RepoHandler) error {
 	allReposResult := map[string]ProcessResult{}
 	wg := sync.WaitGroup{}
 	ch := make(chan repoProcessResult)
-	logrus.WithField("mode", r.config.RunMode).Debug("processing repositories in parallel")
+	logrus.WithField("mode", r.config.RunMode).Debug("processing repositories")
 	processedRepoCount := 0
 	for _, repo := range sets.Repos {
 		if !r.filter.Matches(repo) {

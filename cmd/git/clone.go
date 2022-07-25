@@ -11,13 +11,13 @@ import (
 )
 
 func CreateCloneCommand() *cobra.Command {
-	var filter = &runner.Filter{}
+	var filter = runner.Filter{}
 
 	var result = &cobra.Command{
 		Use:   "clone",
 		Short: "Clones the configured repositories out if they have not been yet",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			newRunner, err := runner.NewRunner(utils.GetConfiguredFS(), config.ReadConfig(), filter)
+			newRunner, err := runner.NewRunner(utils.GetConfiguredFS(), config.ReadConfig(), &filter)
 			if err != nil {
 				return err
 			}
