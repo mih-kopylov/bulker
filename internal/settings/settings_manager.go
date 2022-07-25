@@ -7,6 +7,7 @@ import (
 	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
@@ -58,6 +59,17 @@ func (sm *Manager) Read() (*Settings, error) {
 
 func (sm *Manager) Write(settings *Settings) error {
 	settingsFileName := sm.conf.SettingsFileName
+
+	// make sure all data is sorted alphabetically
+	slices.SortFunc(settings.Repos, func(a Repo, b Repo) bool {
+		return strings.Compare(a.Name, b.Name) < 0
+	})
+	slices.SortFunc(settings.Groups, func(a Group, b Group) bool {
+		return strings.Compare(a.Name, b.Name) < 0
+	})
+	for _, group := range settings.Groups {
+		slices.Sort(group.Repos)
+	}
 
 	fileContent, err := yaml.Marshal(settings)
 	if err != nil {
@@ -248,4 +260,29 @@ func readExistingModel(exportFileName string) (*exportModel, error) {
 	default:
 		return nil, fmt.Errorf("version %v is not supported", version)
 	}
+}
+
+func fromSettings(settings *Settings) *exportModel {
+	data := modelDataV1{}
+	data.Repos = map[string]modelDataV1Repo{}
+	for _, repo := range settings.Repos {
+		data.Repos[repo.Name] = modelDataV1Repo{
+			Url:  repo.Url,
+			Tags: repo.Tags,
+		}
+	}
+
+	return &exportModel{1, data}
+}
+
+func toSettings(em *exportModel) (*Settings, error) {
+	result := Settings{[]Repo{}, []Group{}}
+	for repoName, repoData := range em.Data.Repos {
+		err := result.AddRepo(repoName, repoData.Url, repoData.Tags)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &result, nil
 }
