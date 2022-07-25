@@ -12,6 +12,9 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "bulker",
 	Short: "Runs different operations on a bunch of repositories in bulk mode",
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		configureLogrus()
+	},
 }
 
 func Execute() {
@@ -43,8 +46,6 @@ func init() {
 		),
 	)
 	utils.BindFlag(rootCmd.PersistentFlags().Lookup("output"), "output")
-
-	configureLogrus()
 }
 
 func configureViper() {

@@ -3,6 +3,8 @@ package output
 import (
 	"encoding/json"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
 )
 
 type JsonWriter struct {
@@ -12,8 +14,11 @@ type JsonWriter struct {
 func (w JsonWriter) WriteMessage(value map[string]EntityInfo) string {
 	var valueToLog []interface{}
 
-	for key, info := range value {
-		entry := createValueToLogEntry(w.entityName, key, info)
+	keys := maps.Keys(value)
+	slices.Sort(keys)
+
+	for _, key := range keys {
+		entry := createValueToLogEntry(w.entityName, key, value[key])
 		valueToLog = append(valueToLog, entry)
 	}
 

@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/settings"
 	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/spf13/cobra"
@@ -13,6 +14,8 @@ type Filter struct {
 	Tags  []string
 }
 
+var runMode = config.Parallel
+
 func (f *Filter) Matches(repo settings.Repo) bool {
 	return matchesName(repo.Name, f.Names) && matchesTags(repo.Tags, f.Tags)
 }
@@ -21,8 +24,10 @@ func (f *Filter) AddCommandFlags(command *cobra.Command) {
 	command.Flags().StringSliceVarP(&f.Names, "name", "n", []string{}, "Names of the repositories to process")
 	command.Flags().StringSliceVarP(&f.Tags, "tag", "t", []string{}, "Tags of the repositories to process")
 
-	command.PersistentFlags().String(
-		"run-mode", "par",
+	// in order to viper read configuration from flag that is added multiple times (in different commands),
+	// all the flags with the same name should have the same storage, which is a package variable
+	command.PersistentFlags().Var(&runMode,
+		"run-mode",
 		"Parallel (par) or sequential (seq) run mode for repositories processing",
 	)
 	utils.BindFlag(command.PersistentFlags().Lookup("run-mode"), "runMode")

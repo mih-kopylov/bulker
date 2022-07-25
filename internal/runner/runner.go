@@ -10,23 +10,30 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"path"
-	"sync"
 )
 
-type Runner struct {
-	fs      afero.Fs
-	manager *settings.Manager
-	config  *config.Config
-	filter  *Filter
+type Runner interface {
+	Run(handler RepoHandler) error
 }
 
-func NewRunner(fs afero.Fs, config *config.Config, filter *Filter) *Runner {
-	return &Runner{
-		fs:      fs,
-		manager: settings.NewManager(fs, config),
-		config:  config,
-		filter:  filter,
+func NewRunner(fs afero.Fs, conf *config.Config, filter *Filter) (Runner, error) {
+	manager := settings.NewManager(fs, conf)
+	if conf.RunMode == config.Sequential {
+		return &SequentialRunner{
+			fs:      fs,
+			manager: manager,
+			config:  conf,
+			filter:  filter,
+		}, nil
+	} else if conf.RunMode == config.Parallel {
+		return &ParallelRunner{
+			fs:      fs,
+			manager: manager,
+			config:  conf,
+			filter:  filter,
+		}, nil
 	}
+	return nil, fmt.Errorf("unsupported run mode %v", conf.RunMode)
 }
 
 type RunContext struct {
@@ -36,73 +43,41 @@ type RunContext struct {
 	Repo    *model.Repo
 }
 
-type ProcessResult struct {
-	Result interface{}
-	Error  error
+func newRunContext(fs afero.Fs, manager *settings.Manager, conf *config.Config, repo settings.Repo) *RunContext {
+	return &RunContext{
+		FS:      fs,
+		Manager: manager,
+		Config:  conf,
+		Repo: &model.Repo{
+			Name: repo.Name,
+			Path: path.Join(conf.ReposDirectory, repo.Name),
+			Url:  repo.Url,
+		},
+	}
 }
 
-type RepoHandler func(ctx context.Context, runContext *RunContext) (interface{}, error)
-
-func (r Runner) Run(handler RepoHandler) error {
-	sets, err := r.manager.Read()
-	if err != nil {
-		return err
-	}
-
-	ctx := context.Background()
-
-	allReposResult := map[string]ProcessResult{}
-	wg := sync.WaitGroup{}
-	for _, repo := range sets.Repos {
-		if !r.filter.Matches(repo) {
-			continue
-		}
-		runContext := &RunContext{
-			FS:      r.fs,
-			Manager: r.manager,
-			Config:  r.config,
-			Repo: &model.Repo{
-				Name: repo.Name,
-				Path: path.Join(r.config.ReposDirectory, repo.Name),
-				Url:  repo.Url,
-			},
-		}
-		if r.config.RunMode == config.Sequential {
-			repoResult, err := handler(ctx, runContext)
-			allReposResult[runContext.Repo.Name] = ProcessResult{
-				Result: repoResult,
-				Error:  err,
-			}
-		} else if r.config.RunMode == config.Parallel {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				repoResult, err := handler(ctx, runContext)
-				allReposResult[runContext.Repo.Name] = ProcessResult{
-					Result: repoResult,
-					Error:  err,
-				}
-			}()
-		} else {
-			return fmt.Errorf("unknown run mode: %v", r.config.RunMode)
-		}
-	}
-	wg.Wait()
+func logOutput(result map[string]ProcessResult) error {
+	logrus.WithField("count", len(result)).Debug("processed repos")
 
 	valueToLog := map[string]output.EntityInfo{}
-	for repoName, processResult := range allReposResult {
+	for repoName, procResult := range result {
 		valueToLog[repoName] = output.EntityInfo{
-			Result: processResult.Result,
-			Error:  processResult.Error,
+			Result: procResult.Result,
+			Error:  procResult.Error,
 		}
 	}
 
-	logrus.WithField("count", len(allReposResult)).Debug("processed repos")
-
-	err = output.Write("repo", valueToLog)
+	err := output.Write("repo", valueToLog)
 	if err != nil {
 		return err
 	}
 
 	return nil
 }
+
+type ProcessResult struct {
+	Result interface{}
+	Error  error
+}
+
+type RepoHandler func(ctx context.Context, runContext *RunContext) (interface{}, error)

@@ -3,6 +3,8 @@ package output
 import (
 	"bytes"
 	"fmt"
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
 )
 
 type LineWriter struct {
@@ -11,8 +13,11 @@ type LineWriter struct {
 func (w LineWriter) WriteMessage(value map[string]EntityInfo) string {
 	buffer := &bytes.Buffer{}
 
-	for key, info := range value {
-		infoString := infoToString(info)
+	keys := maps.Keys(value)
+	slices.Sort(keys)
+
+	for _, key := range keys {
+		infoString := infoToString(value[key])
 		if infoString == "" {
 			buffer.WriteString(fmt.Sprintln(key))
 		} else {

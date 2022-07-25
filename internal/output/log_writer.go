@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
 	"reflect"
 )
 
@@ -14,11 +16,16 @@ type LogWriter struct {
 
 func (w LogWriter) WriteMessage(value map[string]EntityInfo) string {
 	buffer := &bytes.Buffer{}
-	for key, info := range value {
+
+	keys := maps.Keys(value)
+	slices.Sort(keys)
+
+	for _, key := range keys {
 		logger := logrus.New()
 		logger.SetOutput(buffer)
 		loggerEntry := logger.WithField(w.entityName, key)
 
+		info := value[key]
 		loggerEntry = addLoggerEntries(loggerEntry, info.Result)
 		if info.Error != nil {
 			loggerEntry.WithError(info.Error).Errorln()
