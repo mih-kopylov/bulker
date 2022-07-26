@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `groups` commands: `list`, `get`, `create`, `append`, `exclude`, `remove`, `clean`
+
 ## [0.1.1] - 2022-07-25
 
 ### Fixed
