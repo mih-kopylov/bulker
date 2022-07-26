@@ -1,13 +1,13 @@
 package settings
 
 import (
-	"fmt"
-	"sort"
-	"strings"
+	"errors"
+	"golang.org/x/exp/slices"
 )
 
 type Settings struct {
-	Repos []Repo `yaml:"repos"`
+	Repos  []Repo  `yaml:"repos"`
+	Groups []Group `yaml:"groups"`
 }
 
 type Repo struct {
@@ -16,11 +16,24 @@ type Repo struct {
 	Tags []string `yaml:"tags"`
 }
 
-func (s *Settings) AddRepo(name string, url string, tags []string) error {
-	repoIndex := s.findRepoIndex(name)
+type Group struct {
+	Name  string   `yaml:"name"`
+	Repos []string `yaml:"repos"`
+}
 
-	if repoIndex >= 0 {
-		return fmt.Errorf("repository %v already exists", name)
+var (
+	ErrGroupNotFound      = errors.New("group is not found")
+	ErrGroupAlreadyExists = errors.New("group already exists")
+	ErrRepoAlreadyExists  = errors.New("repository already exists")
+	ErrRepoNotFound       = errors.New("repository is not found")
+	ErrRepoNotSupported   = errors.New("repository is not supported")
+	ErrRepoAlreadyAdded   = errors.New("repository already added")
+	ErrRepoAlreadyRemoved = errors.New("repository already removed")
+)
+
+func (s *Settings) AddRepo(name string, url string, tags []string) error {
+	if s.RepoExists(name) {
+		return ErrRepoAlreadyExists
 	}
 
 	repo := Repo{
@@ -30,36 +43,112 @@ func (s *Settings) AddRepo(name string, url string, tags []string) error {
 	}
 	s.Repos = append(s.Repos, repo)
 
-	// make sure repos are sorted alphabetically
-	sort.Slice(
-		s.Repos, func(i, j int) bool {
-			return strings.Compare(s.Repos[i].Name, s.Repos[j].Name) > 0
-		},
-	)
-
 	return nil
 }
 
 func (s *Settings) RemoveRepo(name string) error {
-	repoIndex := s.findRepoIndex(name)
+	repoIndex := s.getRepoIndex(name)
 
 	if repoIndex < 0 {
-		return fmt.Errorf("repository %v is not found", name)
+		return ErrRepoNotFound
 	}
 
-	s.Repos = append(s.Repos[:repoIndex], s.Repos[repoIndex+1:]...)
+	s.Repos = slices.Delete(s.Repos, repoIndex, repoIndex+1)
 
 	return nil
 }
 
-func (s *Settings) findRepoIndex(name string) int {
-	repoIndex := -1
+func (s *Settings) RepoExists(name string) bool {
+	return s.getRepoIndex(name) >= 0
+}
 
-	for i, repo := range s.Repos {
-		if repo.Name == name {
-			repoIndex = i
-		}
+func (s *Settings) getRepoIndex(name string) int {
+	return slices.IndexFunc(s.Repos, func(repo Repo) bool {
+		return repo.Name == name
+	})
+}
+
+func (s *Settings) getGroupIndex(group string) int {
+	return slices.IndexFunc(s.Groups, func(g Group) bool {
+		return g.Name == group
+	})
+}
+
+func (s *Settings) GetGroup(group string) (*Group, error) {
+	groupIndex := s.getGroupIndex(group)
+
+	if groupIndex < 0 {
+		return nil, ErrGroupNotFound
 	}
 
-	return repoIndex
+	return &s.Groups[groupIndex], nil
+
+}
+
+func (s *Settings) GroupExists(group string) bool {
+	return s.getGroupIndex(group) >= 0
+}
+
+func (s *Settings) RemoveGroup(group string) error {
+	groupIndex := s.getGroupIndex(group)
+
+	if groupIndex < 0 {
+		return ErrGroupNotFound
+	}
+
+	s.Groups = slices.Delete(s.Groups, groupIndex, groupIndex+1)
+	return nil
+}
+
+func (s *Settings) AddGroup(group string) error {
+	if s.GroupExists(group) {
+		return ErrGroupAlreadyExists
+	}
+
+	newGroup := Group{
+		Name:  group,
+		Repos: []string{},
+	}
+
+	s.Groups = append(s.Groups, newGroup)
+
+	return nil
+}
+
+func (s *Settings) AddRepoToGroup(groupName string, repoName string) error {
+	if !s.RepoExists(repoName) {
+		return ErrRepoNotSupported
+	}
+
+	group, err := s.GetGroup(groupName)
+	if err != nil {
+		return err
+	}
+
+	if slices.Contains(group.Repos, repoName) {
+		return ErrRepoAlreadyAdded
+	}
+
+	group.Repos = append(group.Repos, repoName)
+
+	return nil
+}
+
+func (s *Settings) RemoveRepoFromGroup(groupName string, repoName string) error {
+	if !s.RepoExists(repoName) {
+		return ErrRepoNotSupported
+	}
+
+	group, err := s.GetGroup(groupName)
+	if err != nil {
+		return err
+	}
+
+	repoIndex := slices.Index(group.Repos, repoName)
+	if repoIndex < 0 {
+		return ErrRepoAlreadyRemoved
+	}
+
+	group.Repos = slices.Delete(group.Repos, repoIndex, repoIndex+1)
+	return nil
 }

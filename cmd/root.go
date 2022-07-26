@@ -9,43 +9,49 @@ import (
 	"github.com/spf13/viper"
 )
 
-var rootCmd = &cobra.Command{
-	Use:   "bulker",
-	Short: "Runs different operations on a bunch of repositories in bulk mode",
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		configureLogrus()
-	},
-}
-
-func Execute() {
-	rootCmd.AddCommand(CreateReposCommand())
-	rootCmd.AddCommand(CreateGitCommand())
-
-	err := rootCmd.Execute()
-	if err != nil {
-		logrus.Fatalf("command failed: %v", err)
+func CreateRootCommand() *cobra.Command {
+	var result = &cobra.Command{
+		Use:   "bulker",
+		Short: "Runs different operations on a bunch of repositories in bulk mode",
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			configureLogrus()
+		},
 	}
-}
 
-func init() {
-	configureViper()
+	result.PersistentFlags().Bool("debug", false, "Enable debug level logging")
+	utils.BindFlag(result.PersistentFlags().Lookup("debug"), "debug")
 
-	rootCmd.PersistentFlags().Bool("debug", false, "Enable debug level logging")
-	utils.BindFlag(rootCmd.PersistentFlags().Lookup("debug"), "debug")
-
-	rootCmd.PersistentFlags().String(
+	result.PersistentFlags().String(
 		"settings", utils.AbsPathify("$HOME/.bulker/settings.yaml"),
 		"Settings file name, where list of repositories is stored",
 	)
-	utils.BindFlag(rootCmd.PersistentFlags().Lookup("settings"), "settings")
+	utils.BindFlag(result.PersistentFlags().Lookup("settings"), "settings")
 
-	rootCmd.PersistentFlags().String(
+	result.PersistentFlags().String(
 		"output", string(config.LogOutputFormat), fmt.Sprintf(
 			"Set commands output format. Available formats: %v, %v, %v", config.LogOutputFormat,
 			config.LineOutputFormat, config.JsonOutputFormat,
 		),
 	)
-	utils.BindFlag(rootCmd.PersistentFlags().Lookup("output"), "output")
+	utils.BindFlag(result.PersistentFlags().Lookup("output"), "output")
+
+	result.AddCommand(CreateReposCommand())
+	result.AddCommand(CreateGitCommand())
+	result.AddCommand(CreateGroupsCommand())
+
+	return result
+}
+
+func Execute() {
+	rootCmd := CreateRootCommand()
+	err := rootCmd.Execute()
+	if err != nil {
+		logrus.Debugf("command failed: %v", err)
+	}
+}
+
+func init() {
+	configureViper()
 }
 
 func configureViper() {

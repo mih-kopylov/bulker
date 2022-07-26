@@ -19,5 +19,4 @@ func BindFlag(flag *pflag.Flag, viperFlagName string) {
 	if err != nil {
 		logrus.Fatalf("can't bind flag: %v", err)
 	}
-
 }
