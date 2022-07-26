@@ -2,6 +2,7 @@ package groups
 
 import (
 	"errors"
+	"fmt"
 	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/output"
 	"github.com/mih-kopylov/bulker/internal/settings"
@@ -29,8 +30,8 @@ func CreateCreateCommand() *cobra.Command {
 
 			err = sets.AddGroup(flags.group)
 			if err != nil {
-				if !errors.Is(err, settings.GroupAlreadyExists) || !flags.force {
-					return err
+				if !errors.Is(err, settings.ErrGroupAlreadyExists) || !flags.force {
+					return fmt.Errorf("group already exists, use --force to recreate")
 				}
 
 				err = sets.RemoveGroup(flags.group)
@@ -46,7 +47,12 @@ func CreateCreateCommand() *cobra.Command {
 
 			entityInfoMap := map[string]output.EntityInfo{}
 
-			for _, repoName := range flags.repos {
+			repos, err := utils.GetReposFromStdInOrDefault(flags.repos)
+			if err != nil {
+				return err
+			}
+
+			for _, repoName := range repos {
 				err := sets.AddRepoToGroup(flags.group, repoName)
 				if err != nil {
 					entityInfoMap[repoName] = output.EntityInfo{Result: nil, Error: err}
@@ -73,9 +79,10 @@ func CreateCreateCommand() *cobra.Command {
 	utils.MarkFlagRequiredOrFail(result.Flags(), "group")
 
 	result.Flags().StringSliceVarP(&flags.repos, "add", "a", []string{}, "Repositories to add to the group")
-	utils.MarkFlagRequiredOrFail(result.Flags(), "add")
 
 	result.Flags().BoolVar(&flags.force, "force", false, "Recreate the group if a group with such a name already exists")
+
+	utils.AddReadFromStdInFlag(result, "repo")
 
 	return result
 }

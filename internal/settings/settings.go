@@ -22,18 +22,18 @@ type Group struct {
 }
 
 var (
-	GroupNotFound      = errors.New("group is not found")
-	GroupAlreadyExists = errors.New("group already exists")
-	RepoAlreadyExists  = errors.New("repository already exists")
-	RepoNotFound       = errors.New("repository is not found")
-	RepoNotSupported   = errors.New("repository is not supported")
-	RepoAlreadyAdded   = errors.New("repository already added")
-	RepoAlreadyRemoved = errors.New("repository already removed")
+	ErrGroupNotFound      = errors.New("group is not found")
+	ErrGroupAlreadyExists = errors.New("group already exists")
+	ErrRepoAlreadyExists  = errors.New("repository already exists")
+	ErrRepoNotFound       = errors.New("repository is not found")
+	ErrRepoNotSupported   = errors.New("repository is not supported")
+	ErrRepoAlreadyAdded   = errors.New("repository already added")
+	ErrRepoAlreadyRemoved = errors.New("repository already removed")
 )
 
 func (s *Settings) AddRepo(name string, url string, tags []string) error {
 	if s.RepoExists(name) {
-		return RepoAlreadyExists
+		return ErrRepoAlreadyExists
 	}
 
 	repo := Repo{
@@ -50,7 +50,7 @@ func (s *Settings) RemoveRepo(name string) error {
 	repoIndex := s.getRepoIndex(name)
 
 	if repoIndex < 0 {
-		return RepoNotFound
+		return ErrRepoNotFound
 	}
 
 	s.Repos = slices.Delete(s.Repos, repoIndex, repoIndex+1)
@@ -78,7 +78,7 @@ func (s *Settings) GetGroup(group string) (*Group, error) {
 	groupIndex := s.getGroupIndex(group)
 
 	if groupIndex < 0 {
-		return nil, GroupNotFound
+		return nil, ErrGroupNotFound
 	}
 
 	return &s.Groups[groupIndex], nil
@@ -93,7 +93,7 @@ func (s *Settings) RemoveGroup(group string) error {
 	groupIndex := s.getGroupIndex(group)
 
 	if groupIndex < 0 {
-		return GroupNotFound
+		return ErrGroupNotFound
 	}
 
 	s.Groups = slices.Delete(s.Groups, groupIndex, groupIndex+1)
@@ -102,7 +102,7 @@ func (s *Settings) RemoveGroup(group string) error {
 
 func (s *Settings) AddGroup(group string) error {
 	if s.GroupExists(group) {
-		return GroupAlreadyExists
+		return ErrGroupAlreadyExists
 	}
 
 	newGroup := Group{
@@ -117,7 +117,7 @@ func (s *Settings) AddGroup(group string) error {
 
 func (s *Settings) AddRepoToGroup(groupName string, repoName string) error {
 	if !s.RepoExists(repoName) {
-		return RepoNotSupported
+		return ErrRepoNotSupported
 	}
 
 	group, err := s.GetGroup(groupName)
@@ -126,7 +126,7 @@ func (s *Settings) AddRepoToGroup(groupName string, repoName string) error {
 	}
 
 	if slices.Contains(group.Repos, repoName) {
-		return RepoAlreadyAdded
+		return ErrRepoAlreadyAdded
 	}
 
 	group.Repos = append(group.Repos, repoName)
@@ -136,7 +136,7 @@ func (s *Settings) AddRepoToGroup(groupName string, repoName string) error {
 
 func (s *Settings) RemoveRepoFromGroup(groupName string, repoName string) error {
 	if !s.RepoExists(repoName) {
-		return RepoNotSupported
+		return ErrRepoNotSupported
 	}
 
 	group, err := s.GetGroup(groupName)
@@ -146,7 +146,7 @@ func (s *Settings) RemoveRepoFromGroup(groupName string, repoName string) error 
 
 	repoIndex := slices.Index(group.Repos, repoName)
 	if repoIndex < 0 {
-		return RepoAlreadyRemoved
+		return ErrRepoAlreadyRemoved
 	}
 
 	group.Repos = slices.Delete(group.Repos, repoIndex, repoIndex+1)

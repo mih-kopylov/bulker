@@ -37,7 +37,7 @@ If the repo to be removed does not exist in the group, it will be ignored.`,
 			for _, repoName := range flags.reposToAdd {
 				err := sets.AddRepoToGroup(flags.group, repoName)
 				if err != nil {
-					if errors.Is(err, settings.RepoAlreadyAdded) {
+					if errors.Is(err, settings.ErrRepoAlreadyAdded) {
 						logrus.
 							WithField("repo", repoName).
 							WithField("group", flags.group).
@@ -54,7 +54,7 @@ If the repo to be removed does not exist in the group, it will be ignored.`,
 			for _, repoName := range flags.reposToRemove {
 				err := sets.RemoveRepoFromGroup(flags.group, repoName)
 				if err != nil {
-					if errors.Is(err, settings.RepoAlreadyRemoved) {
+					if errors.Is(err, settings.ErrRepoAlreadyRemoved) {
 						logrus.
 							WithField("repo", repoName).
 							WithField("group", flags.group).
