@@ -10,19 +10,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func CreateUpdateCommand() *cobra.Command {
+func CreateExcludeCommand() *cobra.Command {
 	flags := struct {
-		group         string
-		reposToAdd    []string
-		reposToRemove []string
+		group string
+		repos []string
 	}{}
 
 	var result = &cobra.Command{
-		Use:   "update",
-		Short: "Updates configured group content",
-		Long: `Updates configured group content. 
-Runs "add" operation first, and "remove" last.
-If the repo to be added already exists in the group, it will be ignored.
+		Use:   "exclude",
+		Short: "Removes repositories from an existing group",
+		Long: `Updates the configured group content with adding new repositories.
 If the repo to be removed does not exist in the group, it will be ignored.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			settingsManager := settings.NewManager(utils.GetConfiguredFS(), config.ReadConfig())
@@ -32,26 +29,14 @@ If the repo to be removed does not exist in the group, it will be ignored.`,
 				return err
 			}
 
-			entityInfoMap := map[string]output.EntityInfo{}
-
-			for _, repoName := range flags.reposToAdd {
-				err := sets.AddRepoToGroup(flags.group, repoName)
-				if err != nil {
-					if errors.Is(err, settings.ErrRepoAlreadyAdded) {
-						logrus.
-							WithField("repo", repoName).
-							WithField("group", flags.group).
-							Debug("repository already added, skipping")
-						entityInfoMap[repoName] = output.EntityInfo{Result: "adding skipped", Error: nil}
-					} else {
-						entityInfoMap[repoName] = output.EntityInfo{Result: nil, Error: err}
-					}
-				} else {
-					entityInfoMap[repoName] = output.EntityInfo{Result: "added", Error: nil}
-				}
+			repos, err := utils.GetReposFromStdInOrDefault(flags.repos)
+			if err != nil {
+				return err
 			}
 
-			for _, repoName := range flags.reposToRemove {
+			entityInfoMap := map[string]output.EntityInfo{}
+
+			for _, repoName := range repos {
 				err := sets.RemoveRepoFromGroup(flags.group, repoName)
 				if err != nil {
 					if errors.Is(err, settings.ErrRepoAlreadyRemoved) {
@@ -82,12 +67,12 @@ If the repo to be removed does not exist in the group, it will be ignored.`,
 		},
 	}
 
-	result.Flags().StringVarP(&flags.group, "group", "g", "", "Name of the group to remove")
+	result.Flags().StringVarP(&flags.group, "group", "g", "", "Name of the group to update")
 	utils.MarkFlagRequiredOrFail(result.Flags(), "group")
 
-	result.Flags().StringSliceVarP(&flags.reposToAdd, "add", "a", []string{}, "Repositories to add to the group")
+	result.Flags().StringSliceVarP(&flags.repos, "repo", "r", []string{}, "Repositories to remove from the group")
 
-	result.Flags().StringSliceVarP(&flags.reposToRemove, "remove", "r", []string{}, "Repositories to remove from the group")
+	utils.AddReadFromStdInFlag(result, "repo")
 
 	return result
 }

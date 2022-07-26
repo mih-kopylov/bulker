@@ -2,24 +2,25 @@ package groups
 
 import (
 	"errors"
-	"fmt"
 	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/output"
 	"github.com/mih-kopylov/bulker/internal/settings"
 	"github.com/mih-kopylov/bulker/internal/utils"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
-func CreateCreateCommand() *cobra.Command {
+func CreateAppendCommand() *cobra.Command {
 	flags := struct {
 		group string
 		repos []string
-		force bool
 	}{}
 
 	var result = &cobra.Command{
-		Use:   "create",
-		Short: "Creates a new group with provided content",
+		Use:   "append",
+		Short: "Adds repositories to an existing group",
+		Long: `Updates the configured group content with adding new repositories. 
+If the repo to be added already exists in the group, it will be ignored.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			settingsManager := settings.NewManager(utils.GetConfiguredFS(), config.ReadConfig())
 
@@ -28,36 +29,27 @@ func CreateCreateCommand() *cobra.Command {
 				return err
 			}
 
-			err = sets.AddGroup(flags.group)
-			if err != nil {
-				if !errors.Is(err, settings.ErrGroupAlreadyExists) || !flags.force {
-					return fmt.Errorf("group already exists, use --force to recreate")
-				}
-
-				err = sets.RemoveGroup(flags.group)
-				if err != nil {
-					return err
-				}
-
-				err = sets.AddGroup(flags.group)
-				if err != nil {
-					return err
-				}
-			}
-
-			entityInfoMap := map[string]output.EntityInfo{}
-
 			repos, err := utils.GetReposFromStdInOrDefault(flags.repos)
 			if err != nil {
 				return err
 			}
 
+			entityInfoMap := map[string]output.EntityInfo{}
+
 			for _, repoName := range repos {
 				err := sets.AddRepoToGroup(flags.group, repoName)
 				if err != nil {
-					entityInfoMap[repoName] = output.EntityInfo{Result: nil, Error: err}
+					if errors.Is(err, settings.ErrRepoAlreadyAdded) {
+						logrus.
+							WithField("repo", repoName).
+							WithField("group", flags.group).
+							Debug("repository already added, skipping")
+						entityInfoMap[repoName] = output.EntityInfo{Result: "adding skipped", Error: nil}
+					} else {
+						entityInfoMap[repoName] = output.EntityInfo{Result: nil, Error: err}
+					}
 				} else {
-					entityInfoMap[repoName] = output.EntityInfo{Result: "created", Error: nil}
+					entityInfoMap[repoName] = output.EntityInfo{Result: "added", Error: nil}
 				}
 			}
 
@@ -75,12 +67,10 @@ func CreateCreateCommand() *cobra.Command {
 		},
 	}
 
-	result.Flags().StringVarP(&flags.group, "group", "g", "", "Name of the group to remove")
+	result.Flags().StringVarP(&flags.group, "group", "g", "", "Name of the group to update")
 	utils.MarkFlagRequiredOrFail(result.Flags(), "group")
 
 	result.Flags().StringSliceVarP(&flags.repos, "repo", "r", []string{}, "Repositories to add to the group")
-
-	result.Flags().BoolVarP(&flags.force, "force", "f", false, "Recreate the group if a group with such a name already exists")
 
 	utils.AddReadFromStdInFlag(result, "repo")
 

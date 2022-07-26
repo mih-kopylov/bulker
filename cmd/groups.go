@@ -14,7 +14,8 @@ func CreateGroupsCommand() *cobra.Command {
 	result.AddCommand(groups.CreateListCommand())
 	result.AddCommand(groups.CreateGetCommand())
 	result.AddCommand(groups.CreateCreateCommand())
-	result.AddCommand(groups.CreateUpdateCommand())
+	result.AddCommand(groups.CreateAppendCommand())
+	result.AddCommand(groups.CreateExcludeCommand())
 	result.AddCommand(groups.CreateRemoveCommand())
 	result.AddCommand(groups.CreateCleanCommand())
 
