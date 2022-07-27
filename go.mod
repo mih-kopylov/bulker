@@ -3,6 +3,7 @@ module github.com/mih-kopylov/bulker
 go 1.18
 
 require (
+	github.com/alitto/pond v1.7.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/afero v1.9.2
 	github.com/spf13/cobra v1.5.0

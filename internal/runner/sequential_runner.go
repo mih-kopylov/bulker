@@ -30,7 +30,9 @@ func (r SequentialRunner) Run(handler RepoHandler) error {
 			continue
 		}
 		runContext := newRunContext(r.fs, r.manager, r.config, repo)
+		logrus.WithField("repo", repo.Name).Debug("processing started")
 		repoResult, err := handler(ctx, runContext)
+		logrus.WithField("repo", repo.Name).Debug("processing completed")
 		allReposResult[runContext.Repo.Name] = ProcessResult{
 			Result: repoResult,
 			Error:  err,

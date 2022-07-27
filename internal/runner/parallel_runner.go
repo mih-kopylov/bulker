@@ -2,11 +2,11 @@ package runner
 
 import (
 	"context"
+	"github.com/alitto/pond"
 	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/settings"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"sync"
 )
 
 type ParallelRunner struct {
@@ -30,7 +30,8 @@ func (r ParallelRunner) Run(handler RepoHandler) error {
 	ctx := context.Background()
 
 	allReposResult := map[string]ProcessResult{}
-	wg := sync.WaitGroup{}
+	pool := pond.New(r.config.MaxWorkers, 1000, pond.Context(ctx))
+	defer pool.StopAndWait()
 	ch := make(chan repoProcessResult)
 	logrus.WithField("mode", r.config.RunMode).Debug("processing repositories")
 	processedRepoCount := 0
@@ -40,10 +41,10 @@ func (r ParallelRunner) Run(handler RepoHandler) error {
 		}
 		processedRepoCount++
 		runContext := newRunContext(r.fs, r.manager, r.config, repo)
-		wg.Add(1)
-		go func(ch chan repoProcessResult) {
-			defer wg.Done()
+		pool.Submit(func() {
+			logrus.WithField("repo", runContext.Repo.Name).Debug("processing started")
 			repoResult, err := handler(ctx, runContext)
+			logrus.WithField("repo", runContext.Repo.Name).Debug("processing completed")
 			ch <- repoProcessResult{
 				Name: runContext.Repo.Name,
 				ProcessResult: ProcessResult{
@@ -51,13 +52,12 @@ func (r ParallelRunner) Run(handler RepoHandler) error {
 					Error:  err,
 				},
 			}
-		}(ch)
+		})
 	}
 	for i := 0; i < processedRepoCount; i++ {
 		result := <-ch
 		allReposResult[result.Name] = result.ProcessResult
 	}
-	wg.Wait()
 	close(ch)
 
 	err = logOutput(allReposResult)

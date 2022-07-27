@@ -28,6 +28,12 @@ func CreateRootCommand() *cobra.Command {
 	utils.BindFlag(result.PersistentFlags().Lookup("settings"), "settings")
 
 	result.PersistentFlags().String(
+		"max-workers", "10",
+		"Maximum number of workers to process repositories simultaneously",
+	)
+	utils.BindFlag(result.PersistentFlags().Lookup("max-workers"), "maxWorkers")
+
+	result.PersistentFlags().String(
 		"output", string(config.LogOutputFormat), fmt.Sprintf(
 			"Set commands output format. Available formats: %v, %v, %v", config.LogOutputFormat,
 			config.LineOutputFormat, config.JsonOutputFormat,
