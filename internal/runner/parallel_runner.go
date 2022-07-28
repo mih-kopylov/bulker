@@ -16,7 +16,7 @@ type ParallelRunner struct {
 	filter  *Filter
 }
 
-func (r ParallelRunner) Run(handler RepoHandler) error {
+func (r *ParallelRunner) Run(handler RepoHandler) error {
 	type repoProcessResult struct {
 		Name string
 		ProcessResult
@@ -34,27 +34,27 @@ func (r ParallelRunner) Run(handler RepoHandler) error {
 	defer pool.StopAndWait()
 	ch := make(chan repoProcessResult)
 	logrus.WithField("mode", r.config.RunMode).Debug("processing repositories")
-	processedRepoCount := 0
-	for _, repo := range sets.Repos {
-		if !r.filter.Matches(repo) {
-			continue
-		}
-		processedRepoCount++
+	repos := r.filter.FilterMatchingRepos(sets.Repos)
+	progress := NewProgress(r.config, len(repos))
+	for _, repo := range repos {
 		runContext := newRunContext(r.fs, r.manager, r.config, repo)
-		pool.Submit(func() {
-			logrus.WithField("repo", runContext.Repo.Name).Debug("processing started")
-			repoResult, err := handler(ctx, runContext)
-			logrus.WithField("repo", runContext.Repo.Name).Debug("processing completed")
-			ch <- repoProcessResult{
-				Name: runContext.Repo.Name,
-				ProcessResult: ProcessResult{
-					Result: repoResult,
-					Error:  err,
-				},
-			}
-		})
+		pool.Submit(
+			func() {
+				logrus.WithField("repo", runContext.Repo.Name).Debug("processing started")
+				repoResult, err := handler(ctx, runContext)
+				progress.Incr()
+				logrus.WithField("repo", runContext.Repo.Name).Debug("processing completed")
+				ch <- repoProcessResult{
+					Name: runContext.Repo.Name,
+					ProcessResult: ProcessResult{
+						Result: repoResult,
+						Error:  err,
+					},
+				}
+			},
+		)
 	}
-	for i := 0; i < processedRepoCount; i++ {
+	for i := 0; i < len(repos); i++ {
 		result := <-ch
 		allReposResult[result.Name] = result.ProcessResult
 	}

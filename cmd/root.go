@@ -33,8 +33,14 @@ func CreateRootCommand() *cobra.Command {
 	)
 	utils.BindFlag(result.PersistentFlags().Lookup("max-workers"), "maxWorkers")
 
+	result.PersistentFlags().Bool(
+		"no-progress", false,
+		"Do not show progress bar during repositories processing",
+	)
+	utils.BindFlag(result.PersistentFlags().Lookup("no-progress"), "noProgress")
+
 	result.PersistentFlags().String(
-		"output", string(config.LogOutputFormat), fmt.Sprintf(
+		"output", string(config.LineOutputFormat), fmt.Sprintf(
 			"Set commands output format. Available formats: %v, %v, %v", config.LogOutputFormat,
 			config.LineOutputFormat, config.JsonOutputFormat,
 		),
