@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	rootCommand := cmd.CreateRootCommand()
+	rootCommand := cmd.CreateRootCommand("")
 	rootCommand.DisableAutoGenTag = true
 	dir, err := filepath.Abs("./dist/docs")
 	if err != nil {

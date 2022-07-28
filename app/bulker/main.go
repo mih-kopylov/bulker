@@ -6,7 +6,9 @@ import (
 	"github.com/spf13/afero"
 )
 
+var version string
+
 func main() {
 	utils.ConfigureFS(afero.NewOsFs())
-	cmd.Execute()
+	cmd.Execute(version)
 }

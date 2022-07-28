@@ -9,14 +9,17 @@ import (
 	"github.com/spf13/viper"
 )
 
-func CreateRootCommand() *cobra.Command {
+func CreateRootCommand(applicationVersion string) *cobra.Command {
 	var result = &cobra.Command{
-		Use:   "bulker",
-		Short: "Runs different operations on a bunch of repositories in bulk mode",
+		Use:     "bulker",
+		Short:   "Runs different operations on a bunch of repositories in bulk mode",
+		Version: applicationVersion,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			configureLogrus()
 		},
 	}
+
+	result.SetVersionTemplate("{{.Version}}")
 
 	result.PersistentFlags().Bool("debug", false, "Enable debug level logging")
 	utils.BindFlag(result.PersistentFlags().Lookup("debug"), "debug")
@@ -54,8 +57,8 @@ func CreateRootCommand() *cobra.Command {
 	return result
 }
 
-func Execute() {
-	rootCmd := CreateRootCommand()
+func Execute(applicationVersion string) {
+	rootCmd := CreateRootCommand(applicationVersion)
 	err := rootCmd.Execute()
 	if err != nil {
 		logrus.Debugf("command failed: %v", err)
