@@ -12,6 +12,9 @@ import (
 
 func CreateCloneCommand() *cobra.Command {
 	var filter = runner.Filter{}
+	var flags = struct {
+		recreate bool
+	}{}
 
 	var result = &cobra.Command{
 		Use:   "clone",
@@ -24,7 +27,7 @@ func CreateCloneCommand() *cobra.Command {
 
 			err = newRunner.Run(
 				func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
-					cloneResult, err := gitops.CloneRepo(runContext.FS, runContext.Repo)
+					cloneResult, err := gitops.CloneRepo(runContext.FS, runContext.Repo, flags.recreate)
 					if err != nil {
 						return nil, fmt.Errorf("failed to clone: %w", err)
 					}
@@ -32,6 +35,8 @@ func CreateCloneCommand() *cobra.Command {
 					switch cloneResult {
 					case gitops.ClonedSuccessfully:
 						return "cloned successfully", nil
+					case gitops.ClonedAgain:
+						return "cloned again", nil
 					case gitops.AlreadyCloned:
 						return "already cloned", nil
 					default:
@@ -48,6 +53,11 @@ func CreateCloneCommand() *cobra.Command {
 	}
 
 	filter.AddCommandFlags(result)
+
+	result.Flags().BoolVar(
+		&flags.recreate, "recreate", false,
+		"Delete the repository directory and start clone from scratch",
+	)
 
 	return result
 }
