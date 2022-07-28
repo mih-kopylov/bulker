@@ -19,7 +19,9 @@ func CreateRunCommand() *cobra.Command {
 		Long: `Runs a custom command against each repository.
 In order to pass the command to execute with its options, use "-- <command> [options]" notation, 
 according to POSIX standard
+
 See https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap12.html#tag_12_02 :: Guideline 10
+
 Example: "bulker run -- mvn -B -q clean"`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {

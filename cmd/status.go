@@ -70,9 +70,9 @@ func CreateStatusCommand() *cobra.Command {
 
 	filter.AddCommandFlags(result)
 
-	result.Flags().BoolVar(&flags.showOk, "ok", false, "Keep repositories with 'OK' status only")
-	result.Flags().BoolVar(&flags.showDirty, "dirty", false, "Keep repositories with 'DIRTY' status only")
-	result.Flags().BoolVar(&flags.showMissing, "missing", false, "Keep repositories with 'MISSING' status only")
+	result.Flags().BoolVar(&flags.showOk, "ok", false, "Keep repositories with 'OK' status")
+	result.Flags().BoolVar(&flags.showDirty, "dirty", false, "Keep repositories with 'DIRTY' status")
+	result.Flags().BoolVar(&flags.showMissing, "missing", false, "Keep repositories with 'MISSING' status")
 
 	return result
 }
