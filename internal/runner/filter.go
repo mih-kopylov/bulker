@@ -16,8 +16,19 @@ type Filter struct {
 
 var runMode = config.Parallel
 
-func (f *Filter) Matches(repo settings.Repo) bool {
+func (f *Filter) MatchesRepo(repo settings.Repo) bool {
 	return matchesName(repo.Name, f.Names) && matchesTags(repo.Tags, f.Tags)
+}
+
+func (f *Filter) FilterMatchingRepos(repos []settings.Repo) []settings.Repo {
+	var result []settings.Repo
+	for _, repo := range repos {
+		if !f.MatchesRepo(repo) {
+			continue
+		}
+		result = append(result, repo)
+	}
+	return result
 }
 
 func (f *Filter) AddCommandFlags(command *cobra.Command) {
@@ -26,7 +37,8 @@ func (f *Filter) AddCommandFlags(command *cobra.Command) {
 
 	// in order to viper read configuration from flag that is added multiple times (in different commands),
 	// all the flags with the same name should have the same storage, which is a package variable
-	command.PersistentFlags().Var(&runMode,
+	command.PersistentFlags().Var(
+		&runMode,
 		"run-mode",
 		"Parallel (par) or sequential (seq) run mode for repositories processing",
 	)

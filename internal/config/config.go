@@ -11,6 +11,8 @@ type Config struct {
 	SettingsFileName string       `mapstructure:"settings"`
 	ReposDirectory   string       `mapstructure:"reposDirectory"`
 	RunMode          RunMode      `mapstructure:"runMode"`
+	MaxWorkers       int          `mapstructure:"maxWorkers"`
+	NoProgress       bool         `mapstructure:"noProgress"`
 	Output           OutputFormat `mapstructure:"output"`
 }
 

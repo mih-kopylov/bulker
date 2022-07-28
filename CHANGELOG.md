@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Documentation generation in GitHub Wiki
+- Ability to limit number of simultaneously processed repositories in parallel run mode
+- Progress bar indicating how many repositories have been processed
+
+### Changed
+
+- Default output mode to `line`
 
 ## [0.2.0] - 2022-07-26
 

@@ -154,8 +154,8 @@ func TestFilter_Matches(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(
 			tt.name, func(t *testing.T) {
-				if got := tt.filter.Matches(tt.repo); got != tt.want {
-					t.Errorf("Matches() = %v, want %v", got, tt.want)
+				if got := tt.filter.MatchesRepo(tt.repo); got != tt.want {
+					t.Errorf("MatchesRepo() = %v, want %v", got, tt.want)
 				}
 			},
 		)

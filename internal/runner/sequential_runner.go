@@ -15,7 +15,7 @@ type SequentialRunner struct {
 	filter  *Filter
 }
 
-func (r SequentialRunner) Run(handler RepoHandler) error {
+func (r *SequentialRunner) Run(handler RepoHandler) error {
 	sets, err := r.manager.Read()
 	if err != nil {
 		return err
@@ -25,12 +25,14 @@ func (r SequentialRunner) Run(handler RepoHandler) error {
 
 	allReposResult := map[string]ProcessResult{}
 	logrus.WithField("mode", r.config.RunMode).Debug("processing repositories")
-	for _, repo := range sets.Repos {
-		if !r.filter.Matches(repo) {
-			continue
-		}
+	repos := r.filter.FilterMatchingRepos(sets.Repos)
+	progress := NewProgress(r.config, len(repos))
+	for _, repo := range repos {
 		runContext := newRunContext(r.fs, r.manager, r.config, repo)
+		logrus.WithField("repo", repo.Name).Debug("processing started")
 		repoResult, err := handler(ctx, runContext)
+		logrus.WithField("repo", repo.Name).Debug("processing completed")
+		progress.Incr()
 		allReposResult[runContext.Repo.Name] = ProcessResult{
 			Result: repoResult,
 			Error:  err,
