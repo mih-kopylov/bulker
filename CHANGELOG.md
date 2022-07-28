@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `--recreate` flag for `git clone` command that recreates previously cloned repository
 - `status` command
+- `run` command
 
 ## [0.3.0] - 2022-07-28
 

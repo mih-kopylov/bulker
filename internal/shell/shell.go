@@ -17,7 +17,10 @@ func RunCommand(commandRootDirectory string, command string, arguments ...string
 
 	output, err := cmd.Output()
 	if err != nil {
-		return "", fmt.Errorf("command failed: error output=%v, error=%w", errorOutput.String(), err)
+		return "", fmt.Errorf(
+			"command failed: output=%v, errorOutput=%v, error=%w", string(output),
+			errorOutput.String(), err,
+		)
 	}
 
 	return string(output), nil
