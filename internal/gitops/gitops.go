@@ -14,23 +14,30 @@ type CloneResult int
 const (
 	ClonedSuccessfully CloneResult = iota
 	AlreadyCloned
+	ClonedAgain
 	CloneError
 )
 
-func CloneRepo(fs afero.Fs, repo *model.Repo) (CloneResult, error) {
+func CloneRepo(fs afero.Fs, repo *model.Repo, recreate bool) (CloneResult, error) {
 	_, err := fs.Stat(repo.Path)
 	if err == nil {
 		_, err := shell.RunCommand(repo.Path, "git", "status")
-		if err == nil {
+		if err != nil {
+			return CloneError, fmt.Errorf(
+				"repository directory already exists, and it is not a repository: directory=%v",
+				repo.Path,
+			)
+		}
+		if !recreate {
 			return AlreadyCloned, nil
 		}
-		return CloneError, fmt.Errorf(
-			"repository directory already exists, and it is not a repository: directory=%v",
-			repo.Path,
-		)
+		err = fs.RemoveAll(repo.Path)
+		if err != nil {
+			return CloneError, err
+		}
 	}
 
-	if !errors.Is(err, os.ErrNotExist) {
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return CloneError, fmt.Errorf("expected ErrNotExist but another found: %w", err)
 	}
 
