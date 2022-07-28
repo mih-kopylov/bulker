@@ -61,6 +61,9 @@ func logOutput(result map[string]ProcessResult) error {
 
 	valueToLog := map[string]output.EntityInfo{}
 	for repoName, procResult := range result {
+		if procResult.Result == nil && procResult.Error == nil {
+			continue
+		}
 		valueToLog[repoName] = output.EntityInfo{
 			Result: procResult.Result,
 			Error:  procResult.Error,

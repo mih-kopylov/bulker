@@ -22,7 +22,7 @@ func CreateListCommand() *cobra.Command {
 
 			err = newRunner.Run(
 				func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
-					return nil, nil
+					return "", nil
 				},
 			)
 			if err != nil {

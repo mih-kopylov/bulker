@@ -37,7 +37,7 @@ func CreateCloneCommand() *cobra.Command {
 						return "cloned successfully", nil
 					case gitops.ClonedAgain:
 						return "cloned again", nil
-					case gitops.AlreadyCloned:
+					case gitops.ClonedAlready:
 						return "already cloned", nil
 					default:
 						return nil, fmt.Errorf("unsupported clone status: status=%v", cloneResult)
