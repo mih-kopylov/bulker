@@ -7,15 +7,25 @@ import (
 	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/spf13/afero"
 	"os"
+	"strings"
 )
 
 type CloneResult int
 
 const (
 	ClonedSuccessfully CloneResult = iota
-	AlreadyCloned
+	ClonedAlready
 	ClonedAgain
 	CloneError
+)
+
+type StatusResult int
+
+const (
+	StatusOk StatusResult = iota
+	StatusDirty
+	StatusMissing
+	StatusError
 )
 
 func CloneRepo(fs afero.Fs, repo *model.Repo, recreate bool) (CloneResult, error) {
@@ -29,7 +39,7 @@ func CloneRepo(fs afero.Fs, repo *model.Repo, recreate bool) (CloneResult, error
 			)
 		}
 		if !recreate {
-			return AlreadyCloned, nil
+			return ClonedAlready, nil
 		}
 		err = fs.RemoveAll(repo.Path)
 		if err != nil {
@@ -52,4 +62,26 @@ func CloneRepo(fs afero.Fs, repo *model.Repo, recreate bool) (CloneResult, error
 	}
 
 	return ClonedSuccessfully, nil
+}
+
+func Status(fs afero.Fs, repo *model.Repo) (StatusResult, error) {
+	_, err := fs.Stat(repo.Path)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return StatusMissing, nil
+		} else {
+			return StatusError, fmt.Errorf("failed to get stat of the directory %v: %w", repo.Path, err)
+		}
+	}
+
+	statusResult, err := shell.RunCommand(repo.Path, "git", "status")
+	if err != nil {
+		return StatusError, err
+	}
+
+	if strings.Contains(statusResult, "working tree clean") {
+		return StatusOk, nil
+	}
+
+	return StatusDirty, nil
 }

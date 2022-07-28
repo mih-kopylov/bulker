@@ -53,6 +53,7 @@ func CreateRootCommand(applicationVersion string) *cobra.Command {
 	result.AddCommand(CreateReposCommand())
 	result.AddCommand(CreateGitCommand())
 	result.AddCommand(CreateGroupsCommand())
+	result.AddCommand(CreateStatusCommand())
 
 	return result
 }
