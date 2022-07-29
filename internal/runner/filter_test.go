@@ -75,6 +75,22 @@ func TestFilter_Matches(t *testing.T) {
 			repo: newRepo("qwe"),
 			want: true,
 		},
+		{
+			name: "name regexp", filter: Filter{
+				Names: []string{"q.*we"},
+				Tags:  nil,
+			},
+			repo: newRepo("qwe"),
+			want: true,
+		},
+		{
+			name: "negated name regexp", filter: Filter{
+				Names: []string{"-q.*we"},
+				Tags:  nil,
+			},
+			repo: newRepo("qwe"),
+			want: false,
+		},
 		// tags
 		{
 			name: "matches tag", filter: Filter{

@@ -6,6 +6,7 @@ import (
 	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/slices"
+	"regexp"
 	"strings"
 )
 
@@ -35,7 +36,10 @@ func (f *Filter) FilterMatchingRepos(repos []settings.Repo, groups []settings.Gr
 }
 
 func (f *Filter) AddCommandFlags(command *cobra.Command) {
-	command.Flags().StringSliceVarP(&f.Names, "name", "n", []string{}, "Names of the repositories to process")
+	command.Flags().StringSliceVarP(
+		&f.Names, "name", "n", []string{},
+		"Names of the repositories to process. Can be regexp",
+	)
 	command.Flags().StringSliceVarP(&f.Tags, "tag", "t", []string{}, "Tags of the repositories to process")
 	command.Flags().StringSliceVarP(&f.Groups, "group", "g", []string{}, "Groups of the repositories to process")
 
@@ -58,10 +62,16 @@ func (f *Filter) matchesName(repoName string) bool {
 	}
 
 	for _, filterName := range f.Names {
-		if strings.HasPrefix(filterName, negatePrefix) && repoName != filterName[1:] {
-			return true
+		negated := false
+		if strings.HasPrefix(filterName, negatePrefix) {
+			negated = true
+			filterName = filterName[1:]
 		}
-		if !strings.HasPrefix(filterName, negatePrefix) && repoName == filterName {
+		matched, _ := regexp.MatchString(filterName, repoName)
+		if negated {
+			matched = !matched
+		}
+		if matched {
 			return true
 		}
 	}
