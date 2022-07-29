@@ -34,7 +34,7 @@ func (r *ParallelRunner) Run(handler RepoHandler) error {
 	defer pool.StopAndWait()
 	ch := make(chan repoProcessResult)
 	logrus.WithField("mode", r.config.RunMode).Debug("processing repositories")
-	repos := r.filter.FilterMatchingRepos(sets.Repos)
+	repos := r.filter.FilterMatchingRepos(sets.Repos, sets.Groups)
 	progress := NewProgress(r.config, len(repos))
 	for _, repo := range repos {
 		runContext := newRunContext(r.fs, r.manager, r.config, repo)

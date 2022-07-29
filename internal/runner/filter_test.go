@@ -12,11 +12,18 @@ func TestFilter_Matches(t *testing.T) {
 	newRepoWithTags := func(name string, tags []string) settings.Repo {
 		return settings.Repo{Name: name, Tags: tags}
 	}
+	newGroup := func(name string, repos ...string) settings.Group {
+		return settings.Group{
+			Name:  name,
+			Repos: repos,
+		}
+	}
 
 	tests := []struct {
 		name   string
 		filter Filter
 		repo   settings.Repo
+		groups []settings.Group
 		want   bool
 	}{
 		// names
@@ -150,11 +157,82 @@ func TestFilter_Matches(t *testing.T) {
 			repo: newRepoWithTags("qwe", []string{"t1", "t2"}),
 			want: false,
 		},
+		//groups
+		{
+			name: "group", filter: Filter{
+				Names:  []string{},
+				Tags:   []string{},
+				Groups: []string{"g1"},
+			},
+			repo:   newRepoWithTags("qwe", []string{}),
+			groups: []settings.Group{newGroup("g1", "qwe")},
+			want:   true,
+		},
+		{
+			name: "other group", filter: Filter{
+				Names:  []string{},
+				Tags:   []string{},
+				Groups: []string{"g1"},
+			},
+			repo:   newRepoWithTags("qwe", []string{}),
+			groups: []settings.Group{newGroup("g1", "asd")},
+			want:   false,
+		},
+		{
+			name: "unknown group", filter: Filter{
+				Names:  []string{},
+				Tags:   []string{},
+				Groups: []string{"g1"},
+			},
+			repo:   newRepoWithTags("qwe", []string{}),
+			groups: []settings.Group{newGroup("g2", "qwe")},
+			want:   false,
+		},
+		{
+			name: "not group", filter: Filter{
+				Names:  []string{},
+				Tags:   []string{},
+				Groups: []string{"-g1"},
+			},
+			repo:   newRepoWithTags("qwe", []string{}),
+			groups: []settings.Group{newGroup("g1", "qwe")},
+			want:   false,
+		},
+		{
+			name: "not unknown group", filter: Filter{
+				Names:  []string{},
+				Tags:   []string{},
+				Groups: []string{"-g2"},
+			},
+			repo:   newRepoWithTags("qwe", []string{}),
+			groups: []settings.Group{newGroup("g1", "qwe")},
+			want:   true,
+		},
+		{
+			name: "two groups", filter: Filter{
+				Names:  []string{},
+				Tags:   []string{},
+				Groups: []string{"g1", "g2"},
+			},
+			repo:   newRepoWithTags("qwe", []string{}),
+			groups: []settings.Group{newGroup("g1", "qwe"), newGroup("g2", "qwe")},
+			want:   true,
+		},
+		{
+			name: "belongs only to one group", filter: Filter{
+				Names:  []string{},
+				Tags:   []string{},
+				Groups: []string{"g1", "g2"},
+			},
+			repo:   newRepoWithTags("qwe", []string{}),
+			groups: []settings.Group{newGroup("g1", "qwe"), newGroup("g2", "asd")},
+			want:   false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(
 			tt.name, func(t *testing.T) {
-				if got := tt.filter.MatchesRepo(tt.repo); got != tt.want {
+				if got := tt.filter.MatchesRepo(tt.repo, tt.groups); got != tt.want {
 					t.Errorf("MatchesRepo() = %v, want %v", got, tt.want)
 				}
 			},
