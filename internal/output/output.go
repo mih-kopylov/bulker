@@ -40,6 +40,9 @@ func createWriter(entityName string) (Writer, error) {
 	if outputFormat == config.LogOutputFormat {
 		return LogWriter{entityName}, nil
 	}
+	if outputFormat == config.TableOutputFormat {
+		return TableWriter{entityName}, nil
+	}
 
 	return nil, fmt.Errorf("unsupported output format: %v", outputFormat)
 }

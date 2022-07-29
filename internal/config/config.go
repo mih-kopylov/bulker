@@ -45,9 +45,10 @@ func (rm *RunMode) Type() string {
 type OutputFormat string
 
 const (
-	JsonOutputFormat OutputFormat = "json"
-	LineOutputFormat OutputFormat = "line"
-	LogOutputFormat  OutputFormat = "log"
+	JsonOutputFormat  OutputFormat = "json"
+	LineOutputFormat  OutputFormat = "line"
+	LogOutputFormat   OutputFormat = "log"
+	TableOutputFormat OutputFormat = "table"
 )
 
 func ReadConfig() *Config {

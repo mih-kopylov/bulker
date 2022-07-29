@@ -44,8 +44,8 @@ func CreateRootCommand(applicationVersion string) *cobra.Command {
 
 	result.PersistentFlags().String(
 		"output", string(config.LineOutputFormat), fmt.Sprintf(
-			"Set commands output format. Available formats: %v, %v, %v", config.LogOutputFormat,
-			config.LineOutputFormat, config.JsonOutputFormat,
+			"Set commands output format. Available formats: %v, %v, %v, %v", config.LogOutputFormat,
+			config.LineOutputFormat, config.JsonOutputFormat, config.TableOutputFormat,
 		),
 	)
 	utils.BindFlag(result.PersistentFlags().Lookup("output"), "output")

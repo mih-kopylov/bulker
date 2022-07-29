@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/alitto/pond v1.8.0
+	github.com/aquasecurity/table v1.7.2
 	github.com/schollz/progressbar/v3 v3.8.7
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/afero v1.9.2
