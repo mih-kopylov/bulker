@@ -10,20 +10,23 @@ import (
 )
 
 type Filter struct {
-	Names []string
-	Tags  []string
+	Names  []string
+	Tags   []string
+	Groups []string
 }
 
 var runMode = config.Parallel
 
-func (f *Filter) MatchesRepo(repo settings.Repo) bool {
-	return matchesName(repo.Name, f.Names) && matchesTags(repo.Tags, f.Tags)
+func (f *Filter) MatchesRepo(repo settings.Repo, groups []settings.Group) bool {
+	return f.matchesName(repo.Name) &&
+		f.matchesTags(repo.Tags) &&
+		f.matchesGroups(repo.Name, groups)
 }
 
-func (f *Filter) FilterMatchingRepos(repos []settings.Repo) []settings.Repo {
+func (f *Filter) FilterMatchingRepos(repos []settings.Repo, groups []settings.Group) []settings.Repo {
 	var result []settings.Repo
 	for _, repo := range repos {
-		if !f.MatchesRepo(repo) {
+		if !f.MatchesRepo(repo, groups) {
 			continue
 		}
 		result = append(result, repo)
@@ -34,6 +37,7 @@ func (f *Filter) FilterMatchingRepos(repos []settings.Repo) []settings.Repo {
 func (f *Filter) AddCommandFlags(command *cobra.Command) {
 	command.Flags().StringSliceVarP(&f.Names, "name", "n", []string{}, "Names of the repositories to process")
 	command.Flags().StringSliceVarP(&f.Tags, "tag", "t", []string{}, "Tags of the repositories to process")
+	command.Flags().StringSliceVarP(&f.Groups, "group", "g", []string{}, "Groups of the repositories to process")
 
 	// in order to viper read configuration from flag that is added multiple times (in different commands),
 	// all the flags with the same name should have the same storage, which is a package variable
@@ -48,12 +52,12 @@ func (f *Filter) AddCommandFlags(command *cobra.Command) {
 const negatePrefix = "-"
 
 // matchesName repoName should match any of filterNames
-func matchesName(repoName string, filterNames []string) bool {
-	if len(filterNames) == 0 {
+func (f *Filter) matchesName(repoName string) bool {
+	if len(f.Names) == 0 {
 		return true
 	}
 
-	for _, filterName := range filterNames {
+	for _, filterName := range f.Names {
 		if strings.HasPrefix(filterName, negatePrefix) && repoName != filterName[1:] {
 			return true
 		}
@@ -66,12 +70,12 @@ func matchesName(repoName string, filterNames []string) bool {
 }
 
 // matchesTags repoTags should match all filterTags
-func matchesTags(repoTags []string, filterTags []string) bool {
-	if len(filterTags) == 0 {
+func (f *Filter) matchesTags(repoTags []string) bool {
+	if len(f.Tags) == 0 {
 		return true
 	}
 
-	for _, filterTag := range filterTags {
+	for _, filterTag := range f.Tags {
 		if strings.HasPrefix(filterTag, negatePrefix) && slices.Contains(repoTags, filterTag[1:]) {
 			return false
 		}
@@ -81,5 +85,42 @@ func matchesTags(repoTags []string, filterTags []string) bool {
 		}
 	}
 
+	return true
+}
+
+// matchesGroups repoName should match all group filters
+func (f *Filter) matchesGroups(repoName string, allGroups []settings.Group) bool {
+	if len(f.Groups) == 0 {
+		return true
+	}
+
+	for _, filterGroupName := range f.Groups {
+		negated := false
+		if strings.HasPrefix(filterGroupName, negatePrefix) {
+			negated = true
+			filterGroupName = filterGroupName[1:]
+		}
+		filterGroupIndex := slices.IndexFunc(
+			allGroups, func(group settings.Group) bool {
+				return group.Name == filterGroupName
+			},
+		)
+		if filterGroupIndex < 0 {
+			// passed group name that is not found in settings
+			if negated {
+				continue
+			}
+			return false
+		}
+		filterGroup := allGroups[filterGroupIndex]
+		contains := slices.Contains(filterGroup.Repos, repoName)
+		matches := contains
+		if negated {
+			matches = !contains
+		}
+		if !matches {
+			return false
+		}
+	}
 	return true
 }

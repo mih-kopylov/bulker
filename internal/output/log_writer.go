@@ -73,7 +73,7 @@ func valueToMap(value interface{}) map[string]interface{} {
 		}
 	} else {
 		if fmt.Sprintf("%v", value) != "" {
-			result["value"] = value
+			result["result"] = value
 		}
 	}
 
