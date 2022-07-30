@@ -23,7 +23,7 @@ func CreatePullCommand() *cobra.Command {
 
 			err = newRunner.Run(
 				func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
-					err := gitops.Pull(runContext.FS, runContext.Repo)
+					err := gitops.Pull(runContext.Fs, runContext.Repo)
 					if err != nil {
 						return nil, err
 					}

@@ -34,7 +34,7 @@ func CreateStatusCommand() *cobra.Command {
 
 			err = newRunner.Run(
 				func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
-					repoStatus, err := gitops.Status(runContext.FS, runContext.Repo)
+					repoStatus, err := gitops.Status(runContext.Fs, runContext.Repo)
 					if err != nil {
 						return nil, fmt.Errorf("failed to get status: %w", err)
 					}

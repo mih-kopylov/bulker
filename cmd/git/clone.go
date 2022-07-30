@@ -27,7 +27,7 @@ func CreateCloneCommand() *cobra.Command {
 
 			err = newRunner.Run(
 				func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
-					cloneResult, err := gitops.CloneRepo(runContext.FS, runContext.Repo, flags.recreate)
+					cloneResult, err := gitops.CloneRepo(runContext.Fs, runContext.Repo, flags.recreate)
 					if err != nil {
 						return nil, fmt.Errorf("failed to clone: %w", err)
 					}

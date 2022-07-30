@@ -7,8 +7,10 @@ import (
 	"github.com/mih-kopylov/bulker/internal/model"
 	"github.com/mih-kopylov/bulker/internal/output"
 	"github.com/mih-kopylov/bulker/internal/settings"
+	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+	"github.com/spf13/cobra"
 	"path/filepath"
 )
 
@@ -36,8 +38,24 @@ func NewRunner(fs afero.Fs, conf *config.Config, filter *Filter) (Runner, error)
 	return nil, fmt.Errorf("unsupported run mode %v", conf.RunMode)
 }
 
+func NewDefaultRunner(filter *Filter, handler RepoHandler) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		newRunner, err := NewRunner(utils.GetConfiguredFS(), config.ReadConfig(), filter)
+		if err != nil {
+			return err
+		}
+
+		err = newRunner.Run(handler)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+}
+
 type RunContext struct {
-	FS      afero.Fs
+	Fs      afero.Fs
 	Manager *settings.Manager
 	Config  *config.Config
 	Repo    *model.Repo
@@ -45,7 +63,7 @@ type RunContext struct {
 
 func newRunContext(fs afero.Fs, manager *settings.Manager, conf *config.Config, repo settings.Repo) *RunContext {
 	return &RunContext{
-		FS:      fs,
+		Fs:      fs,
 		Manager: manager,
 		Config:  conf,
 		Repo: &model.Repo{
