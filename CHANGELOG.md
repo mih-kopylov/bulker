@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `git fetch` command
 - `git pull` command
 
+### Fixed
+
+- `--name` filter regexp to match full repository name only
+
 ## [0.5.0] - 2022-07-29
 
 ### Added
