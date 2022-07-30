@@ -67,7 +67,7 @@ func (f *Filter) matchesName(repoName string) bool {
 			negated = true
 			filterName = filterName[1:]
 		}
-		matched, _ := regexp.MatchString(filterName, repoName)
+		matched, _ := regexp.MatchString("^"+filterName+"$", repoName)
 		if negated {
 			matched = !matched
 		}
