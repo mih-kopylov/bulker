@@ -64,6 +64,37 @@ func CloneRepo(fs afero.Fs, repo *model.Repo, recreate bool) (CloneResult, error
 	return ClonedSuccessfully, nil
 }
 
+func Fetch(fs afero.Fs, repo *model.Repo) error {
+	_, err := fs.Stat(repo.Path)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return errors.New("repository not cloned")
+		}
+		return err
+	}
+
+	_, err = shell.RunCommand(repo.Path, "git", "fetch")
+	if err != nil {
+		return fmt.Errorf("failed to fetch remote: %w", err)
+	}
+
+	return nil
+}
+
+func Pull(fs afero.Fs, repo *model.Repo) error {
+	err := checkRepoExists(fs, repo)
+	if err != nil {
+		return err
+	}
+
+	_, err = shell.RunCommand(repo.Path, "git", "pull")
+	if err != nil {
+		return fmt.Errorf("failed to pull remote: %w", err)
+	}
+
+	return nil
+}
+
 func Status(fs afero.Fs, repo *model.Repo) (StatusResult, error) {
 	_, err := fs.Stat(repo.Path)
 	if err != nil {
@@ -84,4 +115,16 @@ func Status(fs afero.Fs, repo *model.Repo) (StatusResult, error) {
 	}
 
 	return StatusDirty, nil
+}
+
+func checkRepoExists(fs afero.Fs, repo *model.Repo) error {
+	_, err := fs.Stat(repo.Path)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return errors.New("repository not cloned")
+		}
+		return err
+	}
+
+	return nil
 }
