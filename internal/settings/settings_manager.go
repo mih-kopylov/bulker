@@ -11,7 +11,6 @@ import (
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 )
@@ -61,12 +60,16 @@ func (sm *Manager) Write(settings *Settings) error {
 	settingsFileName := sm.conf.SettingsFileName
 
 	// make sure all data is sorted alphabetically
-	slices.SortFunc(settings.Repos, func(a Repo, b Repo) bool {
-		return strings.Compare(a.Name, b.Name) < 0
-	})
-	slices.SortFunc(settings.Groups, func(a Group, b Group) bool {
-		return strings.Compare(a.Name, b.Name) < 0
-	})
+	slices.SortFunc(
+		settings.Repos, func(a Repo, b Repo) bool {
+			return strings.Compare(a.Name, b.Name) < 0
+		},
+	)
+	slices.SortFunc(
+		settings.Groups, func(a Group, b Group) bool {
+			return strings.Compare(a.Name, b.Name) < 0
+		},
+	)
 	for _, group := range settings.Groups {
 		slices.Sort(group.Repos)
 	}
@@ -101,7 +104,7 @@ func (sm *Manager) Export(remoteRepoUrl string) (map[string]ExportImportStatus, 
 		return nil, err
 	}
 
-	exportFileName := path.Join(repoDir, exportImportFileName)
+	exportFileName := filepath.Join(repoDir, exportImportFileName)
 	fileModel, err := readExistingModel(exportFileName)
 	if err != nil {
 		return nil, err
@@ -161,7 +164,7 @@ func (sm *Manager) Import(remoteRepoUrl string) (map[string]ExportImportStatus, 
 	}
 
 	settingsModel := fromSettings(settings)
-	importFileName := path.Join(repoDir, exportImportFileName)
+	importFileName := filepath.Join(repoDir, exportImportFileName)
 	fileModel, err := readExistingModel(importFileName)
 	if err != nil {
 		return nil, err

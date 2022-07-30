@@ -9,7 +9,7 @@ import (
 	"github.com/mih-kopylov/bulker/internal/settings"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"path"
+	"path/filepath"
 )
 
 type Runner interface {
@@ -50,7 +50,7 @@ func newRunContext(fs afero.Fs, manager *settings.Manager, conf *config.Config, 
 		Config:  conf,
 		Repo: &model.Repo{
 			Name: repo.Name,
-			Path: path.Join(conf.ReposDirectory, repo.Name),
+			Path: filepath.Join(conf.ReposDirectory, repo.Name),
 			Url:  repo.Url,
 		},
 	}
