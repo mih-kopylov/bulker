@@ -7,8 +7,9 @@ import (
 
 func CreateReposCommand() *cobra.Command {
 	var result = &cobra.Command{
-		Use:   "repos",
-		Short: "Configures repositories that bulker works with",
+		Use:     "repos",
+		Short:   "Configures repositories that bulker works with",
+		Aliases: []string{"repo"},
 	}
 
 	result.AddCommand(repos.CreateListCommand())

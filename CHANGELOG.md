@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `git fetch` command
 - `git pull` command
+- Singular aliases for `groups` and `repos` commands
 
 ### Fixed
 

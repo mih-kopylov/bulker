@@ -7,8 +7,9 @@ import (
 
 func CreateGroupsCommand() *cobra.Command {
 	var result = &cobra.Command{
-		Use:   "groups",
-		Short: "Manages repositories groups",
+		Use:     "groups",
+		Short:   "Manages repositories groups",
+		Aliases: []string{"group"},
 	}
 
 	result.AddCommand(groups.CreateListCommand())
