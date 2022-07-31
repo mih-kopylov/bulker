@@ -6,10 +6,13 @@ import (
 	"github.com/mih-kopylov/bulker/internal/model"
 	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/spf13/afero"
+	"golang.org/x/exp/slices"
 	"os"
 	"regexp"
 	"strings"
 )
+
+var ErrRepositoryNotCloned = errors.New("repository not cloned")
 
 type CloneResult int
 
@@ -28,6 +31,18 @@ const (
 	StatusMissing
 	StatusError
 )
+
+type CheckoutResult string
+
+const (
+	CheckoutOk       = "OK"
+	CheckoutNotFound = "Not Found"
+	CheckoutError    = "Error"
+)
+
+func (r *CheckoutResult) String() string {
+	return string(*r)
+}
 
 type GitMode string
 
@@ -114,9 +129,12 @@ func Pull(fs afero.Fs, repo *model.Repo) error {
 		return err
 	}
 
-	_, err = shell.RunCommand(repo.Path, "git", "pull")
+	output, err := shell.RunCommand(repo.Path, "git", "pull")
 	if err != nil {
-		return fmt.Errorf("failed to pull remote: %w", err)
+		if strings.Contains(output, "There is no tracking information for the current branch") {
+			return fmt.Errorf("no remote upstream configured")
+		}
+		return fmt.Errorf("failed to pull remote: %v %w", output, err)
 	}
 
 	return nil
@@ -147,6 +165,46 @@ func Status(fs afero.Fs, repo *model.Repo) (StatusResult, string, error) {
 	}
 
 	return StatusDirty, ref, nil
+}
+
+func Checkout(fs afero.Fs, repo *model.Repo, ref string) (CheckoutResult, error) {
+	err := checkRepoExists(fs, repo)
+	if err != nil {
+		return CheckoutError, err
+	}
+
+	branches, err := GetBranches(fs, repo, GitModeAll, ".*")
+	if err != nil {
+		return CheckoutError, err
+	}
+
+	branchIndex := slices.IndexFunc(
+		branches, func(b Branch) bool {
+			return b.Name == ref
+		},
+	)
+	if branchIndex < 0 {
+		return CheckoutNotFound, nil
+	}
+
+	output, err := shell.RunCommand(repo.Path, "git", "checkout", ref)
+	if err != nil {
+		return CheckoutError, err
+	}
+
+	if strings.Contains(output, "Already on") {
+		return CheckoutOk, nil
+	}
+
+	if strings.Contains(output, "Switched to branch") {
+		return CheckoutOk, nil
+	}
+
+	if strings.Contains(output, "Switched to a new branch") {
+		return CheckoutOk, nil
+	}
+
+	return CheckoutError, fmt.Errorf("unknown checkout status: %v", output)
 }
 
 func GetBranches(fs afero.Fs, repo *model.Repo, mode GitMode, pattern string) ([]Branch, error) {
@@ -213,7 +271,7 @@ func checkRepoExists(fs afero.Fs, repo *model.Repo) error {
 	_, err := fs.Stat(repo.Path)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return errors.New("repository not cloned")
+			return ErrRepositoryNotCloned
 		}
 		return err
 	}

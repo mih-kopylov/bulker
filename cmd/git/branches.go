@@ -13,6 +13,7 @@ func CreateBranhesCommand() *cobra.Command {
 	}
 
 	result.AddCommand(branches.CreateListCommand())
+	result.AddCommand(branches.CreateCheckoutCommand())
 
 	return result
 }
