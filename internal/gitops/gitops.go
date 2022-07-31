@@ -122,26 +122,31 @@ func Pull(fs afero.Fs, repo *model.Repo) error {
 	return nil
 }
 
-func Status(fs afero.Fs, repo *model.Repo) (StatusResult, error) {
+func Status(fs afero.Fs, repo *model.Repo) (StatusResult, string, error) {
 	_, err := fs.Stat(repo.Path)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return StatusMissing, nil
+			return StatusMissing, "", nil
 		} else {
-			return StatusError, fmt.Errorf("failed to get stat of the directory %v: %w", repo.Path, err)
+			return StatusError, "", fmt.Errorf("failed to get stat of the directory %v: %w", repo.Path, err)
 		}
 	}
 
 	statusResult, err := shell.RunCommand(repo.Path, "git", "status")
 	if err != nil {
-		return StatusError, err
+		return StatusError, "", err
+	}
+
+	ref, err := parseHeadRef(statusResult)
+	if err != nil {
+		return StatusError, "", err
 	}
 
 	if strings.Contains(statusResult, "working tree clean") {
-		return StatusOk, nil
+		return StatusOk, ref, nil
 	}
 
-	return StatusDirty, nil
+	return StatusDirty, ref, nil
 }
 
 func GetBranches(fs afero.Fs, repo *model.Repo, mode GitMode, pattern string) ([]Branch, error) {
@@ -214,4 +219,28 @@ func checkRepoExists(fs afero.Fs, repo *model.Repo) error {
 	}
 
 	return nil
+}
+
+func parseHeadRef(statusResult string) (string, error) {
+	reg, err := regexp.Compile("On branch (.+)\n.*")
+	if err != nil {
+		return "", err
+	}
+
+	submatch := reg.FindStringSubmatch(statusResult)
+	if submatch != nil {
+		return submatch[1], nil
+	}
+
+	reg, err = regexp.Compile("HEAD detached at (.+)\n.*")
+	if err != nil {
+		return "", err
+	}
+
+	submatch = reg.FindStringSubmatch(statusResult)
+	if submatch != nil {
+		return submatch[1], nil
+	}
+
+	return "", fmt.Errorf("can't parse status result for head reference: %v", statusResult)
 }

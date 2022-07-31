@@ -34,25 +34,30 @@ func CreateStatusCommand() *cobra.Command {
 
 			err = newRunner.Run(
 				func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
-					repoStatus, err := gitops.Status(runContext.Fs, runContext.Repo)
+					repoStatus, ref, err := gitops.Status(runContext.Fs, runContext.Repo)
 					if err != nil {
 						return nil, fmt.Errorf("failed to get status: %w", err)
+					}
+
+					type result struct {
+						Status string
+						Ref    string
 					}
 
 					switch repoStatus {
 					case gitops.StatusOk:
 						if flags.showOk || (!flags.showOk && !flags.showDirty && !flags.showMissing) {
-							return "OK", nil
+							return result{"OK", ref}, nil
 						}
 						return nil, nil
 					case gitops.StatusDirty:
 						if flags.showDirty || (!flags.showOk && !flags.showDirty && !flags.showMissing) {
-							return "DIRTY", nil
+							return result{"DIRTY", ref}, nil
 						}
 						return nil, nil
 					case gitops.StatusMissing:
 						if flags.showMissing || (!flags.showOk && !flags.showDirty && !flags.showMissing) {
-							return "MISSING", nil
+							return result{"MISSING", ref}, nil
 						}
 						return nil, nil
 					default:
