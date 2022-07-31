@@ -23,19 +23,23 @@ const (
 	CloneError
 )
 
-type StatusResult int
+type StatusResult string
 
 const (
-	StatusOk StatusResult = iota
-	StatusDirty
-	StatusMissing
-	StatusError
+	StatusClean   StatusResult = "Clean"
+	StatusDirty   StatusResult = "Dirty"
+	StatusMissing StatusResult = "Missing"
+	StatusError   StatusResult = "Error"
 )
+
+func (r *StatusResult) String() string {
+	return string(*r)
+}
 
 type CheckoutResult string
 
 const (
-	CheckoutOk       = "OK"
+	CheckoutOk       = "Success"
 	CheckoutNotFound = "Not Found"
 	CheckoutError    = "Error"
 )
@@ -161,7 +165,7 @@ func Status(fs afero.Fs, repo *model.Repo) (StatusResult, string, error) {
 	}
 
 	if strings.Contains(statusResult, "working tree clean") {
-		return StatusOk, ref, nil
+		return StatusClean, ref, nil
 	}
 
 	return StatusDirty, ref, nil
@@ -205,6 +209,20 @@ func Checkout(fs afero.Fs, repo *model.Repo, ref string) (CheckoutResult, error)
 	}
 
 	return CheckoutError, fmt.Errorf("unknown checkout status: %v", output)
+}
+
+func Discard(fs afero.Fs, repo *model.Repo) error {
+	err := checkRepoExists(fs, repo)
+	if err != nil {
+		return err
+	}
+
+	output, err := shell.RunCommand(repo.Path, "git", "reset", "--hard", "HEAD")
+	if err != nil {
+		return fmt.Errorf("failed to reset: %v %w", output, err)
+	}
+
+	return nil
 }
 
 func GetBranches(fs afero.Fs, repo *model.Repo, mode GitMode, pattern string) ([]Branch, error) {

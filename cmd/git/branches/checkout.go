@@ -13,7 +13,8 @@ import (
 func CreateCheckoutCommand() *cobra.Command {
 	var filter = runner.Filter{}
 	var flags struct {
-		name string
+		name    string
+		discard bool
 	}
 
 	var result = &cobra.Command{
@@ -23,34 +24,35 @@ func CreateCheckoutCommand() *cobra.Command {
 			&filter,
 			func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
 				type result struct {
-					Status   string
-					Checkout string
+					Status   gitops.StatusResult
+					Checkout gitops.CheckoutResult
 					Ref      string
 				}
 
-				checkoutStatus, err := gitops.Checkout(runContext.Fs, runContext.Repo, flags.name)
+				if flags.discard {
+					err := gitops.Discard(runContext.Fs, runContext.Repo)
+					if errors.Is(err, gitops.ErrRepositoryNotCloned) {
+						return result{gitops.StatusMissing, "", ""}, nil
+					}
+					if err != nil {
+						return nil, fmt.Errorf("failed to discard: %w", err)
+					}
+				}
+
+				checkoutResult, err := gitops.Checkout(runContext.Fs, runContext.Repo, flags.name)
 				if err != nil {
 					if errors.Is(err, gitops.ErrRepositoryNotCloned) {
-						return result{"MISSING", "", ""}, nil
+						return result{gitops.StatusMissing, "", ""}, nil
 					}
 					return nil, fmt.Errorf("failed to checkout: %w", err)
 				}
 
-				repoStatus, ref, err := gitops.Status(runContext.Fs, runContext.Repo)
+				statusResult, ref, err := gitops.Status(runContext.Fs, runContext.Repo)
 				if err != nil {
 					return nil, fmt.Errorf("failed to get status: %w", err)
 				}
 
-				switch repoStatus {
-				case gitops.StatusOk:
-					return result{"OK", checkoutStatus.String(), ref}, nil
-				case gitops.StatusDirty:
-					return result{"DIRTY", checkoutStatus.String(), ref}, nil
-				case gitops.StatusMissing:
-					return result{"MISSING", checkoutStatus.String(), ref}, nil
-				default:
-					return nil, fmt.Errorf("unsupported status %v", repoStatus)
-				}
+				return result{statusResult, checkoutResult, ref}, nil
 			},
 		),
 	}
@@ -59,6 +61,10 @@ func CreateCheckoutCommand() *cobra.Command {
 
 	result.Flags().StringVarP(&flags.name, "branch", "b", "", "Name of the branch to checkout")
 	utils.MarkFlagRequiredOrFail(result.Flags(), "branch")
+
+	result.Flags().BoolVarP(
+		&flags.discard, "discard", "d", false, "Discards all local changes in the repository before checkout",
+	)
 
 	return result
 }

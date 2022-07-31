@@ -8,24 +8,24 @@ import (
 	"github.com/mih-kopylov/bulker/internal/runner"
 	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/spf13/cobra"
+	"strings"
 )
 
 func CreateStatusCommand() *cobra.Command {
 	var filter = runner.Filter{}
 
 	flags := struct {
-		showOk      bool
-		showDirty   bool
-		showMissing bool
+		status string
+		ref    string
 	}{}
 
 	var result = &cobra.Command{
 		Use:   "status",
 		Short: "Prints status of all registered repositories",
 		Long: `Prints status of all registered repositories. Status value can be one of:
-* OK - the repository successfully cloned, there are no uncommitted changes
-* DIRTY - the repository successfully cloned, but there are uncommitted changes
-* MISSING - the repository is not cloned yet`,
+* Clean - the repository successfully cloned, there are no uncommitted changes
+* Dirty - the repository successfully cloned, but there are uncommitted changes
+* Missing - the repository is not cloned yet`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			newRunner, err := runner.NewRunner(utils.GetConfiguredFS(), config.ReadConfig(), &filter)
 			if err != nil {
@@ -44,25 +44,46 @@ func CreateStatusCommand() *cobra.Command {
 						Ref    string
 					}
 
-					switch repoStatus {
-					case gitops.StatusOk:
-						if flags.showOk || (!flags.showOk && !flags.showDirty && !flags.showMissing) {
-							return result{"OK", ref}, nil
+					statusFlagMatches := func(repoStatus gitops.StatusResult) bool {
+						if flags.status == "" {
+							return true
 						}
-						return nil, nil
-					case gitops.StatusDirty:
-						if flags.showDirty || (!flags.showOk && !flags.showDirty && !flags.showMissing) {
-							return result{"DIRTY", ref}, nil
+
+						hasPrefix := strings.HasPrefix(flags.status, "!")
+
+						if hasPrefix && !strings.EqualFold(flags.status[1:], repoStatus.String()) {
+							return true
 						}
-						return nil, nil
-					case gitops.StatusMissing:
-						if flags.showMissing || (!flags.showOk && !flags.showDirty && !flags.showMissing) {
-							return result{"MISSING", ref}, nil
+
+						if !hasPrefix && strings.EqualFold(flags.status, repoStatus.String()) {
+							return true
 						}
-						return nil, nil
-					default:
-						return nil, fmt.Errorf("unsupported status %v", repoStatus)
+
+						return false
 					}
+
+					refFlagMatches := func(repoRef string) bool {
+						if flags.ref == "" {
+							return true
+						}
+
+						hasPrefix := strings.HasPrefix(flags.ref, "!")
+
+						if hasPrefix && !strings.EqualFold(flags.ref[1:], repoRef) {
+							return true
+						}
+
+						if !hasPrefix && strings.EqualFold(flags.ref, repoRef) {
+							return true
+						}
+
+						return false
+					}
+
+					if statusFlagMatches(repoStatus) && refFlagMatches(ref) {
+						return result{repoStatus.String(), ref}, nil
+					}
+					return nil, nil
 				},
 			)
 			if err != nil {
@@ -75,9 +96,23 @@ func CreateStatusCommand() *cobra.Command {
 
 	filter.AddCommandFlags(result)
 
-	result.Flags().BoolVar(&flags.showOk, "ok", false, "Keep repositories with 'OK' status")
-	result.Flags().BoolVar(&flags.showDirty, "dirty", false, "Keep repositories with 'DIRTY' status")
-	result.Flags().BoolVar(&flags.showMissing, "missing", false, "Keep repositories with 'MISSING' status")
+	result.Flags().StringVar(
+		&flags.status, "status", "", fmt.Sprintf(
+			`Keep repositories with specified status.
+Examples: 
+"bulker status --status clean" - will keep only repositories with "%v" status
+"bulker status --status !clean" - will keep repositories with any status except "%v"`, gitops.StatusClean,
+			gitops.StatusClean,
+		),
+	)
+	result.Flags().StringVar(
+		&flags.ref, "ref", "", fmt.Sprintf(
+			`Keep repositories with specified ref.
+Examples: 
+"bulker status --ref master" - will keep only repositories with "master" ref
+"bulker status --ref !master" - will keep repositories with any ref except "master"`,
+		),
+	)
 
 	return result
 }
