@@ -67,11 +67,11 @@ func CreateCreateCommand() *cobra.Command {
 
 	filter.AddCommandFlags(result)
 
-	result.Flags().StringVarP(&flags.name, "branch", "b", "", "Name of the branch to checkout")
+	result.Flags().StringVarP(&flags.name, "branch", "b", "", "Name of the branch to create")
 	utils.MarkFlagRequiredOrFail(result.Flags(), "branch")
 
 	result.Flags().BoolVarP(
-		&flags.discard, "discard", "d", false, "Discards all local changes in the repository before checkout",
+		&flags.discard, "discard", "d", false, "Discards all local changes in the repository before creating",
 	)
 
 	return result

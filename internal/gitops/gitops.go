@@ -1,6 +1,7 @@
 package gitops
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/mih-kopylov/bulker/internal/model"
@@ -57,6 +58,10 @@ const (
 	CreateOk    CreateResult = "Created"
 	CreateError CreateResult = "Error"
 )
+
+func (r *CreateResult) String() string {
+	return string(*r)
+}
 
 type GitMode string
 
@@ -135,7 +140,7 @@ func Fetch(fs afero.Fs, repo *model.Repo) error {
 		return err
 	}
 
-	output, err := shell.RunCommand(repo.Path, "git", "fetch")
+	output, err := shell.RunCommand(repo.Path, "git", "fetch", "--prune")
 	if err != nil {
 		return fmt.Errorf("failed to fetch remote: %v, %w", output, err)
 	}
@@ -149,7 +154,7 @@ func Pull(fs afero.Fs, repo *model.Repo) error {
 		return err
 	}
 
-	output, err := shell.RunCommand(repo.Path, "git", "pull")
+	output, err := shell.RunCommand(repo.Path, "git", "pull", "--prune")
 	if err != nil {
 		if strings.Contains(output, "There is no tracking information for the current branch") {
 			return fmt.Errorf("no remote upstream configured")
@@ -208,6 +213,44 @@ func CreateBranch(fs afero.Fs, repo *model.Repo, name string) (CreateResult, err
 	}
 
 	return CreateOk, nil
+}
+
+func RemoveBranch(fs afero.Fs, repo *model.Repo, name string, mode GitMode) (string, error) {
+	err := checkRepoExists(fs, repo)
+	if err != nil {
+		return "", err
+	}
+
+	branches, err := GetBranches(fs, repo, mode, name)
+	if err != nil {
+		return "", err
+	}
+
+	if len(branches) == 0 {
+		return "", fmt.Errorf("branch not found")
+	}
+
+	buffer := bytes.Buffer{}
+	for _, branch := range branches {
+		if branch.IsLocal() {
+			output, err := shell.RunCommand(repo.Path, "git", "branch", "-D", name)
+			if err != nil {
+				if strings.Contains(output, "checked out at") {
+					return "", fmt.Errorf("the branch is checked out")
+				}
+				return "", fmt.Errorf("failed to remove local branch: %v %w", output, err)
+			}
+			buffer.WriteString(fmt.Sprintf("%v: removed\n", branch.Short()))
+		} else {
+			output, err := shell.RunCommand(repo.Path, "git", "push", branch.Remote, "--delete", branch.Name)
+			if err != nil {
+				return "", fmt.Errorf("failed to remove remove branch: %v %w", output, err)
+			}
+			buffer.WriteString(fmt.Sprintf("%v: removed\n", branch.Short()))
+		}
+	}
+
+	return strings.TrimSpace(buffer.String()), nil
 }
 
 func Checkout(fs afero.Fs, repo *model.Repo, ref string) (CheckoutResult, error) {
@@ -290,8 +333,11 @@ func GetBranches(fs afero.Fs, repo *model.Repo, mode GitMode, pattern string) ([
 			continue
 		}
 
-		matched := reg.MatchString(branch.Name)
-		if !matched {
+		matchedRegexp := reg.MatchString(branch.Name)
+		// when searched by 'origin/my-branch' with intention to find the remote branch.
+		// effectively the same as search by 'my-branch' with mode 'remote'
+		matchedEquality := pattern == branch.Short()
+		if !matchedRegexp && !matchedEquality {
 			continue
 		}
 

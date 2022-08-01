@@ -15,6 +15,7 @@ func CreateBranchesCommand() *cobra.Command {
 	result.AddCommand(branches.CreateListCommand())
 	result.AddCommand(branches.CreateCheckoutCommand())
 	result.AddCommand(branches.CreateCreateCommand())
+	result.AddCommand(branches.CreateRemoveCommand())
 
 	return result
 }
