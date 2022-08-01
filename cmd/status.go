@@ -106,12 +106,11 @@ Examples:
 		),
 	)
 	result.Flags().StringVar(
-		&flags.ref, "ref", "", fmt.Sprintf(
-			`Keep repositories with specified ref.
+		&flags.ref, "ref", "",
+		`Keep repositories with specified ref.
 Examples: 
 "bulker status --ref master" - will keep only repositories with "master" ref
 "bulker status --ref !master" - will keep repositories with any ref except "master"`,
-		),
 	)
 
 	return result

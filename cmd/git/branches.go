@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func CreateBranhesCommand() *cobra.Command {
+func CreateBranchesCommand() *cobra.Command {
 	var result = &cobra.Command{
 		Use:     "branches",
 		Short:   "Manages git branches",
@@ -14,6 +14,7 @@ func CreateBranhesCommand() *cobra.Command {
 
 	result.AddCommand(branches.CreateListCommand())
 	result.AddCommand(branches.CreateCheckoutCommand())
+	result.AddCommand(branches.CreateCreateCommand())
 
 	return result
 }

@@ -32,16 +32,7 @@ func CreateCloneCommand() *cobra.Command {
 						return nil, fmt.Errorf("failed to clone: %w", err)
 					}
 
-					switch cloneResult {
-					case gitops.ClonedSuccessfully:
-						return "cloned successfully", nil
-					case gitops.ClonedAgain:
-						return "cloned again", nil
-					case gitops.ClonedAlready:
-						return "already cloned", nil
-					default:
-						return nil, fmt.Errorf("unsupported clone status: status=%v", cloneResult)
-					}
+					return cloneResult.String(), nil
 				},
 			)
 			if err != nil {

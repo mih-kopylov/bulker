@@ -6,7 +6,6 @@ import (
 	"github.com/mih-kopylov/bulker/internal/model"
 	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/spf13/afero"
-	"golang.org/x/exp/slices"
 	"os"
 	"regexp"
 	"strings"
@@ -14,14 +13,18 @@ import (
 
 var ErrRepositoryNotCloned = errors.New("repository not cloned")
 
-type CloneResult int
+type CloneResult string
 
 const (
-	ClonedSuccessfully CloneResult = iota
-	ClonedAlready
-	ClonedAgain
-	CloneError
+	ClonedSuccessfully CloneResult = "Cloned"
+	ClonedAlready      CloneResult = "Already cloned"
+	ClonedAgain        CloneResult = "Re-cloned"
+	CloneError         CloneResult = "Error"
 )
+
+func (r *CloneResult) String() string {
+	return string(*r)
+}
 
 type StatusResult string
 
@@ -39,14 +42,21 @@ func (r *StatusResult) String() string {
 type CheckoutResult string
 
 const (
-	CheckoutOk       = "Success"
-	CheckoutNotFound = "Not Found"
-	CheckoutError    = "Error"
+	CheckoutOk       CheckoutResult = "Success"
+	CheckoutNotFound CheckoutResult = "Not Found"
+	CheckoutError    CheckoutResult = "Error"
 )
 
 func (r *CheckoutResult) String() string {
 	return string(*r)
 }
+
+type CreateResult string
+
+const (
+	CreateOk    CreateResult = "Created"
+	CreateError CreateResult = "Error"
+)
 
 type GitMode string
 
@@ -76,21 +86,26 @@ const (
 
 func CloneRepo(fs afero.Fs, repo *model.Repo, recreate bool) (CloneResult, error) {
 	_, err := fs.Stat(repo.Path)
+
+	wasRecreated := false
+
 	if err == nil {
-		_, err := shell.RunCommand(repo.Path, "git", "status")
-		if err != nil {
-			return CloneError, fmt.Errorf(
-				"repository directory already exists, and it is not a repository: directory=%v",
-				repo.Path,
-			)
-		}
 		if !recreate {
+			output, err := shell.RunCommand(repo.Path, "git", "status")
+			if err != nil {
+				if strings.Contains(output, "not a git repository") {
+					return CloneError, fmt.Errorf("repository directory already exists, and it is not a repository")
+				}
+				return CloneError, fmt.Errorf("%v, %w", output, err)
+			}
+
 			return ClonedAlready, nil
 		}
 		err = fs.RemoveAll(repo.Path)
 		if err != nil {
-			return CloneError, err
+			return CloneError, fmt.Errorf("failed to delete directory for recreation: %w", err)
 		}
+		wasRecreated = true
 	}
 
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
@@ -102,26 +117,27 @@ func CloneRepo(fs afero.Fs, repo *model.Repo, recreate bool) (CloneResult, error
 		return CloneError, fmt.Errorf("failed to create directory: directory=%v, error=%w", repo.Path, err)
 	}
 
-	_, err = shell.RunCommand(repo.Path, "git", "clone", repo.Url, ".")
+	output, err := shell.RunCommand(repo.Path, "git", "clone", repo.Url, ".")
 	if err != nil {
-		return CloneError, fmt.Errorf("failed to clone repository: repo=%v, error=%w", repo.Name, err)
+		return CloneError, fmt.Errorf("failed to clone repository: %v, %w", output, err)
+	}
+
+	if wasRecreated {
+		return ClonedAgain, nil
 	}
 
 	return ClonedSuccessfully, nil
 }
 
 func Fetch(fs afero.Fs, repo *model.Repo) error {
-	_, err := fs.Stat(repo.Path)
+	err := checkRepoExists(fs, repo)
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return errors.New("repository not cloned")
-		}
 		return err
 	}
 
-	_, err = shell.RunCommand(repo.Path, "git", "fetch")
+	output, err := shell.RunCommand(repo.Path, "git", "fetch")
 	if err != nil {
-		return fmt.Errorf("failed to fetch remote: %w", err)
+		return fmt.Errorf("failed to fetch remote: %v, %w", output, err)
 	}
 
 	return nil
@@ -138,37 +154,60 @@ func Pull(fs afero.Fs, repo *model.Repo) error {
 		if strings.Contains(output, "There is no tracking information for the current branch") {
 			return fmt.Errorf("no remote upstream configured")
 		}
-		return fmt.Errorf("failed to pull remote: %v %w", output, err)
+		return fmt.Errorf("failed to pull remote: %v, %w", output, err)
 	}
 
 	return nil
 }
 
 func Status(fs afero.Fs, repo *model.Repo) (StatusResult, string, error) {
-	_, err := fs.Stat(repo.Path)
+	err := checkRepoExists(fs, repo)
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
+		if errors.Is(err, ErrRepositoryNotCloned) {
 			return StatusMissing, "", nil
 		} else {
 			return StatusError, "", fmt.Errorf("failed to get stat of the directory %v: %w", repo.Path, err)
 		}
 	}
 
-	statusResult, err := shell.RunCommand(repo.Path, "git", "status")
+	statusOutput, err := shell.RunCommand(repo.Path, "git", "status")
+	if err != nil {
+		return StatusError, "", fmt.Errorf("failed to get git status: %v, %w", statusOutput, err)
+	}
+
+	ref, err := parseHeadRef(statusOutput)
 	if err != nil {
 		return StatusError, "", err
 	}
 
-	ref, err := parseHeadRef(statusResult)
-	if err != nil {
-		return StatusError, "", err
-	}
-
-	if strings.Contains(statusResult, "working tree clean") {
+	if strings.Contains(statusOutput, "working tree clean") {
 		return StatusClean, ref, nil
 	}
 
 	return StatusDirty, ref, nil
+}
+
+func CreateBranch(fs afero.Fs, repo *model.Repo, name string) (CreateResult, error) {
+	err := checkRepoExists(fs, repo)
+	if err != nil {
+		return CreateError, err
+	}
+
+	branches, err := GetBranches(fs, repo, GitModeAll, name)
+	if err != nil {
+		return CreateError, err
+	}
+
+	if len(branches) > 0 {
+		return CreateError, fmt.Errorf("branch already exists")
+	}
+
+	output, err := shell.RunCommand(repo.Path, "git", "branch", name)
+	if err != nil {
+		return CreateError, fmt.Errorf("failed to create branch: %v, %w", output, err)
+	}
+
+	return CreateOk, nil
 }
 
 func Checkout(fs afero.Fs, repo *model.Repo, ref string) (CheckoutResult, error) {
@@ -177,23 +216,18 @@ func Checkout(fs afero.Fs, repo *model.Repo, ref string) (CheckoutResult, error)
 		return CheckoutError, err
 	}
 
-	branches, err := GetBranches(fs, repo, GitModeAll, ".*")
+	branches, err := GetBranches(fs, repo, GitModeAll, ref)
 	if err != nil {
 		return CheckoutError, err
 	}
 
-	branchIndex := slices.IndexFunc(
-		branches, func(b Branch) bool {
-			return b.Name == ref
-		},
-	)
-	if branchIndex < 0 {
+	if len(branches) == 0 {
 		return CheckoutNotFound, nil
 	}
 
 	output, err := shell.RunCommand(repo.Path, "git", "checkout", ref)
 	if err != nil {
-		return CheckoutError, err
+		return CheckoutError, fmt.Errorf("failed to checkout: %v, %w", output, err)
 	}
 
 	if strings.Contains(output, "Already on") {
@@ -219,7 +253,7 @@ func Discard(fs afero.Fs, repo *model.Repo) error {
 
 	output, err := shell.RunCommand(repo.Path, "git", "reset", "--hard", "HEAD")
 	if err != nil {
-		return fmt.Errorf("failed to reset: %v %w", output, err)
+		return fmt.Errorf("failed to reset: %v, %w", output, err)
 	}
 
 	return nil
@@ -236,12 +270,12 @@ func GetBranches(fs afero.Fs, repo *model.Repo, mode GitMode, pattern string) ([
 		return nil, err
 	}
 
-	outputString, err := shell.RunCommand(repo.Path, "git", "branch", "-a", "--format=%(refname)")
+	output, err := shell.RunCommand(repo.Path, "git", "branch", "-a", "--format=%(refname)")
 	if err != nil {
-		return nil, fmt.Errorf("failed to get branches: %w", err)
+		return nil, fmt.Errorf("failed to get branches: %v, %w", output, err)
 	}
 
-	branches, err := parseBranches(outputString)
+	branches, err := parseBranches(output)
 	if err != nil {
 		return nil, err
 	}
