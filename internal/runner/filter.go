@@ -53,7 +53,7 @@ func (f *Filter) AddCommandFlags(command *cobra.Command) {
 	utils.BindFlag(command.PersistentFlags().Lookup("run-mode"), "runMode")
 }
 
-const negatePrefix = "-"
+const negatePrefix = "!"
 
 // matchesName repoName should match any of filterNames
 func (f *Filter) matchesName(repoName string) bool {

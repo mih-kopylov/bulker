@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `OK` status to `Clean`
 - Replace `--ok`, `--dirty` and `--missing` flags with `--show` in `status` command
+- Negate prefix for filter from `-` to `!`
 
 ### Fixed
 

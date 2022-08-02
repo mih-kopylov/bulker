@@ -61,7 +61,7 @@ func TestFilter_Matches(t *testing.T) {
 		},
 		{
 			name: "except name", filter: Filter{
-				Names: []string{"-qwe"},
+				Names: []string{"!qwe"},
 				Tags:  nil,
 			},
 			repo: newRepo("qwe"),
@@ -69,7 +69,7 @@ func TestFilter_Matches(t *testing.T) {
 		},
 		{
 			name: "except another name", filter: Filter{
-				Names: []string{"-another"},
+				Names: []string{"!another"},
 				Tags:  nil,
 			},
 			repo: newRepo("qwe"),
@@ -93,7 +93,7 @@ func TestFilter_Matches(t *testing.T) {
 		},
 		{
 			name: "negated name regexp", filter: Filter{
-				Names: []string{"-q.*we"},
+				Names: []string{"!q.*we"},
 				Tags:  nil,
 			},
 			repo: newRepo("qwe"),
@@ -127,7 +127,7 @@ func TestFilter_Matches(t *testing.T) {
 		{
 			name: "except another tag", filter: Filter{
 				Names: nil,
-				Tags:  []string{"-t3"},
+				Tags:  []string{"!t3"},
 			},
 			repo: newRepoWithTags("qwe", []string{"t1", "t2"}),
 			want: true,
@@ -135,7 +135,7 @@ func TestFilter_Matches(t *testing.T) {
 		{
 			name: "except two another tags", filter: Filter{
 				Names: nil,
-				Tags:  []string{"-t3", "-t4"},
+				Tags:  []string{"!t3", "!t4"},
 			},
 			repo: newRepoWithTags("qwe", []string{"t1", "t2"}),
 			want: true,
@@ -143,7 +143,7 @@ func TestFilter_Matches(t *testing.T) {
 		{
 			name: "except repo tag", filter: Filter{
 				Names: nil,
-				Tags:  []string{"-t2"},
+				Tags:  []string{"!t2"},
 			},
 			repo: newRepoWithTags("qwe", []string{"t1", "t2"}),
 			want: false,
@@ -151,7 +151,7 @@ func TestFilter_Matches(t *testing.T) {
 		{
 			name: "except another tag and except repo one", filter: Filter{
 				Names: nil,
-				Tags:  []string{"-t2", "-t3"},
+				Tags:  []string{"!t2", "!t3"},
 			},
 			repo: newRepoWithTags("qwe", []string{"t1", "t2"}),
 			want: false,
@@ -216,7 +216,7 @@ func TestFilter_Matches(t *testing.T) {
 			name: "not group", filter: Filter{
 				Names:  []string{},
 				Tags:   []string{},
-				Groups: []string{"-g1"},
+				Groups: []string{"!g1"},
 			},
 			repo:   newRepoWithTags("qwe", []string{}),
 			groups: []settings.Group{newGroup("g1", "qwe")},
@@ -226,7 +226,7 @@ func TestFilter_Matches(t *testing.T) {
 			name: "not unknown group", filter: Filter{
 				Names:  []string{},
 				Tags:   []string{},
-				Groups: []string{"-g2"},
+				Groups: []string{"!g2"},
 			},
 			repo:   newRepoWithTags("qwe", []string{}),
 			groups: []settings.Group{newGroup("g1", "qwe")},
