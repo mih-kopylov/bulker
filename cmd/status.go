@@ -15,8 +15,8 @@ func CreateStatusCommand() *cobra.Command {
 	var filter = runner.Filter{}
 
 	flags := struct {
-		status string
-		ref    string
+		status StatusFilter
+		ref    RefFilter
 	}{}
 
 	var result = &cobra.Command{
@@ -44,43 +44,7 @@ func CreateStatusCommand() *cobra.Command {
 						Ref    string
 					}
 
-					statusFlagMatches := func(repoStatus gitops.StatusResult) bool {
-						if flags.status == "" {
-							return true
-						}
-
-						hasPrefix := strings.HasPrefix(flags.status, "!")
-
-						if hasPrefix && !strings.EqualFold(flags.status[1:], repoStatus.String()) {
-							return true
-						}
-
-						if !hasPrefix && strings.EqualFold(flags.status, repoStatus.String()) {
-							return true
-						}
-
-						return false
-					}
-
-					refFlagMatches := func(repoRef string) bool {
-						if flags.ref == "" {
-							return true
-						}
-
-						hasPrefix := strings.HasPrefix(flags.ref, "!")
-
-						if hasPrefix && !strings.EqualFold(flags.ref[1:], repoRef) {
-							return true
-						}
-
-						if !hasPrefix && strings.EqualFold(flags.ref, repoRef) {
-							return true
-						}
-
-						return false
-					}
-
-					if statusFlagMatches(repoStatus) && refFlagMatches(ref) {
+					if flags.status.Matches(repoStatus.String()) && flags.ref.Matches(ref) {
 						return result{repoStatus.String(), ref}, nil
 					}
 					return nil, nil
@@ -96,8 +60,8 @@ func CreateStatusCommand() *cobra.Command {
 
 	filter.AddCommandFlags(result)
 
-	result.Flags().StringVar(
-		&flags.status, "status", "", fmt.Sprintf(
+	result.Flags().Var(
+		&flags.status, "status", fmt.Sprintf(
 			`Keep repositories with specified status.
 Examples: 
 "bulker status --status clean" - will keep only repositories with "%v" status
@@ -105,8 +69,8 @@ Examples:
 			gitops.StatusClean,
 		),
 	)
-	result.Flags().StringVar(
-		&flags.ref, "ref", "",
+	result.Flags().Var(
+		&flags.ref, "ref",
 		`Keep repositories with specified ref.
 Examples: 
 "bulker status --ref master" - will keep only repositories with "master" ref
@@ -114,4 +78,72 @@ Examples:
 	)
 
 	return result
+}
+
+// StatusFilter implements Value in spf13/pflag for custom flag type
+type StatusFilter string
+
+func (f *StatusFilter) String() string {
+	return string(*f)
+}
+
+func (f *StatusFilter) Set(v string) error {
+	*f = StatusFilter(v)
+	return nil
+}
+
+func (f *StatusFilter) Type() string {
+	return "StatusFilter"
+}
+
+func (f *StatusFilter) Matches(status string) bool {
+	if *f == "" {
+		return true
+	}
+
+	negated, value := runner.ParseNegated(string(*f))
+
+	if negated && !strings.EqualFold(value, status) {
+		return true
+	}
+
+	if !negated && strings.EqualFold(value, status) {
+		return true
+	}
+
+	return false
+}
+
+// RefFilter implements Value in spf13/pflag for custom flag type
+type RefFilter string
+
+func (f *RefFilter) String() string {
+	return string(*f)
+}
+
+func (f *RefFilter) Set(v string) error {
+	*f = RefFilter(v)
+	return nil
+}
+
+func (f *RefFilter) Type() string {
+	return "RefFilter"
+}
+
+func (f *RefFilter) Matches(ref string) bool {
+	if *f == "" {
+		return true
+	}
+
+	negated, value := runner.ParseNegated(string(*f))
+
+	if negated && !strings.EqualFold(value, ref) {
+		return true
+	}
+
+	if !negated && strings.EqualFold(value, ref) {
+		return true
+	}
+
+	return false
 }

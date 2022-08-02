@@ -299,65 +299,15 @@ func CleanBranches(fs afero.Fs, repo *model.Repo, mode GitMode) (string, error) 
 	}
 
 	if mode.Includes(GitModeLocal) {
-		output, err := shell.RunCommand(
-			repo.Path, "git", "branch", "-a", "--format=%(refname)", "--merged",
-			defaultRemoteBranch.Name,
-		)
-		if err != nil {
-			return "", fmt.Errorf("failed to get branches: %v, %w", output, err)
-		}
-
-		branches, err := parseBranches(output)
+		err := cleanLocalBranches(repo, defaultRemoteBranch, &result)
 		if err != nil {
 			return "", err
-		}
-
-		for _, branch := range branches {
-			if !branch.IsLocal() {
-				continue
-			}
-			if branch.Name == defaultRemoteBranch.Name {
-				continue
-			}
-			output, err := shell.RunCommand(repo.Path, "git", "branch", "-d", branch.Name)
-			if err != nil {
-				if strings.Contains(output, "checked out at") {
-					result.WriteString(fmt.Sprintf("%v: failed: %v\n", branch.Name, output))
-					return "", fmt.Errorf("the branch is checked out")
-				}
-				result.WriteString(fmt.Sprintf("%v: failed: %v\n", branch.Name, output))
-			} else {
-				result.WriteString(fmt.Sprintf("%v: removed\n", branch.Name))
-			}
 		}
 	}
 	if mode.Includes(GitModeRemote) {
-		output, err := shell.RunCommand(
-			repo.Path, "git", "branch", "-a", "--format=%(refname)", "--merged",
-			defaultRemoteBranch.Short(),
-		)
-		if err != nil {
-			return "", fmt.Errorf("failed to get branches: %v, %w", output, err)
-		}
-
-		branches, err := parseBranches(output)
+		err := cleanRemoteBranches(repo, remote, defaultRemoteBranch, &result)
 		if err != nil {
 			return "", err
-		}
-
-		for _, branch := range branches {
-			if branch.IsLocal() {
-				continue
-			}
-			if branch.Name == defaultRemoteBranch.Name {
-				continue
-			}
-			output, err := shell.RunCommand(repo.Path, "git", "push", remote, "-d", branch.Name)
-			if err != nil {
-				result.WriteString(fmt.Sprintf("%v: failed: %v\n", branch.Short(), output))
-			} else {
-				result.WriteString(fmt.Sprintf("%v: removed\n", branch.Short()))
-			}
 		}
 	}
 
@@ -506,4 +456,72 @@ func parseHeadRef(statusResult string) (string, error) {
 	}
 
 	return "", fmt.Errorf("can't parse status result for head reference: %v", statusResult)
+}
+
+func cleanLocalBranches(repo *model.Repo, defaultRemoteBranch *Branch, result *bytes.Buffer) error {
+	output, err := shell.RunCommand(
+		repo.Path, "git", "branch", "-a", "--format=%(refname)", "--merged",
+		defaultRemoteBranch.Name,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to get branches: %v, %w", output, err)
+	}
+
+	branches, err := parseBranches(output)
+	if err != nil {
+		return err
+	}
+
+	for _, branch := range branches {
+		if !branch.IsLocal() {
+			continue
+		}
+		if branch.Name == defaultRemoteBranch.Name {
+			continue
+		}
+		output, err := shell.RunCommand(repo.Path, "git", "branch", "-d", branch.Name)
+		if err != nil {
+			if strings.Contains(output, "checked out at") {
+				result.WriteString(fmt.Sprintf("%v: failed: %v\n", branch.Name, output))
+				return fmt.Errorf("the branch is checked out")
+			}
+			result.WriteString(fmt.Sprintf("%v: failed: %v\n", branch.Name, output))
+		} else {
+			result.WriteString(fmt.Sprintf("%v: removed\n", branch.Name))
+		}
+	}
+
+	return nil
+}
+
+func cleanRemoteBranches(repo *model.Repo, remote string, defaultRemoteBranch *Branch, result *bytes.Buffer) error {
+	output, err := shell.RunCommand(
+		repo.Path, "git", "branch", "-a", "--format=%(refname)", "--merged",
+		defaultRemoteBranch.Short(),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to get branches: %v, %w", output, err)
+	}
+
+	branches, err := parseBranches(output)
+	if err != nil {
+		return err
+	}
+
+	for _, branch := range branches {
+		if branch.IsLocal() {
+			continue
+		}
+		if branch.Name == defaultRemoteBranch.Name {
+			continue
+		}
+		output, err := shell.RunCommand(repo.Path, "git", "push", remote, "-d", branch.Name)
+		if err != nil {
+			result.WriteString(fmt.Sprintf("%v: failed: %v\n", branch.Short(), output))
+		} else {
+			result.WriteString(fmt.Sprintf("%v: removed\n", branch.Short()))
+		}
+	}
+
+	return nil
 }
