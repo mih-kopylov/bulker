@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `git fetch` command
 - `git pull` command
 - Singular aliases for `groups` and `repos` commands
-- `git branches` commands: `list`, `checkout`
+- `git branches` commands: `list`, `checkout`, `create`, `remove`, `clean`
 - `--ref` flag for `status` command
 
 ### Changed
