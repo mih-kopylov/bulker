@@ -12,6 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `git fetch` command
 - `git pull` command
 - Singular aliases for `groups` and `repos` commands
+- `git branches` commands: `list`, `checkout`, `create`, `remove`, `clean`
+- `--ref` flag for `status` command
+
+### Changed
+
+- `OK` status to `Clean`
+- Replace `--ok`, `--dirty` and `--missing` flags with `--show` in `status` command
+- Negate prefix for filter from `-` to `!`
 
 ### Fixed
 

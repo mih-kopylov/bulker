@@ -21,14 +21,28 @@ func CreateRootCommand(applicationVersion string) *cobra.Command {
 
 	result.SetVersionTemplate("{{.Version}}")
 
-	result.PersistentFlags().Bool("debug", false, "Enable debug level logging")
+	result.PersistentFlags().Bool("debug", false, "Enable debug level logging. Hide progress bar as well.")
 	utils.BindFlag(result.PersistentFlags().Lookup("debug"), "debug")
 
 	result.PersistentFlags().String(
 		"settings", utils.AbsPathify("$HOME/.bulker/settings.yaml"),
-		"Settings file name, where list of repositories is stored",
+		"Settings file name, where list of repositories and other user data is stored",
 	)
-	utils.BindFlag(result.PersistentFlags().Lookup("settings"), "settings")
+	utils.BindFlag(result.PersistentFlags().Lookup("settings"), "settingsFileName")
+
+	result.PersistentFlags().String(
+		"repos-directory", utils.AbsPathify("."),
+		"Root directory for all the repositories to store",
+	)
+	utils.BindFlag(result.PersistentFlags().Lookup("repos-directory"), "reposDirectory")
+
+	var runMode = config.Parallel
+	result.PersistentFlags().Var(
+		&runMode,
+		"run-mode",
+		"Parallel (par) or sequential (seq) run mode for repositories processing",
+	)
+	utils.BindFlag(result.PersistentFlags().Lookup("run-mode"), "runMode")
 
 	result.PersistentFlags().String(
 		"max-workers", "10",
@@ -43,7 +57,7 @@ func CreateRootCommand(applicationVersion string) *cobra.Command {
 	utils.BindFlag(result.PersistentFlags().Lookup("no-progress"), "noProgress")
 
 	result.PersistentFlags().String(
-		"output", string(config.LineOutputFormat), fmt.Sprintf(
+		"output", string(config.TableOutputFormat), fmt.Sprintf(
 			"Set commands output format. Available formats: %v, %v, %v, %v", config.LogOutputFormat,
 			config.LineOutputFormat, config.JsonOutputFormat, config.TableOutputFormat,
 		),
@@ -76,6 +90,7 @@ func configureViper() {
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(".")
 	viper.AddConfigPath(utils.AbsPathify("$HOME/.bulker"))
+	viper.SetEnvPrefix("B")
 	viper.AutomaticEnv()
 
 	err := viper.ReadInConfig()

@@ -23,7 +23,7 @@ func CreateFetchCommand() *cobra.Command {
 
 			err = newRunner.Run(
 				func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
-					err := gitops.Fetch(runContext.FS, runContext.Repo)
+					err := gitops.Fetch(runContext.Fs, runContext.Repo)
 					if err != nil {
 						return nil, err
 					}

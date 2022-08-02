@@ -8,7 +8,7 @@ import (
 
 type Config struct {
 	Debug            bool         `mapstructure:"debug"`
-	SettingsFileName string       `mapstructure:"settings"`
+	SettingsFileName string       `mapstructure:"settingsFileName"`
 	ReposDirectory   string       `mapstructure:"reposDirectory"`
 	RunMode          RunMode      `mapstructure:"runMode"`
 	MaxWorkers       int          `mapstructure:"maxWorkers"`
@@ -16,7 +16,7 @@ type Config struct {
 	Output           OutputFormat `mapstructure:"output"`
 }
 
-// implements Value in spf13/pflag for custom flag type
+// RunMode implements Value in spf13/pflag for custom flag type
 type RunMode string
 
 const (

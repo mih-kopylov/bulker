@@ -1,9 +1,7 @@
 package runner
 
 import (
-	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/settings"
-	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/slices"
 	"regexp"
@@ -15,8 +13,6 @@ type Filter struct {
 	Tags   []string
 	Groups []string
 }
-
-var runMode = config.Parallel
 
 func (f *Filter) MatchesRepo(repo settings.Repo, groups []settings.Group) bool {
 	return f.matchesName(repo.Name) &&
@@ -42,18 +38,9 @@ func (f *Filter) AddCommandFlags(command *cobra.Command) {
 	)
 	command.Flags().StringSliceVarP(&f.Tags, "tag", "t", []string{}, "Tags of the repositories to process")
 	command.Flags().StringSliceVarP(&f.Groups, "group", "g", []string{}, "Groups of the repositories to process")
-
-	// in order to viper read configuration from flag that is added multiple times (in different commands),
-	// all the flags with the same name should have the same storage, which is a package variable
-	command.PersistentFlags().Var(
-		&runMode,
-		"run-mode",
-		"Parallel (par) or sequential (seq) run mode for repositories processing",
-	)
-	utils.BindFlag(command.PersistentFlags().Lookup("run-mode"), "runMode")
 }
 
-const negatePrefix = "-"
+const negatePrefix = "!"
 
 // matchesName repoName should match any of filterNames
 func (f *Filter) matchesName(repoName string) bool {

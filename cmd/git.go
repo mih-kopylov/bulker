@@ -14,6 +14,7 @@ func CreateGitCommand() *cobra.Command {
 	result.AddCommand(git.CreateCloneCommand())
 	result.AddCommand(git.CreateFetchCommand())
 	result.AddCommand(git.CreatePullCommand())
+	result.AddCommand(git.CreateBranchesCommand())
 
 	return result
 }

@@ -34,3 +34,35 @@ bulker repos list -t github
 bulker git clone
 bulker status
 ```
+
+## Configuration
+
+Bulker supports different configuration options, prioritized in the following order.
+Each item takes precedence over the item below it:
+
+* with global CLI flags
+* with environment variables
+* with configuration file
+
+A configuration file with default values would look like that:
+
+```yaml
+debug: false
+settingsFileName: ~/.bulker/settings.yaml
+reposDirectory: .
+runMode: par
+maxWorkers: 10
+noProgress: false
+output: table
+```
+
+A configuration file is discovered if it is named `bulker.yaml` and placed to either current working directory or
+in `~/.bulker` directory
+
+An environment variable is discovered if it has the same name as in file, but with `B_` prefix.
+Examples:
+
+* `B_DEBUG`
+* `B_REPOSDIRECTORY`
+
+To get each configuration item full description run `bulker -h`
