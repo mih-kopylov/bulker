@@ -42,6 +42,20 @@ func (f *Filter) AddCommandFlags(command *cobra.Command) {
 
 const negatePrefix = "!"
 
+// ParseNegated gets a string value and analyzes if it is negated or not - effectively,
+// if it starts with a prefix or not.
+//
+// It returns a bool flag and a clean value, without the prefix even for negated value
+func ParseNegated(value string) (bool, string) {
+	negated := false
+	if strings.HasPrefix(value, negatePrefix) {
+		negated = true
+		value = value[len(negatePrefix):]
+	}
+
+	return negated, value
+}
+
 // matchesName repoName should match any of filterNames
 func (f *Filter) matchesName(repoName string) bool {
 	if len(f.Names) == 0 {
@@ -49,11 +63,8 @@ func (f *Filter) matchesName(repoName string) bool {
 	}
 
 	for _, filterName := range f.Names {
-		negated := false
-		if strings.HasPrefix(filterName, negatePrefix) {
-			negated = true
-			filterName = filterName[1:]
-		}
+		negated, filterName := ParseNegated(filterName)
+
 		matched, _ := regexp.MatchString("^"+filterName+"$", repoName)
 		if negated {
 			matched = !matched
@@ -73,11 +84,13 @@ func (f *Filter) matchesTags(repoTags []string) bool {
 	}
 
 	for _, filterTag := range f.Tags {
-		if strings.HasPrefix(filterTag, negatePrefix) && slices.Contains(repoTags, filterTag[1:]) {
+		negated, filterTag := ParseNegated(filterTag)
+
+		if negated && slices.Contains(repoTags, filterTag) {
 			return false
 		}
 
-		if !strings.HasPrefix(filterTag, negatePrefix) && !slices.Contains(repoTags, filterTag) {
+		if !negated && !slices.Contains(repoTags, filterTag) {
 			return false
 		}
 	}
@@ -92,11 +105,8 @@ func (f *Filter) matchesGroups(repoName string, allGroups []settings.Group) bool
 	}
 
 	for _, filterGroupName := range f.Groups {
-		negated := false
-		if strings.HasPrefix(filterGroupName, negatePrefix) {
-			negated = true
-			filterGroupName = filterGroupName[1:]
-		}
+		negated, filterGroupName := ParseNegated(filterGroupName)
+
 		filterGroupIndex := slices.IndexFunc(
 			allGroups, func(group settings.Group) bool {
 				return group.Name == filterGroupName
