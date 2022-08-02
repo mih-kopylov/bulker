@@ -15,12 +15,15 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version-file: "go.mod"
-      - name: Print go version
-        run: go version
       - name: Verify dependencies
         run: go mod verify
       - name: Analyze with go vet
         run: go vet ./...
+      - name: Analyze with gocyclo
+        run: |
+          go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
+          gocyclo -over 15 .
+          gocyclo -top 15 .
       - name: Run static analysis
         uses: dominikh/staticcheck-action@v1.2.0
         with:
