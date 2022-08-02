@@ -16,7 +16,7 @@ var (
 )
 
 func AddReadFromStdInFlag(command *cobra.Command, jsonKey string) {
-	command.Flags().BoolVar(&readFromStdIn, "pipe", false, "Read from stdin after pipe")
+	command.Flags().BoolVar(&readFromStdIn, "pipe", false, "Read from stdin after a pipe")
 	jsonKeyName = jsonKey
 }
 

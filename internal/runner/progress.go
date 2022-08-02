@@ -10,7 +10,7 @@ type Progress interface {
 }
 
 func NewProgress(conf *config.Config, maxCount int) Progress {
-	return newProgressBarProgress(maxCount, !conf.NoProgress)
+	return newProgressBarProgress(maxCount, !conf.NoProgress && !conf.Debug)
 }
 
 type ProgressBarProgress struct {
