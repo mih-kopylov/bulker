@@ -83,6 +83,13 @@ func (g *GitMode) Type() string {
 	return "GitMode"
 }
 
+func (g *GitMode) Includes(mode GitMode) bool {
+	if *g == GitModeAll {
+		return true
+	}
+	return *g == mode
+}
+
 const (
 	GitModeAll    GitMode = "all"
 	GitModeLocal  GitMode = "local"
@@ -253,6 +260,110 @@ func RemoveBranch(fs afero.Fs, repo *model.Repo, name string, mode GitMode) (str
 	return strings.TrimSpace(buffer.String()), nil
 }
 
+func CleanBranches(fs afero.Fs, repo *model.Repo, mode GitMode) (string, error) {
+	err := checkRepoExists(fs, repo)
+	if err != nil {
+		return "", err
+	}
+
+	result := bytes.Buffer{}
+
+	output, err := shell.RunCommand(repo.Path, "git", "remote")
+	if err != nil {
+		return "", err
+	}
+
+	remotes := strings.Fields(output)
+	if len(remotes) == 0 {
+		return "", errors.New("no remotes found")
+	}
+	if len(remotes) > 1 {
+		result.WriteString(
+			fmt.Sprintf(
+				"warning: expected to have only 1 remote, but %v found: %v\n", len(remotes),
+				remotes,
+			),
+		)
+	}
+
+	remote := remotes[0]
+
+	output, err = shell.RunCommand(repo.Path, "git", "symbolic-ref", fmt.Sprintf("refs/remotes/%v/HEAD", remote))
+	if err != nil {
+		return "", err
+	}
+
+	defaultRemoteBranch, err := parseBranch(output)
+	if err != nil {
+		return "", err
+	}
+
+	if mode.Includes(GitModeLocal) {
+		output, err := shell.RunCommand(
+			repo.Path, "git", "branch", "-a", "--format=%(refname)", "--merged",
+			defaultRemoteBranch.Name,
+		)
+		if err != nil {
+			return "", fmt.Errorf("failed to get branches: %v, %w", output, err)
+		}
+
+		branches, err := parseBranches(output)
+		if err != nil {
+			return "", err
+		}
+
+		for _, branch := range branches {
+			if !branch.IsLocal() {
+				continue
+			}
+			if branch.Name == defaultRemoteBranch.Name {
+				continue
+			}
+			output, err := shell.RunCommand(repo.Path, "git", "branch", "-d", branch.Name)
+			if err != nil {
+				if strings.Contains(output, "checked out at") {
+					result.WriteString(fmt.Sprintf("%v: failed: %v\n", branch.Name, output))
+					return "", fmt.Errorf("the branch is checked out")
+				}
+				result.WriteString(fmt.Sprintf("%v: failed: %v\n", branch.Name, output))
+			} else {
+				result.WriteString(fmt.Sprintf("%v: removed\n", branch.Name))
+			}
+		}
+	}
+	if mode.Includes(GitModeRemote) {
+		output, err := shell.RunCommand(
+			repo.Path, "git", "branch", "-a", "--format=%(refname)", "--merged",
+			defaultRemoteBranch.Short(),
+		)
+		if err != nil {
+			return "", fmt.Errorf("failed to get branches: %v, %w", output, err)
+		}
+
+		branches, err := parseBranches(output)
+		if err != nil {
+			return "", err
+		}
+
+		for _, branch := range branches {
+			if branch.IsLocal() {
+				continue
+			}
+			if branch.Name == defaultRemoteBranch.Name {
+				continue
+			}
+			output, err := shell.RunCommand(repo.Path, "git", "push", remote, "-d", branch.Name)
+			if err != nil {
+				result.WriteString(fmt.Sprintf("%v: failed: %v\n", branch.Short(), output))
+			} else {
+				result.WriteString(fmt.Sprintf("%v: removed\n", branch.Short()))
+			}
+		}
+	}
+
+	return strings.TrimSpace(result.String()), nil
+}
+
 func Checkout(fs afero.Fs, repo *model.Repo, ref string) (CheckoutResult, error) {
 	err := checkRepoExists(fs, repo)
 	if err != nil {
@@ -325,11 +436,7 @@ func GetBranches(fs afero.Fs, repo *model.Repo, mode GitMode, pattern string) ([
 
 	var result []Branch
 	for _, branch := range branches {
-		if mode == GitModeLocal && !branch.IsLocal() {
-			continue
-		}
-
-		if mode == GitModeRemote && branch.IsLocal() {
+		if !mode.Includes(branch.GetGitMode()) {
 			continue
 		}
 

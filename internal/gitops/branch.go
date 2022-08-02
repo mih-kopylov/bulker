@@ -9,7 +9,6 @@ import (
 const (
 	RefPrefix       = "refs/"
 	RefHeadPrefix   = RefPrefix + "heads/"
-	RefTagPrefix    = RefPrefix + "tags/"
 	RefRemotePrefix = RefPrefix + "remotes/"
 	Head            = "HEAD"
 )
@@ -35,6 +34,14 @@ func (b *Branch) Short() string {
 
 func (b *Branch) IsLocal() bool {
 	return b.Remote == ""
+}
+
+func (b *Branch) GetGitMode() GitMode {
+	if b.IsLocal() {
+		return GitModeLocal
+	}
+
+	return GitModeRemote
 }
 
 func parseBranch(fullBranchName string) (*Branch, error) {
