@@ -3,10 +3,8 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/gitops"
 	"github.com/mih-kopylov/bulker/internal/runner"
-	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/spf13/cobra"
 	"strings"
 )
@@ -26,36 +24,24 @@ func CreateStatusCommand() *cobra.Command {
 * Clean - the repository successfully cloned, there are no uncommitted changes
 * Dirty - the repository successfully cloned, but there are uncommitted changes
 * Missing - the repository is not cloned yet`,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			newRunner, err := runner.NewRunner(utils.GetConfiguredFS(), config.ReadConfig(), &filter)
-			if err != nil {
-				return err
-			}
+		RunE: runner.NewDefaultRunner(
+			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
+				repoStatus, ref, err := gitops.Status(runContext.Fs, runContext.Repo)
+				if err != nil {
+					return nil, fmt.Errorf("failed to get status: %w", err)
+				}
 
-			err = newRunner.Run(
-				func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
-					repoStatus, ref, err := gitops.Status(runContext.Fs, runContext.Repo)
-					if err != nil {
-						return nil, fmt.Errorf("failed to get status: %w", err)
-					}
+				type result struct {
+					Status string
+					Ref    string
+				}
 
-					type result struct {
-						Status string
-						Ref    string
-					}
-
-					if flags.status.Matches(repoStatus.String()) && flags.ref.Matches(ref) {
-						return result{repoStatus.String(), ref}, nil
-					}
-					return nil, nil
-				},
-			)
-			if err != nil {
-				return err
-			}
-
-			return nil
-		},
+				if flags.status.Matches(repoStatus.String()) && flags.ref.Matches(ref) {
+					return result{repoStatus.String(), ref}, nil
+				}
+				return nil, nil
+			},
+		),
 	}
 
 	filter.AddCommandFlags(result)

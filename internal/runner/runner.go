@@ -18,7 +18,7 @@ type Runner interface {
 	Run(handler RepoHandler) error
 }
 
-func NewRunner(fs afero.Fs, conf *config.Config, filter *Filter) (Runner, error) {
+func NewRunner(fs afero.Fs, conf *config.Config, filter *Filter, args []string) (Runner, error) {
 	manager := settings.NewManager(fs, conf)
 	if conf.RunMode == config.Sequential {
 		return &SequentialRunner{
@@ -26,6 +26,7 @@ func NewRunner(fs afero.Fs, conf *config.Config, filter *Filter) (Runner, error)
 			manager: manager,
 			config:  conf,
 			filter:  filter,
+			args:    args,
 		}, nil
 	} else if conf.RunMode == config.Parallel {
 		return &ParallelRunner{
@@ -33,6 +34,7 @@ func NewRunner(fs afero.Fs, conf *config.Config, filter *Filter) (Runner, error)
 			manager: manager,
 			config:  conf,
 			filter:  filter,
+			args:    args,
 		}, nil
 	}
 	return nil, fmt.Errorf("unsupported run mode %v", conf.RunMode)
@@ -40,7 +42,7 @@ func NewRunner(fs afero.Fs, conf *config.Config, filter *Filter) (Runner, error)
 
 func NewDefaultRunner(filter *Filter, handler RepoHandler) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		newRunner, err := NewRunner(utils.GetConfiguredFS(), config.ReadConfig(), filter)
+		newRunner, err := NewRunner(utils.GetConfiguredFS(), config.ReadConfig(), filter, args)
 		if err != nil {
 			return err
 		}
@@ -59,9 +61,12 @@ type RunContext struct {
 	Manager *settings.Manager
 	Config  *config.Config
 	Repo    *model.Repo
+	Args    []string
 }
 
-func newRunContext(fs afero.Fs, manager *settings.Manager, conf *config.Config, repo settings.Repo) *RunContext {
+func newRunContext(
+	fs afero.Fs, manager *settings.Manager, conf *config.Config, args []string, repo settings.Repo,
+) *RunContext {
 	return &RunContext{
 		Fs:      fs,
 		Manager: manager,
@@ -71,6 +76,7 @@ func newRunContext(fs afero.Fs, manager *settings.Manager, conf *config.Config, 
 			Path: filepath.Join(conf.ReposDirectory, repo.Name),
 			Url:  repo.Url,
 		},
+		Args: args,
 	}
 }
 

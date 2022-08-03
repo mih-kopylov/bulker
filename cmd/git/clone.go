@@ -3,10 +3,8 @@ package git
 import (
 	"context"
 	"fmt"
-	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/gitops"
 	"github.com/mih-kopylov/bulker/internal/runner"
-	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -19,28 +17,16 @@ func CreateCloneCommand() *cobra.Command {
 	var result = &cobra.Command{
 		Use:   "clone",
 		Short: "Clones the configured repositories out if they have not been yet",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			newRunner, err := runner.NewRunner(utils.GetConfiguredFS(), config.ReadConfig(), &filter)
-			if err != nil {
-				return err
-			}
+		RunE: runner.NewDefaultRunner(
+			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
+				cloneResult, err := gitops.CloneRepo(runContext.Fs, runContext.Repo, flags.recreate)
+				if err != nil {
+					return nil, fmt.Errorf("failed to clone: %w", err)
+				}
 
-			err = newRunner.Run(
-				func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
-					cloneResult, err := gitops.CloneRepo(runContext.Fs, runContext.Repo, flags.recreate)
-					if err != nil {
-						return nil, fmt.Errorf("failed to clone: %w", err)
-					}
-
-					return cloneResult.String(), nil
-				},
-			)
-			if err != nil {
-				return err
-			}
-
-			return nil
-		},
+				return cloneResult.String(), nil
+			},
+		),
 	}
 
 	filter.AddCommandFlags(result)

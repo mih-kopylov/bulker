@@ -14,6 +14,7 @@ type ParallelRunner struct {
 	manager *settings.Manager
 	config  *config.Config
 	filter  *Filter
+	args    []string
 }
 
 func (r *ParallelRunner) Run(handler RepoHandler) error {
@@ -37,7 +38,7 @@ func (r *ParallelRunner) Run(handler RepoHandler) error {
 	repos := r.filter.FilterMatchingRepos(sets.Repos, sets.Groups)
 	progress := NewProgress(r.config, len(repos))
 	for _, repo := range repos {
-		runContext := newRunContext(r.fs, r.manager, r.config, repo)
+		runContext := newRunContext(r.fs, r.manager, r.config, r.args, repo)
 		pool.Submit(
 			func() {
 				logrus.WithField("repo", runContext.Repo.Name).Debug("processing started")
