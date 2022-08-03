@@ -21,8 +21,7 @@ func CreateCreateCommand() *cobra.Command {
 		Use:   "create",
 		Short: "Create a new branch and switch repository to it",
 		RunE: runner.NewDefaultRunner(
-			&filter,
-			func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
+			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
 				type result struct {
 					Status gitops.StatusResult
 					Create gitops.CreateResult

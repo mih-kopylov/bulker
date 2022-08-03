@@ -21,8 +21,7 @@ func CreateCleanCommand() *cobra.Command {
 First, it defines the default branch of the remote.
 Then, it loops over the branches and removes the ones that don't have differences with the default one'`,
 		RunE: runner.NewDefaultRunner(
-			&filter,
-			func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
+			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
 				cleanResult, err := gitops.CleanBranches(runContext.Fs, runContext.Repo, flags.mode)
 				if err != nil {
 					return nil, err

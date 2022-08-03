@@ -21,8 +21,7 @@ func CreateCheckoutCommand() *cobra.Command {
 		Use:   "checkout",
 		Short: "Switch repository to the provided branch",
 		RunE: runner.NewDefaultRunner(
-			&filter,
-			func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
+			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
 				type result struct {
 					Status   gitops.StatusResult
 					Checkout gitops.CheckoutResult

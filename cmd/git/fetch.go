@@ -2,10 +2,8 @@ package git
 
 import (
 	"context"
-	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/gitops"
 	"github.com/mih-kopylov/bulker/internal/runner"
-	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -15,28 +13,16 @@ func CreateFetchCommand() *cobra.Command {
 	var result = &cobra.Command{
 		Use:   "fetch",
 		Short: "Fetch changes from remote origin",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			newRunner, err := runner.NewRunner(utils.GetConfiguredFS(), config.ReadConfig(), &filter)
-			if err != nil {
-				return err
-			}
+		RunE: runner.NewDefaultRunner(
+			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
+				err := gitops.Fetch(runContext.Fs, runContext.Repo)
+				if err != nil {
+					return nil, err
+				}
 
-			err = newRunner.Run(
-				func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
-					err := gitops.Fetch(runContext.Fs, runContext.Repo)
-					if err != nil {
-						return nil, err
-					}
-
-					return "fetched successfully", nil
-				},
-			)
-			if err != nil {
-				return err
-			}
-
-			return nil
-		},
+				return "fetched successfully", nil
+			},
+		),
 	}
 
 	filter.AddCommandFlags(result)
