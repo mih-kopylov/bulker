@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"errors"
 	"github.com/alitto/pond"
 	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/settings"
@@ -10,47 +11,56 @@ import (
 )
 
 type ParallelRunner struct {
-	fs      afero.Fs
-	manager *settings.Manager
-	config  *config.Config
-	filter  *Filter
-	args    []string
+	fs       afero.Fs
+	manager  *settings.Manager
+	config   *config.Config
+	filter   *Filter
+	progress Progress
+	args     []string
 }
 
-func (r *ParallelRunner) Run(handler RepoHandler) error {
+func (r *ParallelRunner) Run(
+	ctx context.Context, repos []settings.Repo, handler RepoHandler,
+) (map[string]ProcessResult, error) {
 	type repoProcessResult struct {
 		Name string
 		ProcessResult
 	}
 
-	sets, err := r.manager.Read()
-	if err != nil {
-		return err
-	}
-
-	ctx := context.Background()
-
 	allReposResult := map[string]ProcessResult{}
-	pool := pond.New(r.config.MaxWorkers, 1000, pond.Context(ctx))
+	// the pool doesn't use the parent context in order to complete all the tasks even the context is done
+	// each task is notified about the context is done on its own and passes skipped status to the output channel
+	pool := pond.New(r.config.MaxWorkers, len(repos))
 	defer pool.StopAndWait()
 	ch := make(chan repoProcessResult)
 	logrus.WithField("mode", r.config.RunMode).Debug("processing repositories")
-	repos := r.filter.FilterMatchingRepos(sets.Repos, sets.Groups)
-	progress := NewProgress(r.config, len(repos))
 	for _, repo := range repos {
 		runContext := newRunContext(r.fs, r.manager, r.config, r.args, repo)
 		pool.Submit(
 			func() {
-				logrus.WithField("repo", runContext.Repo.Name).Debug("processing started")
-				repoResult, err := handler(ctx, runContext)
-				progress.Incr()
-				logrus.WithField("repo", runContext.Repo.Name).Debug("processing completed")
-				ch <- repoProcessResult{
-					Name: runContext.Repo.Name,
-					ProcessResult: ProcessResult{
-						Result: repoResult,
-						Error:  err,
-					},
+				select {
+				case <-ctx.Done():
+					logrus.WithField("repo", runContext.Repo.Name).Debug("processing skipped")
+					r.progress.Incr()
+					ch <- repoProcessResult{
+						Name: runContext.Repo.Name,
+						ProcessResult: ProcessResult{
+							Result: nil,
+							Error:  errors.New("skipped"),
+						},
+					}
+				default:
+					logrus.WithField("repo", runContext.Repo.Name).Debug("processing started")
+					repoResult, err := handler(ctx, runContext)
+					r.progress.Incr()
+					logrus.WithField("repo", runContext.Repo.Name).Debug("processing completed")
+					ch <- repoProcessResult{
+						Name: runContext.Repo.Name,
+						ProcessResult: ProcessResult{
+							Result: repoResult,
+							Error:  err,
+						},
+					}
 				}
 			},
 		)
@@ -61,10 +71,5 @@ func (r *ParallelRunner) Run(handler RepoHandler) error {
 	}
 	close(ch)
 
-	err = logOutput(allReposResult)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return allReposResult, nil
 }

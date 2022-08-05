@@ -1,8 +1,11 @@
+//go:build linux || darwin
+
 package shell
 
 import (
 	"fmt"
 	"os/exec"
+	"syscall"
 )
 
 // RunCommand Runs a shell command in commandRootDirectory. If the commandRootDirectory is empty,
@@ -11,6 +14,12 @@ import (
 func RunCommand(commandRootDirectory string, command string, arguments ...string) (string, error) {
 	cmd := exec.Command(command, arguments...)
 	cmd.Dir = commandRootDirectory
+	// this makes the child process ignore the SIGTERM for the bulker
+	// so that bulker waits till the child command successfully completes and only then terminates
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Setpgid: true,
+		Pgid:    0,
+	}
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {

@@ -1,12 +1,15 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"os/signal"
+	"syscall"
 )
 
 func CreateRootCommand(applicationVersion string) *cobra.Command {
@@ -20,6 +23,10 @@ func CreateRootCommand(applicationVersion string) *cobra.Command {
 	}
 
 	result.SetVersionTemplate("{{.Version}}")
+
+	// once the APP gets a signal, it will mark the context as Done
+	ctx, _ := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	result.SetContext(ctx)
 
 	result.PersistentFlags().Bool("debug", false, "Enable debug level logging. Hide progress bar as well.")
 	utils.BindFlag(result.PersistentFlags().Lookup("debug"), "debug")
