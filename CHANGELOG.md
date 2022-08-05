@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Commands that process repositories are terminated gracefully
+
 ## [0.6.0] - 2022-08-02
 
 ### Added

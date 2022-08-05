@@ -12,29 +12,32 @@ import (
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"path/filepath"
+	"time"
 )
 
 type Runner interface {
-	Run(handler RepoHandler) error
+	Run(ctx context.Context, repos []settings.Repo, handler RepoHandler) (map[string]ProcessResult, error)
 }
 
-func NewRunner(fs afero.Fs, conf *config.Config, filter *Filter, args []string) (Runner, error) {
+func NewRunner(fs afero.Fs, conf *config.Config, filter *Filter, progress Progress, args []string) (Runner, error) {
 	manager := settings.NewManager(fs, conf)
 	if conf.RunMode == config.Sequential {
 		return &SequentialRunner{
-			fs:      fs,
-			manager: manager,
-			config:  conf,
-			filter:  filter,
-			args:    args,
+			fs:       fs,
+			manager:  manager,
+			config:   conf,
+			filter:   filter,
+			progress: progress,
+			args:     args,
 		}, nil
 	} else if conf.RunMode == config.Parallel {
 		return &ParallelRunner{
-			fs:      fs,
-			manager: manager,
-			config:  conf,
-			filter:  filter,
-			args:    args,
+			fs:       fs,
+			manager:  manager,
+			config:   conf,
+			filter:   filter,
+			progress: progress,
+			args:     args,
 		}, nil
 	}
 	return nil, fmt.Errorf("unsupported run mode %v", conf.RunMode)
@@ -42,12 +45,40 @@ func NewRunner(fs afero.Fs, conf *config.Config, filter *Filter, args []string) 
 
 func NewDefaultRunner(filter *Filter, handler RepoHandler) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		newRunner, err := NewRunner(utils.GetConfiguredFS(), config.ReadConfig(), filter, args)
+		fs := utils.GetConfiguredFS()
+		conf := config.ReadConfig()
+		manager := settings.NewManager(fs, conf)
+
+		sets, err := manager.Read()
 		if err != nil {
 			return err
 		}
 
-		err = newRunner.Run(handler)
+		repos := filter.FilterMatchingRepos(sets.Repos, sets.Groups)
+		progress := NewProgress(conf, len(repos))
+		newRunner, err := NewRunner(fs, conf, filter, progress, args)
+		if err != nil {
+			return err
+		}
+
+		go func() {
+			for {
+				select {
+				case <-cmd.Context().Done():
+					progress.IndicateTermination()
+					return
+				default:
+					time.Sleep(100 * time.Millisecond)
+				}
+			}
+		}()
+
+		allReposResult, err := newRunner.Run(cmd.Context(), repos, handler)
+		if err != nil {
+			return err
+		}
+
+		err = logOutput(allReposResult)
 		if err != nil {
 			return err
 		}
