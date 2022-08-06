@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `git push` command
+
 ### Fixed
 
 - Empty array to be printed in `--output json` mode when no repositories matched
