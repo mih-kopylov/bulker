@@ -184,14 +184,15 @@ func Push(fs afero.Fs, repo *model.Repo, branch string) error {
 		return err
 	}
 
-	var output string
+	arguments := []string{"push", "--set-upstream", remote}
 	if branch == "" {
-		output, err = shell.RunCommand(repo.Path, "git", "push", remote, "-u")
+		arguments = append(arguments, "--all")
 	} else {
-		output, err = shell.RunCommand(repo.Path, "git", "push", remote, "-u", branch)
+		arguments = append(arguments, branch)
 	}
+	output, err := shell.RunCommand(repo.Path, "git", arguments...)
 	if err != nil {
-		return fmt.Errorf("failed to push remote: %v, %w", output, err)
+		return fmt.Errorf("failed to push to remote: %v, %w", output, err)
 	}
 
 	return nil
@@ -322,6 +323,29 @@ func CleanBranches(fs afero.Fs, repo *model.Repo, mode GitMode) (string, error) 
 	}
 
 	return strings.TrimSpace(result.String()), nil
+}
+
+func Commit(fs afero.Fs, repo *model.Repo, pattern string, message string) error {
+	err := checkRepoExists(fs, repo)
+	if err != nil {
+		return err
+	}
+
+	if pattern == "" {
+		pattern = "**"
+	}
+
+	output, err := shell.RunCommand(repo.Path, "git", "add", pattern)
+	if err != nil {
+		return fmt.Errorf("failed to add changes to stage: %v %w", output, err)
+	}
+
+	output, err = shell.RunCommand(repo.Path, "git", "commit", "-m", message)
+	if err != nil {
+		return fmt.Errorf("failed to commit: %v %w", output, err)
+	}
+
+	return nil
 }
 
 func Checkout(fs afero.Fs, repo *model.Repo, ref string) (CheckoutResult, error) {

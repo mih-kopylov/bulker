@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"github.com/mih-kopylov/bulker/internal/runner"
 	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/spf13/cobra"
@@ -23,7 +24,11 @@ Example: "bulker run -- mvn -B -q clean"`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: runner.NewDefaultRunner(
 			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
-				return shell.RunCommand(runContext.Repo.Path, runContext.Args[0], runContext.Args[1:]...)
+				output, err := shell.RunCommand(runContext.Repo.Path, runContext.Args[0], runContext.Args[1:]...)
+				if err != nil {
+					return nil, fmt.Errorf("failed to run %v: %v %w", runContext.Args, output, err)
+				}
+				return output, nil
 			},
 		),
 	}
