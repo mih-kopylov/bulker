@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/mih-kopylov/bulker/internal/model"
 	"github.com/mih-kopylov/bulker/internal/shell"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"os"
 	"regexp"
@@ -172,6 +173,30 @@ func Pull(fs afero.Fs, repo *model.Repo) error {
 	return nil
 }
 
+func Push(fs afero.Fs, repo *model.Repo, branch string) error {
+	err := checkRepoExists(fs, repo)
+	if err != nil {
+		return err
+	}
+
+	remote, err := getTheOnlyRemote(repo)
+	if err != nil {
+		return err
+	}
+
+	var output string
+	if branch == "" {
+		output, err = shell.RunCommand(repo.Path, "git", "push", remote, "-u")
+	} else {
+		output, err = shell.RunCommand(repo.Path, "git", "push", remote, "-u", branch)
+	}
+	if err != nil {
+		return fmt.Errorf("failed to push remote: %v, %w", output, err)
+	}
+
+	return nil
+}
+
 func Status(fs afero.Fs, repo *model.Repo) (StatusResult, string, error) {
 	err := checkRepoExists(fs, repo)
 	if err != nil {
@@ -268,27 +293,12 @@ func CleanBranches(fs afero.Fs, repo *model.Repo, mode GitMode) (string, error) 
 
 	result := bytes.Buffer{}
 
-	output, err := shell.RunCommand(repo.Path, "git", "remote")
+	remote, err := getTheOnlyRemote(repo)
 	if err != nil {
 		return "", err
 	}
 
-	remotes := strings.Fields(output)
-	if len(remotes) == 0 {
-		return "", errors.New("no remotes found")
-	}
-	if len(remotes) > 1 {
-		result.WriteString(
-			fmt.Sprintf(
-				"warning: expected to have only 1 remote, but %v found: %v\n", len(remotes),
-				remotes,
-			),
-		)
-	}
-
-	remote := remotes[0]
-
-	output, err = shell.RunCommand(repo.Path, "git", "symbolic-ref", fmt.Sprintf("refs/remotes/%v/HEAD", remote))
+	output, err := shell.RunCommand(repo.Path, "git", "symbolic-ref", fmt.Sprintf("refs/remotes/%v/HEAD", remote))
 	if err != nil {
 		return "", err
 	}
@@ -524,4 +534,21 @@ func cleanRemoteBranches(repo *model.Repo, remote string, defaultRemoteBranch *B
 	}
 
 	return nil
+}
+
+func getTheOnlyRemote(repo *model.Repo) (string, error) {
+	output, err := shell.RunCommand(repo.Path, "git", "remote")
+	if err != nil {
+		return "", err
+	}
+
+	remotes := strings.Fields(output)
+	if len(remotes) == 0 {
+		return "", errors.New("no remotes found")
+	}
+	if len(remotes) > 1 {
+		logrus.WithField("remotes", remotes).Warnf("expected to have only 1 remote, but %v found", len(remotes))
+	}
+
+	return remotes[0], nil
 }

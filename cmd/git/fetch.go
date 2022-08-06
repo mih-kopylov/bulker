@@ -12,7 +12,7 @@ func CreateFetchCommand() *cobra.Command {
 
 	var result = &cobra.Command{
 		Use:   "fetch",
-		Short: "Fetch changes from remote origin",
+		Short: "Fetch changes from remote",
 		RunE: runner.NewDefaultRunner(
 			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
 				err := gitops.Fetch(runContext.Fs, runContext.Repo)
