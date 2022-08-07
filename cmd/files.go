@@ -13,6 +13,7 @@ func CreateFilesCommand() *cobra.Command {
 	}
 
 	result.AddCommand(files.CreateCopyCommand())
+	result.AddCommand(files.CreateRenameCommand())
 
 	return result
 }

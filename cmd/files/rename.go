@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func CreateCopyCommand() *cobra.Command {
+func CreateRenameCommand() *cobra.Command {
 	var filter = runner.Filter{}
 	var flags = struct {
 		source string
@@ -18,8 +18,8 @@ func CreateCopyCommand() *cobra.Command {
 	}{}
 
 	var result = &cobra.Command{
-		Use:   "copy",
-		Short: "Copy source file into target",
+		Use:   "rename",
+		Short: "Rename source file into target",
 		RunE: runner.NewDefaultRunner(
 			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
 				type result struct {
@@ -28,7 +28,7 @@ func CreateCopyCommand() *cobra.Command {
 					Target string
 				}
 
-				source, target, err := fileops.Copy(
+				source, target, err := fileops.Rename(
 					runContext.Fs, runContext.Repo, flags.source, flags.target,
 					flags.force,
 				)
@@ -39,7 +39,7 @@ func CreateCopyCommand() *cobra.Command {
 					return result{"failed", source, target}, err
 				}
 
-				return result{"copied", source, target}, nil
+				return result{"renamed", source, target}, nil
 			},
 		),
 	}
@@ -48,7 +48,7 @@ func CreateCopyCommand() *cobra.Command {
 
 	result.Flags().StringVar(
 		&flags.source, "source", "",
-		`File name to copy. The path is considered relative to the repository root.
+		`File name to rename. The path is considered relative to the repository root.
 The following examples are equal:
 - README.md
 - ./README.md
@@ -58,13 +58,13 @@ The following examples are equal:
 
 	result.Flags().StringVar(
 		&flags.target, "target", "",
-		`File name to copy to. The same rules as for "source" flag are applied`,
+		`File name to rename to. The same rules as for "source" flag are applied`,
 	)
 	utils.MarkFlagRequiredOrFail(result.Flags(), "target")
 
 	result.Flags().BoolVarP(
 		&flags.force, "force", "f", false,
-		"Force copying if target file already exists, rewriting the target file",
+		"Force renaming if target file already exists, rewriting the target file",
 	)
 
 	return result
