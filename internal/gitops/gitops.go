@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/mih-kopylov/bulker/internal/fileops"
 	"github.com/mih-kopylov/bulker/internal/model"
 	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/sirupsen/logrus"
@@ -12,8 +13,6 @@ import (
 	"regexp"
 	"strings"
 )
-
-var ErrRepositoryNotCloned = errors.New("repository not cloned")
 
 type CloneResult string
 
@@ -143,7 +142,7 @@ func CloneRepo(fs afero.Fs, repo *model.Repo, recreate bool) (CloneResult, error
 }
 
 func Fetch(fs afero.Fs, repo *model.Repo) error {
-	err := checkRepoExists(fs, repo)
+	err := fileops.CheckRepoExists(fs, repo)
 	if err != nil {
 		return err
 	}
@@ -157,7 +156,7 @@ func Fetch(fs afero.Fs, repo *model.Repo) error {
 }
 
 func Pull(fs afero.Fs, repo *model.Repo) error {
-	err := checkRepoExists(fs, repo)
+	err := fileops.CheckRepoExists(fs, repo)
 	if err != nil {
 		return err
 	}
@@ -174,7 +173,7 @@ func Pull(fs afero.Fs, repo *model.Repo) error {
 }
 
 func Push(fs afero.Fs, repo *model.Repo, branch string) error {
-	err := checkRepoExists(fs, repo)
+	err := fileops.CheckRepoExists(fs, repo)
 	if err != nil {
 		return err
 	}
@@ -199,9 +198,9 @@ func Push(fs afero.Fs, repo *model.Repo, branch string) error {
 }
 
 func Status(fs afero.Fs, repo *model.Repo) (StatusResult, string, error) {
-	err := checkRepoExists(fs, repo)
+	err := fileops.CheckRepoExists(fs, repo)
 	if err != nil {
-		if errors.Is(err, ErrRepositoryNotCloned) {
+		if errors.Is(err, fileops.ErrRepositoryNotCloned) {
 			return StatusMissing, "", nil
 		} else {
 			return StatusError, "", fmt.Errorf("failed to get stat of the directory %v: %w", repo.Path, err)
@@ -226,7 +225,7 @@ func Status(fs afero.Fs, repo *model.Repo) (StatusResult, string, error) {
 }
 
 func CreateBranch(fs afero.Fs, repo *model.Repo, name string) (CreateResult, error) {
-	err := checkRepoExists(fs, repo)
+	err := fileops.CheckRepoExists(fs, repo)
 	if err != nil {
 		return CreateError, err
 	}
@@ -249,7 +248,7 @@ func CreateBranch(fs afero.Fs, repo *model.Repo, name string) (CreateResult, err
 }
 
 func RemoveBranch(fs afero.Fs, repo *model.Repo, name string, mode GitMode) (string, error) {
-	err := checkRepoExists(fs, repo)
+	err := fileops.CheckRepoExists(fs, repo)
 	if err != nil {
 		return "", err
 	}
@@ -287,7 +286,7 @@ func RemoveBranch(fs afero.Fs, repo *model.Repo, name string, mode GitMode) (str
 }
 
 func CleanBranches(fs afero.Fs, repo *model.Repo, mode GitMode) (string, error) {
-	err := checkRepoExists(fs, repo)
+	err := fileops.CheckRepoExists(fs, repo)
 	if err != nil {
 		return "", err
 	}
@@ -326,7 +325,7 @@ func CleanBranches(fs afero.Fs, repo *model.Repo, mode GitMode) (string, error) 
 }
 
 func Commit(fs afero.Fs, repo *model.Repo, pattern string, message string) error {
-	err := checkRepoExists(fs, repo)
+	err := fileops.CheckRepoExists(fs, repo)
 	if err != nil {
 		return err
 	}
@@ -349,7 +348,7 @@ func Commit(fs afero.Fs, repo *model.Repo, pattern string, message string) error
 }
 
 func Checkout(fs afero.Fs, repo *model.Repo, ref string) (CheckoutResult, error) {
-	err := checkRepoExists(fs, repo)
+	err := fileops.CheckRepoExists(fs, repo)
 	if err != nil {
 		return CheckoutError, err
 	}
@@ -384,7 +383,7 @@ func Checkout(fs afero.Fs, repo *model.Repo, ref string) (CheckoutResult, error)
 }
 
 func Discard(fs afero.Fs, repo *model.Repo) error {
-	err := checkRepoExists(fs, repo)
+	err := fileops.CheckRepoExists(fs, repo)
 	if err != nil {
 		return err
 	}
@@ -398,7 +397,7 @@ func Discard(fs afero.Fs, repo *model.Repo) error {
 }
 
 func GetBranches(fs afero.Fs, repo *model.Repo, mode GitMode, pattern string) ([]Branch, error) {
-	err := checkRepoExists(fs, repo)
+	err := fileops.CheckRepoExists(fs, repo)
 	if err != nil {
 		return nil, err
 	}
@@ -454,18 +453,6 @@ func parseBranches(consoleOutputString string) ([]Branch, error) {
 	}
 
 	return result, nil
-}
-
-func checkRepoExists(fs afero.Fs, repo *model.Repo) error {
-	_, err := fs.Stat(repo.Path)
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return ErrRepositoryNotCloned
-		}
-		return err
-	}
-
-	return nil
 }
 
 func parseHeadRef(statusResult string) (string, error) {
