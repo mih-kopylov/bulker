@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/afero"
 	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -110,7 +109,7 @@ func (sm *Manager) Export(remoteRepoUrl string) (map[string]ExportImportStatus, 
 		return nil, err
 	}
 
-	err = ioutil.WriteFile(exportFileName, jsonBytes, 0777)
+	err = os.WriteFile(exportFileName, jsonBytes, 0777)
 	if err != nil {
 		return nil, err
 	}
@@ -228,7 +227,7 @@ func prepareResult(previousModel *exportModel, newModel *exportModel) map[string
 }
 
 func readExistingModel(exportFileName string) (*exportModel, error) {
-	fileBytes, err := ioutil.ReadFile(exportFileName)
+	fileBytes, err := os.ReadFile(exportFileName)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			return &exportModel{1, modelDataV1{Repos: map[string]modelDataV1Repo{}}}, nil
