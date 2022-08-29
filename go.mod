@@ -3,7 +3,7 @@ module github.com/mih-kopylov/bulker
 go 1.18
 
 require (
-	github.com/alitto/pond v1.8.0
+	github.com/alitto/pond v1.8.1
 	github.com/aquasecurity/table v1.8.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/schollz/progressbar/v3 v3.9.0
