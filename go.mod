@@ -6,7 +6,7 @@ require (
 	github.com/alitto/pond v1.8.1
 	github.com/aquasecurity/table v1.8.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
-	github.com/schollz/progressbar/v3 v3.10.0
+	github.com/schollz/progressbar/v3 v3.10.1
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/afero v1.9.2
 	github.com/spf13/cobra v1.5.0
