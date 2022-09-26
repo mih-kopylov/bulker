@@ -15,6 +15,7 @@ func CreateFilesCommand() *cobra.Command {
 	result.AddCommand(files.CreateCopyCommand())
 	result.AddCommand(files.CreateRenameCommand())
 	result.AddCommand(files.CreateRemoveCommand())
+	result.AddCommand(files.CreateSearchCommand())
 
 	return result
 }

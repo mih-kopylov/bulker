@@ -44,11 +44,11 @@ func CreateRemoveCommand() *cobra.Command {
 	filter.AddCommandFlags(result)
 
 	result.Flags().StringVarP(
-		&flags.pattern, "pattern", "p", "",
-		`Glob pattern to remove.
+		&flags.pattern, "files", "f", "",
+		`Glob files pattern to remove.
 See https://pkg.go.dev/path/filepath#Match for syntax`,
 	)
-	utils.MarkFlagRequiredOrFail(result.Flags(), "pattern")
+	utils.MarkFlagRequiredOrFail(result.Flags(), "files")
 
 	return result
 }
