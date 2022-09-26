@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/mih-kopylov/bulker/internal/fileops"
 	"github.com/mih-kopylov/bulker/internal/runner"
+	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 	"path/filepath"
@@ -85,6 +86,7 @@ func CreateSearchCommand() *cobra.Command {
 		`Glob files pattern to search. If not passed, all files will be processed.
 See https://pkg.go.dev/path/filepath#Match for syntax`,
 	)
+	utils.MarkFlagRequiredOrFail(result.Flags(), "files")
 
 	result.Flags().StringVarP(
 		&flags.contains, "contains", "c", "",
