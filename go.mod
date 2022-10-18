@@ -3,7 +3,7 @@ module github.com/mih-kopylov/bulker
 go 1.18
 
 require (
-	github.com/alitto/pond v1.8.1
+	github.com/alitto/pond v1.8.2
 	github.com/aquasecurity/table v1.8.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/schollz/progressbar/v3 v3.11.0
@@ -32,9 +32,9 @@ require (
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/subosito/gotenv v1.4.1 // indirect
-	golang.org/x/sys v0.0.0-20221010170243-090e33056c14 // indirect
-	golang.org/x/term v0.0.0-20220919170432-7a66f970e087 // indirect
-	golang.org/x/text v0.3.8 // indirect
+	golang.org/x/sys v0.1.0 // indirect
+	golang.org/x/term v0.0.0-20221017184919-83659145692c // indirect
+	golang.org/x/text v0.4.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
