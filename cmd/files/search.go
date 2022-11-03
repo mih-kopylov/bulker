@@ -16,11 +16,10 @@ import (
 func CreateSearchCommand() *cobra.Command {
 	var filter = runner.Filter{}
 	var flags = struct {
-		pattern     string
-		contains    string
-		replacement string
-		before      int
-		after       int
+		pattern  string
+		contains string
+		before   int
+		after    int
 	}{}
 
 	var result = &cobra.Command{
@@ -93,14 +92,6 @@ See https://pkg.go.dev/path/filepath#Match for syntax`,
 		`Regexp to search in the files for. 
 If passed, only repos with matching files will be returned.
 Example: "text\s+(value)"`,
-	)
-
-	result.Flags().StringVarP(
-		&flags.replacement, "replacement", "r", "",
-		`Expression to use for replacement.
-If passed, the matched files content will be updated.
-Only matters if "--contains" is set.
-Example: "$1 found"`,
 	)
 
 	result.Flags().IntVarP(
