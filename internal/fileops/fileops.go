@@ -3,6 +3,7 @@ package fileops
 import (
 	"errors"
 	"fmt"
+	"github.com/bmatcuk/doublestar/v4"
 	"github.com/mih-kopylov/bulker/internal/model"
 	"github.com/spf13/afero"
 	"os"
@@ -142,7 +143,7 @@ func SearchFiles(
 		return nil, err
 	}
 
-	matchedFiles, err := afero.Glob(fs, filepath.Join(repo.Path, pattern))
+	matchedFiles, err := doublestar.FilepathGlob(filepath.Join(repo.Path, pattern))
 	if err != nil {
 		return nil, err
 	}
@@ -157,6 +158,15 @@ func SearchFiles(
 
 	var result []FileSearchResult
 	for _, matchedFile := range matchedFiles {
+		stat, err := os.Stat(matchedFile)
+		if err != nil {
+			return nil, err
+		}
+
+		if stat.IsDir() {
+			continue
+		}
+
 		if containsReg == nil {
 			result = append(
 				result, FileSearchResult{
@@ -174,6 +184,78 @@ func SearchFiles(
 				result = append(result, *searchResult)
 			}
 		}
+	}
+
+	if len(result) == 0 {
+		return nil, nil
+	}
+
+	return result, nil
+}
+
+type FileReplacementResult struct {
+	FileName string
+	Count    int
+}
+
+func ReplaceInFiles(fs afero.Fs, repo *model.Repo, pattern string, contains string, replacement string) (
+	[]FileReplacementResult, error,
+) {
+	err := CheckRepoExists(fs, repo)
+	if err != nil {
+		return nil, err
+	}
+
+	matchedFiles, err := doublestar.FilepathGlob(filepath.Join(repo.Path, pattern))
+	if err != nil {
+		return nil, err
+	}
+
+	var containsReg *regexp.Regexp
+	if contains != "" {
+		containsReg, err = regexp.Compile(contains)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var result []FileReplacementResult
+	for _, matchedFile := range matchedFiles {
+		stat, err := fs.Stat(matchedFile)
+		if err != nil {
+			return nil, err
+		}
+		if stat.IsDir() {
+			continue
+		}
+
+		fileBytes, err := afero.ReadFile(fs, matchedFile)
+		if err != nil {
+			return nil, err
+		}
+
+		findings := containsReg.FindAllIndex(fileBytes, -1)
+		if len(findings) == 0 {
+			continue
+		}
+
+		lastFoundIndex := 0
+		var resultBytes []byte
+
+		for _, finding := range findings {
+			findingStart := finding[0]
+			findingEnd := finding[1]
+			resultBytes = append(resultBytes, fileBytes[lastFoundIndex:findingStart]...)
+			resultBytes = append(resultBytes, []byte(replacement)...)
+			lastFoundIndex = findingEnd
+		}
+		resultBytes = append(resultBytes, fileBytes[lastFoundIndex:]...)
+
+		err = afero.WriteFile(fs, matchedFile, resultBytes, stat.Mode())
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, FileReplacementResult{FileName: matchedFile, Count: len(findings)})
 	}
 
 	if len(result) == 0 {
