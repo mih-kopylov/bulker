@@ -38,6 +38,9 @@ func (r *SequentialRunner) Run(
 			repoResult, err := handler(ctx, runContext)
 			logrus.WithField("repo", repo.Name).Debug("processing completed")
 			r.progress.Incr()
+			if err != nil {
+				r.progress.IncrErrors()
+			}
 			allReposResult[runContext.Repo.Name] = ProcessResult{
 				Result: repoResult,
 				Error:  err,

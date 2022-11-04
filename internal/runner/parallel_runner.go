@@ -52,8 +52,11 @@ func (r *ParallelRunner) Run(
 				default:
 					logrus.WithField("repo", runContext.Repo.Name).Debug("processing started")
 					repoResult, err := handler(ctx, runContext)
-					r.progress.Incr()
 					logrus.WithField("repo", runContext.Repo.Name).Debug("processing completed")
+					r.progress.Incr()
+					if err != nil {
+						r.progress.IncrErrors()
+					}
 					ch <- repoProcessResult{
 						Name: runContext.Repo.Name,
 						ProcessResult: ProcessResult{
