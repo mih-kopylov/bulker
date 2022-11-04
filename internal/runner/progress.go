@@ -1,14 +1,18 @@
 package runner
 
 import (
+	"fmt"
 	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/schollz/progressbar/v3"
 	"github.com/sirupsen/logrus"
+	"strings"
 )
 
 type Progress interface {
 	// Incr increase current progress with 1
 	Incr()
+	// IncrErrors increments number of errors happened during the process
+	IncrErrors()
 	// IndicateTermination makes progress indicate that bulker received "SIGINT" and terminates gracefully
 	IndicateTermination()
 }
@@ -18,7 +22,9 @@ func NewProgress(conf *config.Config, maxCount int) Progress {
 }
 
 type ProgressBarProgress struct {
-	bar *progressbar.ProgressBar
+	bar         *progressbar.ProgressBar
+	errorsCount int
+	terminating bool
 }
 
 func (p *ProgressBarProgress) Incr() {
@@ -28,13 +34,31 @@ func (p *ProgressBarProgress) Incr() {
 	}
 }
 
+func (p *ProgressBarProgress) IncrErrors() {
+	p.errorsCount += 1
+	p.updateDescription()
+}
+
 func (p *ProgressBarProgress) IndicateTermination() {
-	p.bar.Describe("terminating, please wait")
+	p.terminating = true
+	p.updateDescription()
+}
+
+func (p *ProgressBarProgress) updateDescription() {
+	var messages []string
+	if p.errorsCount > 0 {
+		messages = append(messages, fmt.Sprintf("errors: %v", p.errorsCount))
+	}
+	if p.terminating {
+		messages = append(messages, "terminating, please wait")
+	}
+	p.bar.Describe(strings.Join(messages, " | "))
+
 }
 
 func newProgressBarProgress(maxCount int, visible bool) *ProgressBarProgress {
 	return &ProgressBarProgress{
-		progressbar.NewOptions(
+		bar: progressbar.NewOptions(
 			maxCount,
 			progressbar.OptionFullWidth(),
 			progressbar.OptionSetRenderBlankState(true),
@@ -43,5 +67,6 @@ func newProgressBarProgress(maxCount int, visible bool) *ProgressBarProgress {
 			progressbar.OptionSetPredictTime(false),
 			progressbar.OptionClearOnFinish(),
 		),
+		errorsCount: 0,
 	}
 }

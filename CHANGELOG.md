@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `force` flag for `git push` command
+- Number of errors indication in the progress bar
 
 ### Changed
 
