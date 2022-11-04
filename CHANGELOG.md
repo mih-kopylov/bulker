@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `open` command
-- `files` commands: `copy`, `rename`, `remove`
+- `files` commands: `copy`, `rename`, `remove`, `search`, `replace`
 
 ## [0.8.0] - 2022-08-06
 
