@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/spf13/cobra"
-	"io/ioutil"
+	"io"
 	"os"
 	"strings"
 )
@@ -38,7 +38,7 @@ func isInputFromPipe() bool {
 }
 
 func readFromStdin() ([]string, error) {
-	allBytes, err := ioutil.ReadAll(os.Stdin)
+	allBytes, err := io.ReadAll(os.Stdin)
 	if err != nil {
 		return nil, err
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/mih-kopylov/bulker/internal/fileops"
 	"github.com/mih-kopylov/bulker/internal/gitops"
 	"github.com/mih-kopylov/bulker/internal/runner"
 	"github.com/mih-kopylov/bulker/internal/utils"
@@ -30,7 +31,7 @@ func CreateCreateCommand() *cobra.Command {
 
 				if flags.discard {
 					err := gitops.Discard(runContext.Fs, runContext.Repo)
-					if errors.Is(err, gitops.ErrRepositoryNotCloned) {
+					if errors.Is(err, fileops.ErrRepositoryNotCloned) {
 						return result{gitops.StatusMissing, "", ""}, nil
 					}
 					if err != nil {
@@ -40,7 +41,7 @@ func CreateCreateCommand() *cobra.Command {
 
 				createResult, err := gitops.CreateBranch(runContext.Fs, runContext.Repo, flags.name)
 				if err != nil {
-					if errors.Is(err, gitops.ErrRepositoryNotCloned) {
+					if errors.Is(err, fileops.ErrRepositoryNotCloned) {
 						return result{gitops.StatusMissing, "", ""}, nil
 					}
 					return nil, fmt.Errorf("failed to create: %w", err)
@@ -48,7 +49,7 @@ func CreateCreateCommand() *cobra.Command {
 
 				_, err = gitops.Checkout(runContext.Fs, runContext.Repo, flags.name)
 				if err != nil {
-					if errors.Is(err, gitops.ErrRepositoryNotCloned) {
+					if errors.Is(err, fileops.ErrRepositoryNotCloned) {
 						return result{gitops.StatusMissing, "", ""}, nil
 					}
 					return nil, fmt.Errorf("failed to checkout: %w", err)

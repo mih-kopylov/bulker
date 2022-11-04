@@ -6,7 +6,7 @@ import (
 
 var fs afero.Fs
 
-//  Gets the configured file system for the application. Once it's configured on start,
+// GetConfiguredFS Gets the configured file system for the application. Once it's configured on start,
 // should be used for all file system manipulations
 func GetConfiguredFS() afero.Fs {
 	return fs
