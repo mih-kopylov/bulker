@@ -70,7 +70,9 @@ If the repo to be added already exists in the group, it will be ignored.`,
 	result.Flags().StringVarP(&flags.group, "group", "g", "", "Name of the group to update")
 	utils.MarkFlagRequiredOrFail(result.Flags(), "group")
 
-	result.Flags().StringSliceVarP(&flags.repos, "repo", "r", []string{}, "Repositories to add to the group")
+	result.Flags().StringSliceVarP(
+		&flags.repos, "name", "n", []string{}, "Names of the repositories to add to the group",
+	)
 
 	utils.AddReadFromStdInFlag(result, "repo")
 

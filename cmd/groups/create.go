@@ -78,9 +78,13 @@ func CreateCreateCommand() *cobra.Command {
 	result.Flags().StringVarP(&flags.group, "group", "g", "", "Name of the group to remove")
 	utils.MarkFlagRequiredOrFail(result.Flags(), "group")
 
-	result.Flags().StringSliceVarP(&flags.repos, "repo", "r", []string{}, "Repositories to add to the group")
+	result.Flags().StringSliceVarP(
+		&flags.repos, "name", "n", []string{}, "Names of the repositories to add to the group",
+	)
 
-	result.Flags().BoolVarP(&flags.force, "force", "f", false, "Recreate the group if a group with such a name already exists")
+	result.Flags().BoolVarP(
+		&flags.force, "force", "f", false, "Recreate the group if a group with such a name already exists",
+	)
 
 	utils.AddReadFromStdInFlag(result, "repo")
 
