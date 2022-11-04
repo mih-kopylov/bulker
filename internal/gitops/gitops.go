@@ -172,7 +172,7 @@ func Pull(fs afero.Fs, repo *model.Repo) error {
 	return nil
 }
 
-func Push(fs afero.Fs, repo *model.Repo, branch string) error {
+func Push(fs afero.Fs, repo *model.Repo, branch string, allBranches bool, force bool) error {
 	err := fileops.CheckRepoExists(fs, repo)
 	if err != nil {
 		return err
@@ -184,11 +184,19 @@ func Push(fs afero.Fs, repo *model.Repo, branch string) error {
 	}
 
 	arguments := []string{"push", "--set-upstream", remote}
-	if branch == "" {
+	if allBranches {
 		arguments = append(arguments, "--all")
 	} else {
+		if branch == "" {
+			return errors.New("incompatible 'branch' and 'allBranches' parameters values")
+		}
 		arguments = append(arguments, branch)
 	}
+
+	if force {
+		arguments = append(arguments, "--force")
+	}
+
 	output, err := shell.RunCommand(repo.Path, "git", arguments...)
 	if err != nil {
 		return fmt.Errorf("failed to push to remote: %v, %w", output, err)

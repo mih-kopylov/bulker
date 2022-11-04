@@ -2,6 +2,7 @@ package git
 
 import (
 	"context"
+	"errors"
 	"github.com/mih-kopylov/bulker/internal/gitops"
 	"github.com/mih-kopylov/bulker/internal/runner"
 	"github.com/spf13/cobra"
@@ -11,7 +12,9 @@ func CreatePushCommand() *cobra.Command {
 	var filter = runner.Filter{}
 
 	var flags struct {
-		branch string
+		force       bool
+		allBranches bool
+		branch      string
 	}
 
 	var result = &cobra.Command{
@@ -19,9 +22,18 @@ func CreatePushCommand() *cobra.Command {
 		Short: "Push branches to remote",
 		Long: `Push branches to remote.
 If -b <branchName> is defined, pushes the only branch. Otherwise pushes all branches`,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if flags.branch == "" && !flags.allBranches {
+				return errors.New("either 'branch' or 'all' flags should be set")
+			}
+			if flags.allBranches && flags.force {
+				return errors.New("only one branch is allowed to be force pushed")
+			}
+			return nil
+		},
 		RunE: runner.NewDefaultRunner(
 			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
-				err := gitops.Push(runContext.Fs, runContext.Repo, flags.branch)
+				err := gitops.Push(runContext.Fs, runContext.Repo, flags.branch, flags.allBranches, flags.force)
 				if err != nil {
 					return nil, err
 				}
@@ -34,6 +46,12 @@ If -b <branchName> is defined, pushes the only branch. Otherwise pushes all bran
 	filter.AddCommandFlags(result)
 
 	result.Flags().StringVarP(&flags.branch, "branch", "b", "", "Name of the branch to push")
+
+	result.Flags().BoolVarP(&flags.allBranches, "all", "a", false, "Push all branches if defined")
+
+	result.MarkFlagsMutuallyExclusive("branch", "all")
+
+	result.Flags().BoolVarP(&flags.force, "force", "f", false, "Use force push if defined")
 
 	return result
 }
