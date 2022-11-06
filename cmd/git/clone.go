@@ -17,7 +17,7 @@ func CreateCloneCommand() *cobra.Command {
 	var result = &cobra.Command{
 		Use:   "clone",
 		Short: "Clones the configured repositories out if they have not been yet",
-		RunE: runner.NewDefaultRunner(
+		RunE: runner.NewCommandRunner(
 			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
 				cloneResult, err := gitops.CloneRepo(runContext.Fs, runContext.Repo, flags.recreate)
 				if err != nil {

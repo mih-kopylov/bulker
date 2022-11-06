@@ -22,11 +22,6 @@ func Copy(fs afero.Fs, repo *model.Repo, source string, target string, force boo
 	sourceAbs := filepath.Join(repo.Path, source)
 	targetAbs := filepath.Join(repo.Path, target)
 
-	err := CheckRepoExists(fs, repo)
-	if err != nil {
-		return sourceAbs, targetAbs, err
-	}
-
 	sourceExists, err := afero.Exists(fs, sourceAbs)
 	if err != nil {
 		return sourceAbs, targetAbs, err
@@ -65,11 +60,6 @@ func Rename(fs afero.Fs, repo *model.Repo, source string, target string, force b
 	sourceAbs := filepath.Join(repo.Path, source)
 	targetAbs := filepath.Join(repo.Path, target)
 
-	err := CheckRepoExists(fs, repo)
-	if err != nil {
-		return sourceAbs, targetAbs, err
-	}
-
 	sourceExists, err := afero.Exists(fs, sourceAbs)
 	if err != nil {
 		return sourceAbs, targetAbs, err
@@ -95,11 +85,6 @@ func Rename(fs afero.Fs, repo *model.Repo, source string, target string, force b
 }
 
 func Remove(fs afero.Fs, repo *model.Repo, pattern string) ([]string, error) {
-	err := CheckRepoExists(fs, repo)
-	if err != nil {
-		return nil, err
-	}
-
 	matches, err := afero.Glob(fs, filepath.Join(repo.Path, pattern))
 	if err != nil {
 		return nil, err
@@ -138,11 +123,6 @@ type FileSearchResult struct {
 func SearchFiles(
 	fs afero.Fs, repo *model.Repo, pattern string, contains string, before int, after int,
 ) ([]FileSearchResult, error) {
-	err := CheckRepoExists(fs, repo)
-	if err != nil {
-		return nil, err
-	}
-
 	matchedFiles, err := doublestar.FilepathGlob(filepath.Join(repo.Path, pattern))
 	if err != nil {
 		return nil, err
@@ -201,11 +181,6 @@ type FileReplacementResult struct {
 func ReplaceInFiles(fs afero.Fs, repo *model.Repo, pattern string, contains string, replacement string) (
 	[]FileReplacementResult, error,
 ) {
-	err := CheckRepoExists(fs, repo)
-	if err != nil {
-		return nil, err
-	}
-
 	matchedFiles, err := doublestar.FilepathGlob(filepath.Join(repo.Path, pattern))
 	if err != nil {
 		return nil, err

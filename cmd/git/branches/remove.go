@@ -19,9 +19,9 @@ func CreateRemoveCommand() *cobra.Command {
 	var result = &cobra.Command{
 		Use:   "remove",
 		Short: "Remove a branch",
-		RunE: runner.NewDefaultRunner(
+		RunE: runner.NewCommandRunnerForExistingRepos(
 			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
-				removeResult, err := gitops.RemoveBranch(runContext.Fs, runContext.Repo, flags.name, flags.mode)
+				removeResult, err := gitops.RemoveBranch(runContext.Repo, flags.name, flags.mode)
 				if err != nil {
 					return nil, err
 				}

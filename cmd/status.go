@@ -24,7 +24,7 @@ func CreateStatusCommand() *cobra.Command {
 * Clean - the repository successfully cloned, there are no uncommitted changes
 * Dirty - the repository successfully cloned, but there are uncommitted changes
 * Missing - the repository is not cloned yet`,
-		RunE: runner.NewDefaultRunner(
+		RunE: runner.NewCommandRunner(
 			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
 				repoStatus, ref, err := gitops.Status(runContext.Fs, runContext.Repo)
 				if err != nil {

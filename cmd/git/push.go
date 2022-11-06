@@ -31,9 +31,9 @@ If -b <branchName> is defined, pushes the only branch. Otherwise pushes all bran
 			}
 			return nil
 		},
-		RunE: runner.NewDefaultRunner(
+		RunE: runner.NewCommandRunnerForExistingRepos(
 			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
-				err := gitops.Push(runContext.Fs, runContext.Repo, flags.branch, flags.allBranches, flags.force)
+				err := gitops.Push(runContext.Repo, flags.branch, flags.allBranches, flags.force)
 				if err != nil {
 					return nil, err
 				}

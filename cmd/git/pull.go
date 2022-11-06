@@ -13,9 +13,9 @@ func CreatePullCommand() *cobra.Command {
 	var result = &cobra.Command{
 		Use:   "pull",
 		Short: "Pull changes from remote",
-		RunE: runner.NewDefaultRunner(
+		RunE: runner.NewCommandRunnerForExistingRepos(
 			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
-				err := gitops.Pull(runContext.Fs, runContext.Repo)
+				err := gitops.Pull(runContext.Repo)
 				if err != nil {
 					return nil, err
 				}

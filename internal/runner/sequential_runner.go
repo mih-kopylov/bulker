@@ -28,7 +28,7 @@ func (r *SequentialRunner) Run(
 		select {
 		case <-ctx.Done():
 			logrus.WithField("repo", runContext.Repo.Name).Debug("processing skipped")
-			r.progress.Incr()
+			r.progress.IncrProgress()
 			allReposResult[runContext.Repo.Name] = ProcessResult{
 				Result: nil,
 				Error:  errors.New("skipped"),
@@ -37,7 +37,7 @@ func (r *SequentialRunner) Run(
 			logrus.WithField("repo", repo.Name).Debug("processing started")
 			repoResult, err := handler(ctx, runContext)
 			logrus.WithField("repo", repo.Name).Debug("processing completed")
-			r.progress.Incr()
+			r.progress.IncrProgress()
 			if err != nil {
 				r.progress.IncrErrors()
 			}

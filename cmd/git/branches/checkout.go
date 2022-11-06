@@ -21,7 +21,7 @@ func CreateCheckoutCommand() *cobra.Command {
 	var result = &cobra.Command{
 		Use:   "checkout",
 		Short: "Switch repository to the provided branch",
-		RunE: runner.NewDefaultRunner(
+		RunE: runner.NewCommandRunnerForExistingRepos(
 			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
 				type result struct {
 					Status   gitops.StatusResult
@@ -30,7 +30,7 @@ func CreateCheckoutCommand() *cobra.Command {
 				}
 
 				if flags.discard {
-					err := gitops.Discard(runContext.Fs, runContext.Repo)
+					err := gitops.Discard(runContext.Repo)
 					if errors.Is(err, fileops.ErrRepositoryNotCloned) {
 						return result{gitops.StatusMissing, "", ""}, nil
 					}
@@ -39,7 +39,7 @@ func CreateCheckoutCommand() *cobra.Command {
 					}
 				}
 
-				checkoutResult, err := gitops.Checkout(runContext.Fs, runContext.Repo, flags.name)
+				checkoutResult, err := gitops.Checkout(runContext.Repo, flags.name)
 				if err != nil {
 					if errors.Is(err, fileops.ErrRepositoryNotCloned) {
 						return result{gitops.StatusMissing, "", ""}, nil

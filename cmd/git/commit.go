@@ -19,9 +19,9 @@ func CreateCommitCommand() *cobra.Command {
 	var result = &cobra.Command{
 		Use:   "commit",
 		Short: "Commit changes",
-		RunE: runner.NewDefaultRunner(
+		RunE: runner.NewCommandRunnerForExistingRepos(
 			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
-				err := gitops.Commit(runContext.Fs, runContext.Repo, flags.pattern, flags.message)
+				err := gitops.Commit(runContext.Repo, flags.pattern, flags.message)
 				if err != nil {
 					return nil, err
 				}
