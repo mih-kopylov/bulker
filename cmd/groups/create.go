@@ -15,6 +15,7 @@ func CreateCreateCommand() *cobra.Command {
 		group string
 		repos []string
 		force bool
+		from  string
 	}{}
 
 	var result = &cobra.Command{
@@ -85,6 +86,12 @@ func CreateCreateCommand() *cobra.Command {
 	result.Flags().BoolVarP(
 		&flags.force, "force", "f", false, "Recreate the group if a group with such a name already exists",
 	)
+
+	result.Flags().StringVar(
+		&flags.from, "from", "", `Name of the group to use as a source for the new one. 
+Use 'previous' to refer to the previous command result`,
+	)
+	result.MarkFlagsMutuallyExclusive("name", "from")
 
 	utils.AddReadFromStdInFlag(result, "repo")
 

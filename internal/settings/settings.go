@@ -21,6 +21,10 @@ type Group struct {
 	Repos []string `yaml:"repos"`
 }
 
+const (
+	PreviousGroupName = "previous"
+)
+
 var (
 	ErrGroupNotFound      = errors.New("group is not found")
 	ErrGroupAlreadyExists = errors.New("group already exists")
@@ -63,15 +67,19 @@ func (s *Settings) RepoExists(name string) bool {
 }
 
 func (s *Settings) getRepoIndex(name string) int {
-	return slices.IndexFunc(s.Repos, func(repo Repo) bool {
-		return repo.Name == name
-	})
+	return slices.IndexFunc(
+		s.Repos, func(repo Repo) bool {
+			return repo.Name == name
+		},
+	)
 }
 
 func (s *Settings) getGroupIndex(group string) int {
-	return slices.IndexFunc(s.Groups, func(g Group) bool {
-		return g.Name == group
-	})
+	return slices.IndexFunc(
+		s.Groups, func(g Group) bool {
+			return g.Name == group
+		},
+	)
 }
 
 func (s *Settings) GetGroup(group string) (*Group, error) {
