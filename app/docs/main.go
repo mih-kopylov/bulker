@@ -16,7 +16,7 @@ func main() {
 		logrus.Fatal(err)
 	}
 
-	err = os.MkdirAll(dir, 0777)
+	err = os.MkdirAll(dir, os.ModePerm)
 	if err != nil {
 		logrus.Fatal(err)
 	}

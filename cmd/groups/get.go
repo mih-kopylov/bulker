@@ -17,7 +17,7 @@ func CreateGetCommand() *cobra.Command {
 		Use:   "get",
 		Short: "Prints repositories of the provided group",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			settingsManager := settings.NewManager(utils.GetConfiguredFS(), config.ReadConfig())
+			settingsManager := settings.NewManager(config.ReadConfig())
 
 			sets, err := settingsManager.Read()
 			if err != nil {

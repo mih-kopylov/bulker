@@ -21,7 +21,7 @@ func CreateCreateCommand() *cobra.Command {
 		Use:   "create",
 		Short: "Creates a new group with provided content",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			settingsManager := settings.NewManager(utils.GetConfiguredFS(), config.ReadConfig())
+			settingsManager := settings.NewManager(config.ReadConfig())
 
 			sets, err := settingsManager.Read()
 			if err != nil {

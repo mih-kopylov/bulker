@@ -6,7 +6,6 @@ import (
 	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 	"os"
@@ -15,13 +14,11 @@ import (
 )
 
 type Manager struct {
-	fs   afero.Fs
 	conf *config.Config
 }
 
-func NewManager(fs afero.Fs, conf *config.Config) *Manager {
+func NewManager(conf *config.Config) *Manager {
 	return &Manager{
-		fs:   fs,
 		conf: conf,
 	}
 }
@@ -30,12 +27,12 @@ func (sm *Manager) Read() (*Settings, error) {
 	settingsFileName := sm.conf.SettingsFileName
 
 	settingsDirectory := filepath.Dir(settingsFileName)
-	err := sm.fs.MkdirAll(settingsDirectory, 0777)
+	err := os.MkdirAll(settingsDirectory, os.ModePerm)
 	if err != nil {
 		return nil, err
 	}
 
-	fileContent, err := afero.ReadFile(sm.fs, settingsFileName)
+	fileContent, err := os.ReadFile(settingsFileName)
 	if err != nil {
 		newInstance := &Settings{}
 		err := sm.Write(newInstance)
@@ -78,7 +75,7 @@ func (sm *Manager) Write(settings *Settings) error {
 		return err
 	}
 
-	err = afero.WriteFile(sm.fs, settingsFileName, fileContent, os.ModePerm)
+	err = os.WriteFile(settingsFileName, fileContent, os.ModePerm)
 	return err
 }
 
@@ -109,7 +106,7 @@ func (sm *Manager) Export(remoteRepoUrl string) (map[string]ExportImportStatus, 
 		return nil, err
 	}
 
-	err = os.WriteFile(exportFileName, jsonBytes, 0777)
+	err = os.WriteFile(exportFileName, jsonBytes, os.ModePerm)
 	if err != nil {
 		return nil, err
 	}

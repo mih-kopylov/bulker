@@ -26,7 +26,7 @@ func CreateReplaceCommand() *cobra.Command {
 		RunE: runner.NewCommandRunnerForExistingRepos(
 			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
 				replaceResult, err := fileops.ReplaceInFiles(
-					runContext.Fs, runContext.Repo, flags.pattern, flags.contains, flags.replacement,
+					runContext.Repo, flags.pattern, flags.contains, flags.replacement,
 				)
 				if err != nil {
 					if errors.Is(err, fileops.ErrSourceNotFound) {

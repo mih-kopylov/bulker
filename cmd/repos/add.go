@@ -19,7 +19,7 @@ func CreateAddCommand() *cobra.Command {
 		Use:   "add",
 		Short: "Adds a new repository to the supported list",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			settingsManager := settings.NewManager(utils.GetConfiguredFS(), config.ReadConfig())
+			settingsManager := settings.NewManager(config.ReadConfig())
 
 			sets, err := settingsManager.Read()
 			if err != nil {

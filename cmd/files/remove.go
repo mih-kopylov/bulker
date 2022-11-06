@@ -24,9 +24,7 @@ func CreateRemoveCommand() *cobra.Command {
 					Removed string
 				}
 
-				removed, err := fileops.Remove(
-					runContext.Fs, runContext.Repo, flags.pattern,
-				)
+				removed, err := fileops.Remove(runContext.Repo, flags.pattern)
 				if len(removed) == 0 {
 					return nil, nil
 				}

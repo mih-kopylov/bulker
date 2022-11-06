@@ -8,7 +8,6 @@ import (
 	"github.com/mih-kopylov/bulker/internal/model"
 	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 	"os"
 	"regexp"
 	"strings"
@@ -96,8 +95,8 @@ const (
 	GitModeRemote GitMode = "remote"
 )
 
-func CloneRepo(fs afero.Fs, repo *model.Repo, recreate bool) (CloneResult, error) {
-	_, err := fs.Stat(repo.Path)
+func CloneRepo(repo *model.Repo, recreate bool) (CloneResult, error) {
+	_, err := os.Stat(repo.Path)
 
 	wasRecreated := false
 
@@ -113,7 +112,7 @@ func CloneRepo(fs afero.Fs, repo *model.Repo, recreate bool) (CloneResult, error
 
 			return ClonedAlready, nil
 		}
-		err = fs.RemoveAll(repo.Path)
+		err = os.RemoveAll(repo.Path)
 		if err != nil {
 			return CloneError, fmt.Errorf("failed to delete directory for recreation: %w", err)
 		}
@@ -124,7 +123,7 @@ func CloneRepo(fs afero.Fs, repo *model.Repo, recreate bool) (CloneResult, error
 		return CloneError, fmt.Errorf("expected ErrNotExist but another found: %w", err)
 	}
 
-	err = fs.MkdirAll(repo.Path, 0700)
+	err = os.MkdirAll(repo.Path, 0700)
 	if err != nil {
 		return CloneError, fmt.Errorf("failed to create directory: directory=%v, error=%w", repo.Path, err)
 	}
@@ -190,8 +189,8 @@ func Push(repo *model.Repo, branch string, allBranches bool, force bool) error {
 	return nil
 }
 
-func Status(fs afero.Fs, repo *model.Repo) (StatusResult, string, error) {
-	err := fileops.CheckRepoExists(fs, repo)
+func Status(repo *model.Repo) (StatusResult, string, error) {
+	err := fileops.CheckRepoExists(repo)
 	if err != nil {
 		if errors.Is(err, fileops.ErrRepositoryNotCloned) {
 			return StatusMissing, "", nil

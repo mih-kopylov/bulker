@@ -47,7 +47,7 @@ func CreateCheckoutCommand() *cobra.Command {
 					return nil, fmt.Errorf("failed to checkout: %w", err)
 				}
 
-				statusResult, ref, err := gitops.Status(runContext.Fs, runContext.Repo)
+				statusResult, ref, err := gitops.Status(runContext.Repo)
 				if err != nil {
 					return nil, fmt.Errorf("failed to get status: %w", err)
 				}

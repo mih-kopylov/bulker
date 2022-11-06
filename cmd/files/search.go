@@ -28,8 +28,7 @@ func CreateSearchCommand() *cobra.Command {
 		RunE: runner.NewCommandRunnerForExistingRepos(
 			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
 				searchResult, err := fileops.SearchFiles(
-					runContext.Fs, runContext.Repo, flags.pattern, flags.contains,
-					flags.before, flags.after,
+					runContext.Repo, flags.pattern, flags.contains, flags.before, flags.after,
 				)
 				if err != nil {
 					if errors.Is(err, fileops.ErrSourceNotFound) {

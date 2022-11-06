@@ -7,11 +7,9 @@ import (
 	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/settings"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 )
 
 type ParallelRunner struct {
-	fs       afero.Fs
 	manager  *settings.Manager
 	config   *config.Config
 	filter   *Filter
@@ -35,7 +33,7 @@ func (r *ParallelRunner) Run(
 	ch := make(chan repoProcessResult)
 	logrus.WithField("mode", r.config.RunMode).Debug("processing repositories")
 	for _, repo := range repos {
-		runContext := newRunContext(r.fs, r.manager, r.config, r.args, repo)
+		runContext := newRunContext(r.manager, r.config, r.args, repo)
 		pool.Submit(
 			func() {
 				select {

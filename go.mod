@@ -5,11 +5,10 @@ go 1.18
 require (
 	github.com/alitto/pond v1.8.2
 	github.com/aquasecurity/table v1.8.0
-	github.com/bmatcuk/doublestar/v4 v4.3.1
+	github.com/bmatcuk/doublestar/v4 v4.3.2
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/schollz/progressbar/v3 v3.12.0
 	github.com/sirupsen/logrus v1.9.0
-	github.com/spf13/afero v1.9.2
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.13.0
@@ -30,6 +29,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.0.5 // indirect
 	github.com/rivo/uniseg v0.4.2 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	github.com/spf13/afero v1.9.2 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/subosito/gotenv v1.4.1 // indirect

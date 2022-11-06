@@ -18,7 +18,7 @@ func CreateImportCommand() *cobra.Command {
 		Use:   "import",
 		Short: "Imports the repositories configuration from an external git repository",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			manager := settings.NewManager(utils.GetConfiguredFS(), config.ReadConfig())
+			manager := settings.NewManager(config.ReadConfig())
 			importResult, err := manager.Import(flags.remote)
 			if err != nil {
 				return err
