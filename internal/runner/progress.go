@@ -9,8 +9,8 @@ import (
 )
 
 type Progress interface {
-	// Incr increase current progress with 1
-	Incr()
+	// IncrProgress increase current progress with 1
+	IncrProgress()
 	// IncrErrors increments number of errors happened during the process
 	IncrErrors()
 	// IndicateTermination makes progress indicate that bulker received "SIGINT" and terminates gracefully
@@ -27,7 +27,7 @@ type ProgressBarProgress struct {
 	terminating bool
 }
 
-func (p *ProgressBarProgress) Incr() {
+func (p *ProgressBarProgress) IncrProgress() {
 	err := p.bar.Add(1)
 	if err != nil {
 		logrus.Debug(err)
