@@ -22,7 +22,7 @@ func CreateAppendCommand() *cobra.Command {
 		Long: `Updates the configured group content with adding new repositories. 
 If the repo to be added already exists in the group, it will be ignored.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			settingsManager := settings.NewManager(utils.GetConfiguredFS(), config.ReadConfig())
+			settingsManager := settings.NewManager(config.ReadConfig())
 
 			sets, err := settingsManager.Read()
 			if err != nil {

@@ -28,10 +28,7 @@ func CreateCopyCommand() *cobra.Command {
 					Target string
 				}
 
-				source, target, err := fileops.Copy(
-					runContext.Fs, runContext.Repo, flags.source, flags.target,
-					flags.force,
-				)
+				source, target, err := fileops.Copy(runContext.Repo, flags.source, flags.target, flags.force)
 				if err != nil {
 					if errors.Is(err, fileops.ErrSourceNotFound) {
 						return nil, nil

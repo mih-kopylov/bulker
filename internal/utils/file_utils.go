@@ -28,3 +28,15 @@ func AbsPathify(path string) string {
 	}
 	return filepath.Clean(path)
 }
+
+// Exists returns whether a file or directory exists on file system
+func Exists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, err
+}

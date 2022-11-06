@@ -17,7 +17,7 @@ func CreateRemoveCommand() *cobra.Command {
 		Use:   "remove",
 		Short: "Remove one repo from the supported list",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			settingsManager := settings.NewManager(utils.GetConfiguredFS(), config.ReadConfig())
+			settingsManager := settings.NewManager(config.ReadConfig())
 
 			sets, err := settingsManager.Read()
 			if err != nil {

@@ -6,11 +6,9 @@ import (
 	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/settings"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 )
 
 type SequentialRunner struct {
-	fs       afero.Fs
 	manager  *settings.Manager
 	config   *config.Config
 	filter   *Filter
@@ -24,7 +22,7 @@ func (r *SequentialRunner) Run(
 	allReposResult := map[string]ProcessResult{}
 	logrus.WithField("mode", r.config.RunMode).Debug("processing repositories")
 	for _, repo := range repos {
-		runContext := newRunContext(r.fs, r.manager, r.config, r.args, repo)
+		runContext := newRunContext(r.manager, r.config, r.args, repo)
 		select {
 		case <-ctx.Done():
 			logrus.WithField("repo", runContext.Repo.Name).Debug("processing skipped")

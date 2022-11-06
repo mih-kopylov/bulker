@@ -18,7 +18,7 @@ func CreateExportCommand() *cobra.Command {
 		Use:   "export",
 		Short: "Exports the repositories configuration into an external git repository",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			manager := settings.NewManager(utils.GetConfiguredFS(), config.ReadConfig())
+			manager := settings.NewManager(config.ReadConfig())
 			exportResult, err := manager.Export(flags.remote)
 			if err != nil {
 				return err

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/mih-kopylov/bulker/internal/model"
-	"github.com/spf13/afero"
+	"github.com/mih-kopylov/bulker/internal/utils"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -18,11 +18,11 @@ var (
 	ErrRepositoryNotCloned = errors.New("repository not cloned")
 )
 
-func Copy(fs afero.Fs, repo *model.Repo, source string, target string, force bool) (string, string, error) {
+func Copy(repo *model.Repo, source string, target string, force bool) (string, string, error) {
 	sourceAbs := filepath.Join(repo.Path, source)
 	targetAbs := filepath.Join(repo.Path, target)
 
-	sourceExists, err := afero.Exists(fs, sourceAbs)
+	sourceExists, err := utils.Exists(sourceAbs)
 	if err != nil {
 		return sourceAbs, targetAbs, err
 	}
@@ -30,7 +30,7 @@ func Copy(fs afero.Fs, repo *model.Repo, source string, target string, force boo
 		return sourceAbs, targetAbs, ErrSourceNotFound
 	}
 
-	targetExists, err := afero.Exists(fs, targetAbs)
+	targetExists, err := utils.Exists(targetAbs)
 	if err != nil {
 		return sourceAbs, targetAbs, err
 	}
@@ -38,17 +38,17 @@ func Copy(fs afero.Fs, repo *model.Repo, source string, target string, force boo
 		return sourceAbs, targetAbs, ErrTargetAlreadyExists
 	}
 
-	fileContent, err := afero.ReadFile(fs, sourceAbs)
+	fileContent, err := os.ReadFile(sourceAbs)
 	if err != nil {
 		return sourceAbs, targetAbs, err
 	}
 
-	sourceFileInfo, err := fs.Stat(sourceAbs)
+	sourceFileInfo, err := os.Stat(sourceAbs)
 	if err != nil {
 		return sourceAbs, targetAbs, err
 	}
 
-	err = afero.WriteFile(fs, targetAbs, fileContent, sourceFileInfo.Mode())
+	err = os.WriteFile(targetAbs, fileContent, sourceFileInfo.Mode())
 	if err != nil {
 		return sourceAbs, targetAbs, err
 	}
@@ -56,11 +56,11 @@ func Copy(fs afero.Fs, repo *model.Repo, source string, target string, force boo
 	return sourceAbs, targetAbs, nil
 }
 
-func Rename(fs afero.Fs, repo *model.Repo, source string, target string, force bool) (string, string, error) {
+func Rename(repo *model.Repo, source string, target string, force bool) (string, string, error) {
 	sourceAbs := filepath.Join(repo.Path, source)
 	targetAbs := filepath.Join(repo.Path, target)
 
-	sourceExists, err := afero.Exists(fs, sourceAbs)
+	sourceExists, err := utils.Exists(sourceAbs)
 	if err != nil {
 		return sourceAbs, targetAbs, err
 	}
@@ -68,7 +68,7 @@ func Rename(fs afero.Fs, repo *model.Repo, source string, target string, force b
 		return sourceAbs, targetAbs, ErrSourceNotFound
 	}
 
-	targetExists, err := afero.Exists(fs, targetAbs)
+	targetExists, err := utils.Exists(targetAbs)
 	if err != nil {
 		return sourceAbs, targetAbs, err
 	}
@@ -76,7 +76,7 @@ func Rename(fs afero.Fs, repo *model.Repo, source string, target string, force b
 		return sourceAbs, targetAbs, ErrTargetAlreadyExists
 	}
 
-	err = fs.Rename(sourceAbs, targetAbs)
+	err = os.Rename(sourceAbs, targetAbs)
 	if err != nil {
 		return sourceAbs, targetAbs, err
 	}
@@ -84,15 +84,15 @@ func Rename(fs afero.Fs, repo *model.Repo, source string, target string, force b
 	return sourceAbs, targetAbs, nil
 }
 
-func Remove(fs afero.Fs, repo *model.Repo, pattern string) ([]string, error) {
-	matches, err := afero.Glob(fs, filepath.Join(repo.Path, pattern))
+func Remove(repo *model.Repo, pattern string) ([]string, error) {
+	matchedFiles, err := doublestar.FilepathGlob(filepath.Join(repo.Path, pattern))
 	if err != nil {
 		return nil, err
 	}
 
 	var result []string
-	for _, fileToRemove := range matches {
-		err := fs.Remove(fileToRemove)
+	for _, fileToRemove := range matchedFiles {
+		err := os.Remove(fileToRemove)
 		if err != nil {
 			result = append(result, fmt.Sprintf("%v: failed: %v", fileToRemove, err))
 		} else {
@@ -103,8 +103,8 @@ func Remove(fs afero.Fs, repo *model.Repo, pattern string) ([]string, error) {
 	return result, nil
 }
 
-func CheckRepoExists(fs afero.Fs, repo *model.Repo) error {
-	_, err := fs.Stat(repo.Path)
+func CheckRepoExists(repo *model.Repo) error {
+	_, err := os.Stat(repo.Path)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			return ErrRepositoryNotCloned
@@ -120,9 +120,9 @@ type FileSearchResult struct {
 	Matches  []string
 }
 
-func SearchFiles(
-	fs afero.Fs, repo *model.Repo, pattern string, contains string, before int, after int,
-) ([]FileSearchResult, error) {
+func SearchFiles(repo *model.Repo, pattern string, contains string, before int, after int) (
+	[]FileSearchResult, error,
+) {
 	matchedFiles, err := doublestar.FilepathGlob(filepath.Join(repo.Path, pattern))
 	if err != nil {
 		return nil, err
@@ -155,7 +155,7 @@ func SearchFiles(
 				},
 			)
 		} else {
-			searchResult, err := SearchInFile(fs, matchedFile, containsReg, before, after)
+			searchResult, err := SearchInFile(matchedFile, containsReg, before, after)
 			if err != nil {
 				return nil, err
 			}
@@ -178,7 +178,7 @@ type FileReplacementResult struct {
 	Count    int
 }
 
-func ReplaceInFiles(fs afero.Fs, repo *model.Repo, pattern string, contains string, replacement string) (
+func ReplaceInFiles(repo *model.Repo, pattern string, contains string, replacement string) (
 	[]FileReplacementResult, error,
 ) {
 	matchedFiles, err := doublestar.FilepathGlob(filepath.Join(repo.Path, pattern))
@@ -196,7 +196,7 @@ func ReplaceInFiles(fs afero.Fs, repo *model.Repo, pattern string, contains stri
 
 	var result []FileReplacementResult
 	for _, matchedFile := range matchedFiles {
-		stat, err := fs.Stat(matchedFile)
+		stat, err := os.Stat(matchedFile)
 		if err != nil {
 			return nil, err
 		}
@@ -204,7 +204,7 @@ func ReplaceInFiles(fs afero.Fs, repo *model.Repo, pattern string, contains stri
 			continue
 		}
 
-		fileBytes, err := afero.ReadFile(fs, matchedFile)
+		fileBytes, err := os.ReadFile(matchedFile)
 		if err != nil {
 			return nil, err
 		}
@@ -226,7 +226,7 @@ func ReplaceInFiles(fs afero.Fs, repo *model.Repo, pattern string, contains stri
 		}
 		resultBytes = append(resultBytes, fileBytes[lastFoundIndex:]...)
 
-		err = afero.WriteFile(fs, matchedFile, resultBytes, stat.Mode())
+		err = os.WriteFile(matchedFile, resultBytes, stat.Mode())
 		if err != nil {
 			return nil, err
 		}
@@ -240,14 +240,12 @@ func ReplaceInFiles(fs afero.Fs, repo *model.Repo, pattern string, contains stri
 	return result, nil
 }
 
-func SearchInFile(fs afero.Fs, fileName string, containsReg *regexp.Regexp, before int, after int) (
-	*FileSearchResult, error,
-) {
+func SearchInFile(fileName string, containsReg *regexp.Regexp, before int, after int) (*FileSearchResult, error) {
 	if containsReg == nil {
 		return nil, errors.New("containsReg is expected to be passed")
 	}
 
-	fileBytes, err := afero.ReadFile(fs, fileName)
+	fileBytes, err := os.ReadFile(fileName)
 	if err != nil {
 		return nil, err
 	}

@@ -26,7 +26,7 @@ func CreateStatusCommand() *cobra.Command {
 * Missing - the repository is not cloned yet`,
 		RunE: runner.NewCommandRunner(
 			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
-				repoStatus, ref, err := gitops.Status(runContext.Fs, runContext.Repo)
+				repoStatus, ref, err := gitops.Status(runContext.Repo)
 				if err != nil {
 					return nil, fmt.Errorf("failed to get status: %w", err)
 				}

@@ -8,9 +8,7 @@ import (
 	"github.com/mih-kopylov/bulker/internal/model"
 	"github.com/mih-kopylov/bulker/internal/output"
 	"github.com/mih-kopylov/bulker/internal/settings"
-	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"path/filepath"
 	"time"
@@ -20,11 +18,10 @@ type Runner interface {
 	Run(ctx context.Context, repos []settings.Repo, handler RepoHandler) (map[string]ProcessResult, error)
 }
 
-func NewRunner(fs afero.Fs, conf *config.Config, filter *Filter, progress Progress, args []string) (Runner, error) {
-	manager := settings.NewManager(fs, conf)
+func NewRunner(conf *config.Config, filter *Filter, progress Progress, args []string) (Runner, error) {
+	manager := settings.NewManager(conf)
 	if conf.RunMode == config.Sequential {
 		return &SequentialRunner{
-			fs:       fs,
 			manager:  manager,
 			config:   conf,
 			filter:   filter,
@@ -33,7 +30,6 @@ func NewRunner(fs afero.Fs, conf *config.Config, filter *Filter, progress Progre
 		}, nil
 	} else if conf.RunMode == config.Parallel {
 		return &ParallelRunner{
-			fs:       fs,
 			manager:  manager,
 			config:   conf,
 			filter:   filter,
@@ -49,9 +45,8 @@ func NewCommandRunner(filter *Filter, handler RepoHandler) func(
 	args []string,
 ) error {
 	return func(cmd *cobra.Command, args []string) error {
-		fs := utils.GetConfiguredFS()
 		conf := config.ReadConfig()
-		manager := settings.NewManager(fs, conf)
+		manager := settings.NewManager(conf)
 
 		sets, err := manager.Read()
 		if err != nil {
@@ -60,7 +55,7 @@ func NewCommandRunner(filter *Filter, handler RepoHandler) func(
 
 		repos := filter.FilterMatchingRepos(sets.Repos, sets.Groups)
 		progress := NewProgress(conf, len(repos))
-		newRunner, err := NewRunner(fs, conf, filter, progress, args)
+		newRunner, err := NewRunner(conf, filter, progress, args)
 		if err != nil {
 			return err
 		}
@@ -96,7 +91,7 @@ func NewCommandRunnerForExistingRepos(filter *Filter, handler RepoHandler) func(
 	args []string,
 ) error {
 	handlerWithRepoExistenceVerifier := func(ctx context.Context, runContext *RunContext) (interface{}, error) {
-		err := fileops.CheckRepoExists(runContext.Fs, runContext.Repo)
+		err := fileops.CheckRepoExists(runContext.Repo)
 		if err != nil {
 			return nil, err
 		}
@@ -108,18 +103,14 @@ func NewCommandRunnerForExistingRepos(filter *Filter, handler RepoHandler) func(
 }
 
 type RunContext struct {
-	Fs      afero.Fs
 	Manager *settings.Manager
 	Config  *config.Config
 	Repo    *model.Repo
 	Args    []string
 }
 
-func newRunContext(
-	fs afero.Fs, manager *settings.Manager, conf *config.Config, args []string, repo settings.Repo,
-) *RunContext {
+func newRunContext(manager *settings.Manager, conf *config.Config, args []string, repo settings.Repo) *RunContext {
 	return &RunContext{
-		Fs:      fs,
 		Manager: manager,
 		Config:  conf,
 		Repo: &model.Repo{

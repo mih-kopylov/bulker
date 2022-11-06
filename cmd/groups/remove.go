@@ -17,7 +17,7 @@ func CreateRemoveCommand() *cobra.Command {
 		Use:   "remove",
 		Short: "Removes a group",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			settingsManager := settings.NewManager(utils.GetConfiguredFS(), config.ReadConfig())
+			settingsManager := settings.NewManager(config.ReadConfig())
 
 			sets, err := settingsManager.Read()
 			if err != nil {
