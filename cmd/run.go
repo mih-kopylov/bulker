@@ -22,7 +22,7 @@ See https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap12.html#tag
 
 Example: "bulker run -- mvn -B -q clean"`,
 		Args: cobra.MinimumNArgs(1),
-		RunE: runner.NewDefaultRunner(
+		RunE: runner.NewCommandRunnerForExistingRepos(
 			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
 				output, err := shell.RunCommand(runContext.Repo.Path, runContext.Args[0], runContext.Args[1:]...)
 				if err != nil {

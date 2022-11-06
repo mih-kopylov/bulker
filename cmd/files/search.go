@@ -25,7 +25,7 @@ func CreateSearchCommand() *cobra.Command {
 	var result = &cobra.Command{
 		Use:   "search",
 		Short: "Searches for files and file content",
-		RunE: runner.NewDefaultRunner(
+		RunE: runner.NewCommandRunnerForExistingRepos(
 			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
 				searchResult, err := fileops.SearchFiles(
 					runContext.Fs, runContext.Repo, flags.pattern, flags.contains,

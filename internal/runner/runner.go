@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/mih-kopylov/bulker/internal/config"
+	"github.com/mih-kopylov/bulker/internal/fileops"
 	"github.com/mih-kopylov/bulker/internal/model"
 	"github.com/mih-kopylov/bulker/internal/output"
 	"github.com/mih-kopylov/bulker/internal/settings"
@@ -43,7 +44,10 @@ func NewRunner(fs afero.Fs, conf *config.Config, filter *Filter, progress Progre
 	return nil, fmt.Errorf("unsupported run mode %v", conf.RunMode)
 }
 
-func NewDefaultRunner(filter *Filter, handler RepoHandler) func(cmd *cobra.Command, args []string) error {
+func NewCommandRunner(filter *Filter, handler RepoHandler) func(
+	cmd *cobra.Command,
+	args []string,
+) error {
 	return func(cmd *cobra.Command, args []string) error {
 		fs := utils.GetConfiguredFS()
 		conf := config.ReadConfig()
@@ -85,6 +89,22 @@ func NewDefaultRunner(filter *Filter, handler RepoHandler) func(cmd *cobra.Comma
 
 		return nil
 	}
+}
+
+func NewCommandRunnerForExistingRepos(filter *Filter, handler RepoHandler) func(
+	cmd *cobra.Command,
+	args []string,
+) error {
+	handlerWithRepoExistenceVerifier := func(ctx context.Context, runContext *RunContext) (interface{}, error) {
+		err := fileops.CheckRepoExists(runContext.Fs, runContext.Repo)
+		if err != nil {
+			return nil, err
+		}
+
+		return handler(ctx, runContext)
+	}
+
+	return NewCommandRunner(filter, handlerWithRepoExistenceVerifier)
 }
 
 type RunContext struct {

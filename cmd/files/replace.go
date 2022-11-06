@@ -23,7 +23,7 @@ func CreateReplaceCommand() *cobra.Command {
 	var result = &cobra.Command{
 		Use:   "replace",
 		Short: "Replaces files content",
-		RunE: runner.NewDefaultRunner(
+		RunE: runner.NewCommandRunnerForExistingRepos(
 			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
 				replaceResult, err := fileops.ReplaceInFiles(
 					runContext.Fs, runContext.Repo, flags.pattern, flags.contains, flags.replacement,

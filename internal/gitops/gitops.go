@@ -141,12 +141,7 @@ func CloneRepo(fs afero.Fs, repo *model.Repo, recreate bool) (CloneResult, error
 	return ClonedSuccessfully, nil
 }
 
-func Fetch(fs afero.Fs, repo *model.Repo) error {
-	err := fileops.CheckRepoExists(fs, repo)
-	if err != nil {
-		return err
-	}
-
+func Fetch(repo *model.Repo) error {
 	output, err := shell.RunCommand(repo.Path, "git", "fetch", "--prune")
 	if err != nil {
 		return fmt.Errorf("failed to fetch remote: %v, %w", output, err)
@@ -155,12 +150,7 @@ func Fetch(fs afero.Fs, repo *model.Repo) error {
 	return nil
 }
 
-func Pull(fs afero.Fs, repo *model.Repo) error {
-	err := fileops.CheckRepoExists(fs, repo)
-	if err != nil {
-		return err
-	}
-
+func Pull(repo *model.Repo) error {
 	output, err := shell.RunCommand(repo.Path, "git", "pull", "--prune")
 	if err != nil {
 		if strings.Contains(output, "There is no tracking information for the current branch") {
@@ -172,12 +162,7 @@ func Pull(fs afero.Fs, repo *model.Repo) error {
 	return nil
 }
 
-func Push(fs afero.Fs, repo *model.Repo, branch string, allBranches bool, force bool) error {
-	err := fileops.CheckRepoExists(fs, repo)
-	if err != nil {
-		return err
-	}
-
+func Push(repo *model.Repo, branch string, allBranches bool, force bool) error {
 	remote, err := getTheOnlyRemote(repo)
 	if err != nil {
 		return err
@@ -232,13 +217,8 @@ func Status(fs afero.Fs, repo *model.Repo) (StatusResult, string, error) {
 	return StatusDirty, ref, nil
 }
 
-func CreateBranch(fs afero.Fs, repo *model.Repo, name string) (CreateResult, error) {
-	err := fileops.CheckRepoExists(fs, repo)
-	if err != nil {
-		return CreateError, err
-	}
-
-	branches, err := GetBranches(fs, repo, GitModeAll, name)
+func CreateBranch(repo *model.Repo, name string) (CreateResult, error) {
+	branches, err := GetBranches(repo, GitModeAll, name)
 	if err != nil {
 		return CreateError, err
 	}
@@ -255,13 +235,8 @@ func CreateBranch(fs afero.Fs, repo *model.Repo, name string) (CreateResult, err
 	return CreateOk, nil
 }
 
-func RemoveBranch(fs afero.Fs, repo *model.Repo, name string, mode GitMode) (string, error) {
-	err := fileops.CheckRepoExists(fs, repo)
-	if err != nil {
-		return "", err
-	}
-
-	branches, err := GetBranches(fs, repo, mode, name)
+func RemoveBranch(repo *model.Repo, name string, mode GitMode) (string, error) {
+	branches, err := GetBranches(repo, mode, name)
 	if err != nil {
 		return "", err
 	}
@@ -293,12 +268,7 @@ func RemoveBranch(fs afero.Fs, repo *model.Repo, name string, mode GitMode) (str
 	return strings.TrimSpace(buffer.String()), nil
 }
 
-func CleanBranches(fs afero.Fs, repo *model.Repo, mode GitMode) (string, error) {
-	err := fileops.CheckRepoExists(fs, repo)
-	if err != nil {
-		return "", err
-	}
-
+func CleanBranches(repo *model.Repo, mode GitMode) (string, error) {
 	result := bytes.Buffer{}
 
 	remote, err := getTheOnlyRemote(repo)
@@ -332,12 +302,7 @@ func CleanBranches(fs afero.Fs, repo *model.Repo, mode GitMode) (string, error) 
 	return strings.TrimSpace(result.String()), nil
 }
 
-func Commit(fs afero.Fs, repo *model.Repo, pattern string, message string) error {
-	err := fileops.CheckRepoExists(fs, repo)
-	if err != nil {
-		return err
-	}
-
+func Commit(repo *model.Repo, pattern string, message string) error {
 	if pattern == "" {
 		pattern = "**"
 	}
@@ -355,13 +320,8 @@ func Commit(fs afero.Fs, repo *model.Repo, pattern string, message string) error
 	return nil
 }
 
-func Checkout(fs afero.Fs, repo *model.Repo, ref string) (CheckoutResult, error) {
-	err := fileops.CheckRepoExists(fs, repo)
-	if err != nil {
-		return CheckoutError, err
-	}
-
-	branches, err := GetBranches(fs, repo, GitModeAll, ref)
+func Checkout(repo *model.Repo, ref string) (CheckoutResult, error) {
+	branches, err := GetBranches(repo, GitModeAll, ref)
 	if err != nil {
 		return CheckoutError, err
 	}
@@ -390,12 +350,7 @@ func Checkout(fs afero.Fs, repo *model.Repo, ref string) (CheckoutResult, error)
 	return CheckoutError, fmt.Errorf("unknown checkout status: %v", output)
 }
 
-func Discard(fs afero.Fs, repo *model.Repo) error {
-	err := fileops.CheckRepoExists(fs, repo)
-	if err != nil {
-		return err
-	}
-
+func Discard(repo *model.Repo) error {
 	output, err := shell.RunCommand(repo.Path, "git", "reset", "--hard", "HEAD")
 	if err != nil {
 		return fmt.Errorf("failed to reset: %v, %w", output, err)
@@ -404,12 +359,7 @@ func Discard(fs afero.Fs, repo *model.Repo) error {
 	return nil
 }
 
-func GetBranches(fs afero.Fs, repo *model.Repo, mode GitMode, pattern string) ([]Branch, error) {
-	err := fileops.CheckRepoExists(fs, repo)
-	if err != nil {
-		return nil, err
-	}
-
+func GetBranches(repo *model.Repo, mode GitMode, pattern string) ([]Branch, error) {
 	reg, err := regexp.Compile("^" + pattern + "$")
 	if err != nil {
 		return nil, err

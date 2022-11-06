@@ -12,7 +12,7 @@ func CreateListCommand() *cobra.Command {
 	var result = &cobra.Command{
 		Use:   "list",
 		Short: "Prints a list of supported repositories",
-		RunE: runner.NewDefaultRunner(
+		RunE: runner.NewCommandRunner(
 			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
 				return "", nil
 			},

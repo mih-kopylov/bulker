@@ -21,9 +21,9 @@ func CreateListCommand() *cobra.Command {
 		Short: "Prints a list of repository branches",
 		Long: `Prints a list of repository branches.
 If a repository doesn't have any branch matching pattern, the repository will be omitted in the result'`,
-		RunE: runner.NewDefaultRunner(
+		RunE: runner.NewCommandRunnerForExistingRepos(
 			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
-				branches, err := gitops.GetBranches(runContext.Fs, runContext.Repo, flags.mode, flags.pattern)
+				branches, err := gitops.GetBranches(runContext.Repo, flags.mode, flags.pattern)
 				if err != nil {
 					return nil, err
 				}

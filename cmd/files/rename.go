@@ -20,7 +20,7 @@ func CreateRenameCommand() *cobra.Command {
 	var result = &cobra.Command{
 		Use:   "rename",
 		Short: "Rename source file into target",
-		RunE: runner.NewDefaultRunner(
+		RunE: runner.NewCommandRunnerForExistingRepos(
 			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
 				type result struct {
 					Status string

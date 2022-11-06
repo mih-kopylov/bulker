@@ -18,7 +18,7 @@ func CreateRemoveCommand() *cobra.Command {
 	var result = &cobra.Command{
 		Use:   "remove",
 		Short: "Remove all files matching pattern",
-		RunE: runner.NewDefaultRunner(
+		RunE: runner.NewCommandRunnerForExistingRepos(
 			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
 				type result struct {
 					Removed string

@@ -21,7 +21,7 @@ func CreateCreateCommand() *cobra.Command {
 	var result = &cobra.Command{
 		Use:   "create",
 		Short: "Create a new branch and switch repository to it",
-		RunE: runner.NewDefaultRunner(
+		RunE: runner.NewCommandRunnerForExistingRepos(
 			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
 				type result struct {
 					Status gitops.StatusResult
@@ -30,7 +30,7 @@ func CreateCreateCommand() *cobra.Command {
 				}
 
 				if flags.discard {
-					err := gitops.Discard(runContext.Fs, runContext.Repo)
+					err := gitops.Discard(runContext.Repo)
 					if errors.Is(err, fileops.ErrRepositoryNotCloned) {
 						return result{gitops.StatusMissing, "", ""}, nil
 					}
@@ -39,7 +39,7 @@ func CreateCreateCommand() *cobra.Command {
 					}
 				}
 
-				createResult, err := gitops.CreateBranch(runContext.Fs, runContext.Repo, flags.name)
+				createResult, err := gitops.CreateBranch(runContext.Repo, flags.name)
 				if err != nil {
 					if errors.Is(err, fileops.ErrRepositoryNotCloned) {
 						return result{gitops.StatusMissing, "", ""}, nil
@@ -47,7 +47,7 @@ func CreateCreateCommand() *cobra.Command {
 					return nil, fmt.Errorf("failed to create: %w", err)
 				}
 
-				_, err = gitops.Checkout(runContext.Fs, runContext.Repo, flags.name)
+				_, err = gitops.Checkout(runContext.Repo, flags.name)
 				if err != nil {
 					if errors.Is(err, fileops.ErrRepositoryNotCloned) {
 						return result{gitops.StatusMissing, "", ""}, nil

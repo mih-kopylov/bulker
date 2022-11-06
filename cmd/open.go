@@ -26,7 +26,7 @@ The following VCS platforms are supported:
 - %v
 - %v`, shell.RepoTypeNameGithubCom, shell.RepoTypeNameBitbucketOrg,
 		),
-		RunE: runner.NewDefaultRunner(
+		RunE: runner.NewCommandRunnerForExistingRepos(
 			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
 				type result struct {
 					Status string
