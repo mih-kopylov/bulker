@@ -10,6 +10,7 @@ import (
 	"github.com/mih-kopylov/bulker/internal/settings"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"golang.org/x/exp/maps"
 	"path/filepath"
 	"time"
 )
@@ -77,6 +78,11 @@ func NewCommandRunner(filter *Filter, handler RepoHandler) func(
 			return err
 		}
 
+		err = savePreviousGroup(maps.Keys(allReposResult))
+		if err != nil {
+			return err
+		}
+
 		err = logOutput(allReposResult)
 		if err != nil {
 			return err
@@ -120,6 +126,42 @@ func newRunContext(manager *settings.Manager, conf *config.Config, args []string
 		},
 		Args: args,
 	}
+}
+
+// savePreviousGroup saves a group with a constant name `previous`. If such one exists, it gets recreated
+func savePreviousGroup(repos []string) error {
+	settingsManager := settings.NewManager(config.ReadConfig())
+
+	sets, err := settingsManager.Read()
+	if err != nil {
+		return err
+	}
+
+	if sets.GroupExists(settings.PreviousGroupName) {
+		err := sets.RemoveGroup(settings.PreviousGroupName)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = sets.AddGroup(settings.PreviousGroupName)
+	if err != nil {
+		return err
+	}
+
+	for _, repoName := range repos {
+		err := sets.AddRepoToGroup(settings.PreviousGroupName, repoName)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = settingsManager.Write(sets)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func logOutput(result map[string]ProcessResult) error {

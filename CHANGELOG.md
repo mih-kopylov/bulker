@@ -11,12 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `force` flag for `git push` command
 - Number of errors indication in the progress bar
+- `from` flag for `group create` command
+- `previous` group is created with the repositories of the previous command run 
 
 ### Changed
 
 - `repo` to `name` flag name to mention repository names in `groups create`, `groups append`, `groups exclude` commands
 
 ## [0.9.0] - 2022-11-04
+
 
 ### Added
 
