@@ -7,12 +7,12 @@ require (
 	github.com/aquasecurity/table v1.8.0
 	github.com/bmatcuk/doublestar/v4 v4.3.2
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
-	github.com/schollz/progressbar/v3 v3.12.0
+	github.com/schollz/progressbar/v3 v3.12.1
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5
-	github.com/spf13/viper v1.13.0
-	golang.org/x/exp v0.0.0-20221031165847-c99f073a8326
+	github.com/spf13/viper v1.14.0
+	golang.org/x/exp v0.0.0-20221106115401-f9659909a136
 	gopkg.in/yaml.v3 v3.0.1
 )
 
