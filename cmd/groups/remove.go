@@ -36,7 +36,7 @@ func CreateRemoveCommand() *cobra.Command {
 
 			entityInfoMap := map[string]output.EntityInfo{}
 			entityInfoMap[flags.group] = output.EntityInfo{Result: "removed", Error: nil}
-			err = output.Write("group", entityInfoMap)
+			err = output.Write(cmd.OutOrStdout(), "group", entityInfoMap)
 			if err != nil {
 				return err
 			}

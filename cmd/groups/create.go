@@ -67,7 +67,7 @@ func CreateCreateCommand() *cobra.Command {
 				return err
 			}
 
-			err = output.Write("repo", entityInfoMap)
+			err = output.Write(cmd.OutOrStdout(), "repo", entityInfoMap)
 			if err != nil {
 				return err
 			}

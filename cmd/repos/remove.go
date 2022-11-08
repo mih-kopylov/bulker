@@ -35,7 +35,7 @@ func CreateRemoveCommand() *cobra.Command {
 			}
 
 			err = output.Write(
-				"repo",
+				cmd.OutOrStdout(), "repo",
 				map[string]output.EntityInfo{
 					flags.name: {Result: "removed"},
 				},

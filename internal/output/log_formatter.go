@@ -9,12 +9,12 @@ import (
 	"reflect"
 )
 
-// LogWriter Writes the information with a regular logging
-type LogWriter struct {
+// LogFormatter Formats the information with a regular logging
+type LogFormatter struct {
 	entityName string
 }
 
-func (w LogWriter) WriteMessage(value map[string]EntityInfo) string {
+func (w LogFormatter) FormatMessage(value map[string]EntityInfo) string {
 	buffer := &bytes.Buffer{}
 
 	keys := maps.Keys(value)

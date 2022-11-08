@@ -38,7 +38,7 @@ func CreateImportCommand() *cobra.Command {
 				entityInfoMap[repo] = output.EntityInfo{Result: statusString}
 			}
 
-			err = output.Write("repo", entityInfoMap)
+			err = output.Write(cmd.OutOrStdout(), "repo", entityInfoMap)
 			if err != nil {
 				return err
 			}

@@ -11,6 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
+	"io"
 	"path/filepath"
 	"time"
 )
@@ -83,7 +84,7 @@ func NewCommandRunner(filter *Filter, handler RepoHandler) func(
 			return err
 		}
 
-		err = logOutput(allReposResult)
+		err = logOutput(cmd.OutOrStdout(), allReposResult)
 		if err != nil {
 			return err
 		}
@@ -164,7 +165,7 @@ func savePreviousGroup(repos []string) error {
 	return nil
 }
 
-func logOutput(result map[string]ProcessResult) error {
+func logOutput(writer io.Writer, result map[string]ProcessResult) error {
 	logrus.WithField("count", len(result)).Debug("processed repos")
 
 	valueToLog := map[string]output.EntityInfo{}
@@ -178,7 +179,7 @@ func logOutput(result map[string]ProcessResult) error {
 		}
 	}
 
-	err := output.Write("repo", valueToLog)
+	err := output.Write(writer, "repo", valueToLog)
 	if err != nil {
 		return err
 	}

@@ -24,7 +24,7 @@ func CreateListCommand() *cobra.Command {
 				entityInfoMap[group.Name] = output.EntityInfo{Result: nil, Error: nil}
 			}
 
-			err = output.Write("group", entityInfoMap)
+			err = output.Write(cmd.OutOrStdout(), "group", entityInfoMap)
 			if err != nil {
 				return err
 			}

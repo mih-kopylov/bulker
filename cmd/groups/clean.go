@@ -31,7 +31,7 @@ func CreateCleanCommand() *cobra.Command {
 				return err
 			}
 
-			err = output.Write("group", entityInfoMap)
+			err = output.Write(cmd.OutOrStdout(), "group", entityInfoMap)
 			if err != nil {
 				return err
 			}
