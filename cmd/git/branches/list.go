@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"github.com/mih-kopylov/bulker/internal/gitops"
 	"github.com/mih-kopylov/bulker/internal/runner"
+	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/spf13/cobra"
 	"strings"
 )
 
-func CreateListCommand() *cobra.Command {
+func CreateListCommand(sh shell.Shell) *cobra.Command {
 	var filter = runner.Filter{}
 	var flags struct {
 		mode    gitops.GitMode
@@ -22,8 +23,9 @@ func CreateListCommand() *cobra.Command {
 		Long: `Prints a list of repository branches.
 If a repository doesn't have any branch matching pattern, the repository will be omitted in the result'`,
 		RunE: runner.NewCommandRunnerForExistingRepos(
-			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
-				branches, err := gitops.GetBranches(runContext.Repo, flags.mode, flags.pattern)
+			&filter, sh, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
+				gitService := gitops.NewGitService(sh)
+				branches, err := gitService.GetBranches(runContext.Repo, flags.mode, flags.pattern)
 				if err != nil {
 					return nil, err
 				}

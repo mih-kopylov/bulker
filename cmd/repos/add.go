@@ -4,11 +4,12 @@ import (
 	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/output"
 	"github.com/mih-kopylov/bulker/internal/settings"
+	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/spf13/cobra"
 )
 
-func CreateAddCommand() *cobra.Command {
+func CreateAddCommand(sh shell.Shell) *cobra.Command {
 	var flags struct {
 		name string
 		url  string
@@ -19,7 +20,7 @@ func CreateAddCommand() *cobra.Command {
 		Use:   "add",
 		Short: "Adds a new repository to the supported list",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			settingsManager := settings.NewManager(config.ReadConfig())
+			settingsManager := settings.NewManager(config.ReadConfig(), sh)
 
 			sets, err := settingsManager.Read()
 			if err != nil {

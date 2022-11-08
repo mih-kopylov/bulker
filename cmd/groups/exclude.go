@@ -5,12 +5,13 @@ import (
 	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/output"
 	"github.com/mih-kopylov/bulker/internal/settings"
+	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
-func CreateExcludeCommand() *cobra.Command {
+func CreateExcludeCommand(sh shell.Shell) *cobra.Command {
 	flags := struct {
 		group string
 		repos []string
@@ -22,7 +23,7 @@ func CreateExcludeCommand() *cobra.Command {
 		Long: `Updates the configured group content with adding new repositories.
 If the repo to be removed does not exist in the group, it will be ignored.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			settingsManager := settings.NewManager(config.ReadConfig())
+			settingsManager := settings.NewManager(config.ReadConfig(), sh)
 
 			sets, err := settingsManager.Read()
 			if err != nil {

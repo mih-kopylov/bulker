@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/mih-kopylov/bulker/cmd"
+	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra/doc"
 	"os"
@@ -9,7 +10,7 @@ import (
 )
 
 func main() {
-	rootCommand := cmd.CreateRootCommand("")
+	rootCommand := cmd.CreateRootCommand("", &shell.NativeShell{})
 	rootCommand.DisableAutoGenTag = true
 	dir, err := filepath.Abs("./dist/docs")
 	if err != nil {

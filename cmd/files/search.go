@@ -7,13 +7,14 @@ import (
 	"fmt"
 	"github.com/mih-kopylov/bulker/internal/fileops"
 	"github.com/mih-kopylov/bulker/internal/runner"
+	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 	"path/filepath"
 )
 
-func CreateSearchCommand() *cobra.Command {
+func CreateSearchCommand(sh shell.Shell) *cobra.Command {
 	var filter = runner.Filter{}
 	var flags = struct {
 		pattern  string
@@ -26,7 +27,7 @@ func CreateSearchCommand() *cobra.Command {
 		Use:   "search",
 		Short: "Searches for files and file content",
 		RunE: runner.NewCommandRunnerForExistingRepos(
-			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
+			&filter, sh, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
 				searchResult, err := fileops.SearchFiles(
 					runContext.Repo, flags.pattern, flags.contains, flags.before, flags.after,
 				)

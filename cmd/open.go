@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func CreateOpenCommand() *cobra.Command {
+func CreateOpenCommand(sh shell.Shell) *cobra.Command {
 	var filter = runner.Filter{}
 
 	var flags struct {
@@ -27,7 +27,7 @@ The following VCS platforms are supported:
 - %v`, shell.RepoTypeNameGithubCom, shell.RepoTypeNameBitbucketOrg,
 		),
 		RunE: runner.NewCommandRunnerForExistingRepos(
-			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
+			&filter, sh, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
 				type result struct {
 					Status string
 					Url    string

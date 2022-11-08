@@ -13,96 +13,22 @@ import (
 	"strings"
 )
 
-type CloneResult string
-
-const (
-	ClonedSuccessfully CloneResult = "Cloned"
-	ClonedAlready      CloneResult = "Already cloned"
-	ClonedAgain        CloneResult = "Re-cloned"
-	CloneError         CloneResult = "Error"
-)
-
-func (r *CloneResult) String() string {
-	return string(*r)
+type GitService struct {
+	sh shell.Shell
 }
 
-type StatusResult string
-
-const (
-	StatusClean   StatusResult = "Clean"
-	StatusDirty   StatusResult = "Dirty"
-	StatusMissing StatusResult = "Missing"
-	StatusError   StatusResult = "Error"
-)
-
-func (r *StatusResult) String() string {
-	return string(*r)
+func NewGitService(sh shell.Shell) GitService {
+	return GitService{sh: sh}
 }
 
-type CheckoutResult string
-
-const (
-	CheckoutOk       CheckoutResult = "Success"
-	CheckoutNotFound CheckoutResult = "Not Found"
-	CheckoutError    CheckoutResult = "Error"
-)
-
-func (r *CheckoutResult) String() string {
-	return string(*r)
-}
-
-type CreateResult string
-
-const (
-	CreateOk    CreateResult = "Created"
-	CreateError CreateResult = "Error"
-)
-
-func (r *CreateResult) String() string {
-	return string(*r)
-}
-
-type GitMode string
-
-func (g *GitMode) String() string {
-	return string(*g)
-}
-
-func (g *GitMode) Set(v string) error {
-	switch v {
-	case string(GitModeAll), string(GitModeLocal), string(GitModeRemote):
-		*g = GitMode(v)
-		return nil
-	default:
-		return fmt.Errorf("must be one of '%s' '%s' '%s'", GitModeAll, GitModeLocal, GitModeRemote)
-	}
-}
-
-func (g *GitMode) Type() string {
-	return "GitMode"
-}
-
-func (g *GitMode) Includes(mode GitMode) bool {
-	if *g == GitModeAll {
-		return true
-	}
-	return *g == mode
-}
-
-const (
-	GitModeAll    GitMode = "all"
-	GitModeLocal  GitMode = "local"
-	GitModeRemote GitMode = "remote"
-)
-
-func CloneRepo(repo *model.Repo, recreate bool) (CloneResult, error) {
+func (g *GitService) CloneRepo(repo *model.Repo, recreate bool) (CloneResult, error) {
 	_, err := os.Stat(repo.Path)
 
 	wasRecreated := false
 
 	if err == nil {
 		if !recreate {
-			output, err := shell.RunCommand(repo.Path, "git", "status")
+			output, err := g.sh.RunCommand(repo.Path, "git", "status")
 			if err != nil {
 				if strings.Contains(output, "not a git repository") {
 					return CloneError, fmt.Errorf("repository directory already exists, and it is not a repository")
@@ -128,7 +54,7 @@ func CloneRepo(repo *model.Repo, recreate bool) (CloneResult, error) {
 		return CloneError, fmt.Errorf("failed to create directory: directory=%v, error=%w", repo.Path, err)
 	}
 
-	output, err := shell.RunCommand(repo.Path, "git", "clone", repo.Url, ".")
+	output, err := g.sh.RunCommand(repo.Path, "git", "clone", repo.Url, ".")
 	if err != nil {
 		return CloneError, fmt.Errorf("failed to clone repository: %v, %w", output, err)
 	}
@@ -140,8 +66,8 @@ func CloneRepo(repo *model.Repo, recreate bool) (CloneResult, error) {
 	return ClonedSuccessfully, nil
 }
 
-func Fetch(repo *model.Repo) error {
-	output, err := shell.RunCommand(repo.Path, "git", "fetch", "--prune")
+func (g *GitService) Fetch(repo *model.Repo) error {
+	output, err := g.sh.RunCommand(repo.Path, "git", "fetch", "--prune")
 	if err != nil {
 		return fmt.Errorf("failed to fetch remote: %v, %w", output, err)
 	}
@@ -149,8 +75,8 @@ func Fetch(repo *model.Repo) error {
 	return nil
 }
 
-func Pull(repo *model.Repo) error {
-	output, err := shell.RunCommand(repo.Path, "git", "pull", "--prune")
+func (g *GitService) Pull(repo *model.Repo) error {
+	output, err := g.sh.RunCommand(repo.Path, "git", "pull", "--prune")
 	if err != nil {
 		if strings.Contains(output, "There is no tracking information for the current branch") {
 			return fmt.Errorf("no remote upstream configured")
@@ -161,8 +87,8 @@ func Pull(repo *model.Repo) error {
 	return nil
 }
 
-func Push(repo *model.Repo, branch string, allBranches bool, force bool) error {
-	remote, err := getTheOnlyRemote(repo)
+func (g *GitService) Push(repo *model.Repo, branch string, allBranches bool, force bool) error {
+	remote, err := g.getTheOnlyRemote(repo)
 	if err != nil {
 		return err
 	}
@@ -181,7 +107,7 @@ func Push(repo *model.Repo, branch string, allBranches bool, force bool) error {
 		arguments = append(arguments, "--force")
 	}
 
-	output, err := shell.RunCommand(repo.Path, "git", arguments...)
+	output, err := g.sh.RunCommand(repo.Path, "git", arguments...)
 	if err != nil {
 		return fmt.Errorf("failed to push to remote: %v, %w", output, err)
 	}
@@ -189,7 +115,7 @@ func Push(repo *model.Repo, branch string, allBranches bool, force bool) error {
 	return nil
 }
 
-func Status(repo *model.Repo) (StatusResult, string, error) {
+func (g *GitService) Status(repo *model.Repo) (StatusResult, string, error) {
 	err := fileops.CheckRepoExists(repo)
 	if err != nil {
 		if errors.Is(err, fileops.ErrRepositoryNotCloned) {
@@ -199,12 +125,12 @@ func Status(repo *model.Repo) (StatusResult, string, error) {
 		}
 	}
 
-	statusOutput, err := shell.RunCommand(repo.Path, "git", "status")
+	statusOutput, err := g.sh.RunCommand(repo.Path, "git", "status")
 	if err != nil {
 		return StatusError, "", fmt.Errorf("failed to get git status: %v, %w", statusOutput, err)
 	}
 
-	ref, err := parseHeadRef(statusOutput)
+	ref, err := g.parseHeadRef(statusOutput)
 	if err != nil {
 		return StatusError, "", err
 	}
@@ -216,8 +142,8 @@ func Status(repo *model.Repo) (StatusResult, string, error) {
 	return StatusDirty, ref, nil
 }
 
-func CreateBranch(repo *model.Repo, name string) (CreateResult, error) {
-	branches, err := GetBranches(repo, GitModeAll, name)
+func (g *GitService) CreateBranch(repo *model.Repo, name string) (CreateResult, error) {
+	branches, err := g.GetBranches(repo, GitModeAll, name)
 	if err != nil {
 		return CreateError, err
 	}
@@ -226,7 +152,7 @@ func CreateBranch(repo *model.Repo, name string) (CreateResult, error) {
 		return CreateError, fmt.Errorf("branch already exists")
 	}
 
-	output, err := shell.RunCommand(repo.Path, "git", "branch", name)
+	output, err := g.sh.RunCommand(repo.Path, "git", "branch", name)
 	if err != nil {
 		return CreateError, fmt.Errorf("failed to create branch: %v, %w", output, err)
 	}
@@ -234,8 +160,8 @@ func CreateBranch(repo *model.Repo, name string) (CreateResult, error) {
 	return CreateOk, nil
 }
 
-func RemoveBranch(repo *model.Repo, name string, mode GitMode) (string, error) {
-	branches, err := GetBranches(repo, mode, name)
+func (g *GitService) RemoveBranch(repo *model.Repo, name string, mode GitMode) (string, error) {
+	branches, err := g.GetBranches(repo, mode, name)
 	if err != nil {
 		return "", err
 	}
@@ -247,7 +173,7 @@ func RemoveBranch(repo *model.Repo, name string, mode GitMode) (string, error) {
 	buffer := bytes.Buffer{}
 	for _, branch := range branches {
 		if branch.IsLocal() {
-			output, err := shell.RunCommand(repo.Path, "git", "branch", "-D", name)
+			output, err := g.sh.RunCommand(repo.Path, "git", "branch", "-D", name)
 			if err != nil {
 				if strings.Contains(output, "checked out at") {
 					return "", fmt.Errorf("the branch is checked out")
@@ -256,7 +182,7 @@ func RemoveBranch(repo *model.Repo, name string, mode GitMode) (string, error) {
 			}
 			buffer.WriteString(fmt.Sprintf("%v: removed\n", branch.Short()))
 		} else {
-			output, err := shell.RunCommand(repo.Path, "git", "push", branch.Remote, "--delete", branch.Name)
+			output, err := g.sh.RunCommand(repo.Path, "git", "push", branch.Remote, "--delete", branch.Name)
 			if err != nil {
 				return "", fmt.Errorf("failed to remove remove branch: %v %w", output, err)
 			}
@@ -267,15 +193,17 @@ func RemoveBranch(repo *model.Repo, name string, mode GitMode) (string, error) {
 	return strings.TrimSpace(buffer.String()), nil
 }
 
-func CleanBranches(repo *model.Repo, mode GitMode) (string, error) {
+func (g *GitService) CleanBranches(repo *model.Repo, mode GitMode) (string, error) {
 	result := bytes.Buffer{}
 
-	remote, err := getTheOnlyRemote(repo)
+	remote, err := g.getTheOnlyRemote(repo)
 	if err != nil {
 		return "", err
 	}
 
-	output, err := shell.RunCommand(repo.Path, "git", "symbolic-ref", fmt.Sprintf("refs/remotes/%v/HEAD", remote))
+	output, err := g.sh.RunCommand(
+		repo.Path, "git", "symbolic-ref", fmt.Sprintf("refs/remotes/%v/HEAD", remote),
+	)
 	if err != nil {
 		return "", err
 	}
@@ -286,13 +214,13 @@ func CleanBranches(repo *model.Repo, mode GitMode) (string, error) {
 	}
 
 	if mode.Includes(GitModeLocal) {
-		err := cleanLocalBranches(repo, defaultRemoteBranch, &result)
+		err := g.cleanLocalBranches(repo, defaultRemoteBranch, &result)
 		if err != nil {
 			return "", err
 		}
 	}
 	if mode.Includes(GitModeRemote) {
-		err := cleanRemoteBranches(repo, remote, defaultRemoteBranch, &result)
+		err := g.cleanRemoteBranches(repo, remote, defaultRemoteBranch, &result)
 		if err != nil {
 			return "", err
 		}
@@ -301,17 +229,17 @@ func CleanBranches(repo *model.Repo, mode GitMode) (string, error) {
 	return strings.TrimSpace(result.String()), nil
 }
 
-func Commit(repo *model.Repo, pattern string, message string) error {
+func (g *GitService) Commit(repo *model.Repo, pattern string, message string) error {
 	if pattern == "" {
 		pattern = "**"
 	}
 
-	output, err := shell.RunCommand(repo.Path, "git", "add", pattern)
+	output, err := g.sh.RunCommand(repo.Path, "git", "add", pattern)
 	if err != nil {
 		return fmt.Errorf("failed to add changes to stage: %v %w", output, err)
 	}
 
-	output, err = shell.RunCommand(repo.Path, "git", "commit", "-m", message)
+	output, err = g.sh.RunCommand(repo.Path, "git", "commit", "-m", message)
 	if err != nil {
 		return fmt.Errorf("failed to commit: %v %w", output, err)
 	}
@@ -319,8 +247,8 @@ func Commit(repo *model.Repo, pattern string, message string) error {
 	return nil
 }
 
-func Checkout(repo *model.Repo, ref string) (CheckoutResult, error) {
-	branches, err := GetBranches(repo, GitModeAll, ref)
+func (g *GitService) Checkout(repo *model.Repo, ref string) (CheckoutResult, error) {
+	branches, err := g.GetBranches(repo, GitModeAll, ref)
 	if err != nil {
 		return CheckoutError, err
 	}
@@ -329,7 +257,7 @@ func Checkout(repo *model.Repo, ref string) (CheckoutResult, error) {
 		return CheckoutNotFound, nil
 	}
 
-	output, err := shell.RunCommand(repo.Path, "git", "checkout", ref)
+	output, err := g.sh.RunCommand(repo.Path, "git", "checkout", ref)
 	if err != nil {
 		return CheckoutError, fmt.Errorf("failed to checkout: %v, %w", output, err)
 	}
@@ -349,8 +277,8 @@ func Checkout(repo *model.Repo, ref string) (CheckoutResult, error) {
 	return CheckoutError, fmt.Errorf("unknown checkout status: %v", output)
 }
 
-func Discard(repo *model.Repo) error {
-	output, err := shell.RunCommand(repo.Path, "git", "reset", "--hard", "HEAD")
+func (g *GitService) Discard(repo *model.Repo) error {
+	output, err := g.sh.RunCommand(repo.Path, "git", "reset", "--hard", "HEAD")
 	if err != nil {
 		return fmt.Errorf("failed to reset: %v, %w", output, err)
 	}
@@ -358,18 +286,18 @@ func Discard(repo *model.Repo) error {
 	return nil
 }
 
-func GetBranches(repo *model.Repo, mode GitMode, pattern string) ([]Branch, error) {
+func (g *GitService) GetBranches(repo *model.Repo, mode GitMode, pattern string) ([]Branch, error) {
 	reg, err := regexp.Compile("^" + pattern + "$")
 	if err != nil {
 		return nil, err
 	}
 
-	output, err := shell.RunCommand(repo.Path, "git", "branch", "-a", "--format=%(refname)")
+	output, err := g.sh.RunCommand(repo.Path, "git", "branch", "-a", "--format=%(refname)")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get branches: %v, %w", output, err)
 	}
 
-	branches, err := parseBranches(output)
+	branches, err := g.parseBranches(output)
 	if err != nil {
 		return nil, err
 	}
@@ -395,7 +323,7 @@ func GetBranches(repo *model.Repo, mode GitMode, pattern string) ([]Branch, erro
 
 }
 
-func parseBranches(consoleOutputString string) ([]Branch, error) {
+func (g *GitService) parseBranches(consoleOutputString string) ([]Branch, error) {
 	var result []Branch
 	for _, outputBranchName := range strings.Fields(consoleOutputString) {
 		branch, err := parseBranch(outputBranchName)
@@ -412,7 +340,7 @@ func parseBranches(consoleOutputString string) ([]Branch, error) {
 	return result, nil
 }
 
-func parseHeadRef(statusResult string) (string, error) {
+func (g *GitService) parseHeadRef(statusResult string) (string, error) {
 	reg, err := regexp.Compile("On branch (.+)\n.*")
 	if err != nil {
 		return "", err
@@ -436,8 +364,8 @@ func parseHeadRef(statusResult string) (string, error) {
 	return "", fmt.Errorf("can't parse status result for head reference: %v", statusResult)
 }
 
-func cleanLocalBranches(repo *model.Repo, defaultRemoteBranch *Branch, result *bytes.Buffer) error {
-	output, err := shell.RunCommand(
+func (g *GitService) cleanLocalBranches(repo *model.Repo, defaultRemoteBranch *Branch, result *bytes.Buffer) error {
+	output, err := g.sh.RunCommand(
 		repo.Path, "git", "branch", "-a", "--format=%(refname)", "--merged",
 		defaultRemoteBranch.Name,
 	)
@@ -445,7 +373,7 @@ func cleanLocalBranches(repo *model.Repo, defaultRemoteBranch *Branch, result *b
 		return fmt.Errorf("failed to get branches: %v, %w", output, err)
 	}
 
-	branches, err := parseBranches(output)
+	branches, err := g.parseBranches(output)
 	if err != nil {
 		return err
 	}
@@ -457,7 +385,7 @@ func cleanLocalBranches(repo *model.Repo, defaultRemoteBranch *Branch, result *b
 		if branch.Name == defaultRemoteBranch.Name {
 			continue
 		}
-		output, err := shell.RunCommand(repo.Path, "git", "branch", "-d", branch.Name)
+		output, err := g.sh.RunCommand(repo.Path, "git", "branch", "-d", branch.Name)
 		if err != nil {
 			if strings.Contains(output, "checked out at") {
 				result.WriteString(fmt.Sprintf("%v: failed: %v\n", branch.Name, output))
@@ -472,8 +400,10 @@ func cleanLocalBranches(repo *model.Repo, defaultRemoteBranch *Branch, result *b
 	return nil
 }
 
-func cleanRemoteBranches(repo *model.Repo, remote string, defaultRemoteBranch *Branch, result *bytes.Buffer) error {
-	output, err := shell.RunCommand(
+func (g *GitService) cleanRemoteBranches(
+	repo *model.Repo, remote string, defaultRemoteBranch *Branch, result *bytes.Buffer,
+) error {
+	output, err := g.sh.RunCommand(
 		repo.Path, "git", "branch", "-a", "--format=%(refname)", "--merged",
 		defaultRemoteBranch.Short(),
 	)
@@ -481,7 +411,7 @@ func cleanRemoteBranches(repo *model.Repo, remote string, defaultRemoteBranch *B
 		return fmt.Errorf("failed to get branches: %v, %w", output, err)
 	}
 
-	branches, err := parseBranches(output)
+	branches, err := g.parseBranches(output)
 	if err != nil {
 		return err
 	}
@@ -493,7 +423,7 @@ func cleanRemoteBranches(repo *model.Repo, remote string, defaultRemoteBranch *B
 		if branch.Name == defaultRemoteBranch.Name {
 			continue
 		}
-		output, err := shell.RunCommand(repo.Path, "git", "push", remote, "-d", branch.Name)
+		output, err := g.sh.RunCommand(repo.Path, "git", "push", remote, "-d", branch.Name)
 		if err != nil {
 			result.WriteString(fmt.Sprintf("%v: failed: %v\n", branch.Short(), output))
 		} else {
@@ -504,8 +434,8 @@ func cleanRemoteBranches(repo *model.Repo, remote string, defaultRemoteBranch *B
 	return nil
 }
 
-func getTheOnlyRemote(repo *model.Repo) (string, error) {
-	output, err := shell.RunCommand(repo.Path, "git", "remote")
+func (g *GitService) getTheOnlyRemote(repo *model.Repo) (string, error) {
+	output, err := g.sh.RunCommand(repo.Path, "git", "remote")
 	if err != nil {
 		return "", err
 	}

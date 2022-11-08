@@ -4,11 +4,12 @@ import (
 	"context"
 	"github.com/mih-kopylov/bulker/internal/gitops"
 	"github.com/mih-kopylov/bulker/internal/runner"
+	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/spf13/cobra"
 )
 
-func CreateCommitCommand() *cobra.Command {
+func CreateCommitCommand(sh shell.Shell) *cobra.Command {
 	var filter = runner.Filter{}
 
 	var flags struct {
@@ -20,8 +21,9 @@ func CreateCommitCommand() *cobra.Command {
 		Use:   "commit",
 		Short: "Commit changes",
 		RunE: runner.NewCommandRunnerForExistingRepos(
-			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
-				err := gitops.Commit(runContext.Repo, flags.pattern, flags.message)
+			&filter, sh, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
+				gitService := gitops.NewGitService(sh)
+				err := gitService.Commit(runContext.Repo, flags.pattern, flags.message)
 				if err != nil {
 					return nil, err
 				}

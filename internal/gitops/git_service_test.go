@@ -1,6 +1,7 @@
 package gitops
 
 import (
+	"github.com/mih-kopylov/bulker/internal/shell"
 	"reflect"
 	"testing"
 )
@@ -47,7 +48,8 @@ refs/remotes/origin/master`,
 	for _, tt := range tests {
 		t.Run(
 			tt.name, func(t *testing.T) {
-				got, err := parseBranches(tt.consoleOutputString)
+				gitService := NewGitService(&shell.NativeShell{})
+				got, err := gitService.parseBranches(tt.consoleOutputString)
 				if (err != nil) != tt.wantErr {
 					t.Errorf("parseBranches() error = %v, wantErr %v", err, tt.wantErr)
 					return

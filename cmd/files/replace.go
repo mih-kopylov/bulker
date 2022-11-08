@@ -7,12 +7,13 @@ import (
 	"fmt"
 	"github.com/mih-kopylov/bulker/internal/fileops"
 	"github.com/mih-kopylov/bulker/internal/runner"
+	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/spf13/cobra"
 	"path/filepath"
 )
 
-func CreateReplaceCommand() *cobra.Command {
+func CreateReplaceCommand(sh shell.Shell) *cobra.Command {
 	var filter = runner.Filter{}
 	var flags = struct {
 		pattern     string
@@ -24,7 +25,7 @@ func CreateReplaceCommand() *cobra.Command {
 		Use:   "replace",
 		Short: "Replaces files content",
 		RunE: runner.NewCommandRunnerForExistingRepos(
-			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
+			&filter, sh, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
 				replaceResult, err := fileops.ReplaceInFiles(
 					runContext.Repo, flags.pattern, flags.contains, flags.replacement,
 				)

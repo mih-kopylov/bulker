@@ -5,10 +5,11 @@ import (
 	"errors"
 	"github.com/mih-kopylov/bulker/internal/gitops"
 	"github.com/mih-kopylov/bulker/internal/runner"
+	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/spf13/cobra"
 )
 
-func CreatePushCommand() *cobra.Command {
+func CreatePushCommand(sh shell.Shell) *cobra.Command {
 	var filter = runner.Filter{}
 
 	var flags struct {
@@ -32,8 +33,9 @@ If -b <branchName> is defined, pushes the only branch. Otherwise pushes all bran
 			return nil
 		},
 		RunE: runner.NewCommandRunnerForExistingRepos(
-			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
-				err := gitops.Push(runContext.Repo, flags.branch, flags.allBranches, flags.force)
+			&filter, sh, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
+				gitService := gitops.NewGitService(sh)
+				err := gitService.Push(runContext.Repo, flags.branch, flags.allBranches, flags.force)
 				if err != nil {
 					return nil, err
 				}

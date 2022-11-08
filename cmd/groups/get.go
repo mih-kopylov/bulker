@@ -4,11 +4,12 @@ import (
 	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/output"
 	"github.com/mih-kopylov/bulker/internal/settings"
+	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/spf13/cobra"
 )
 
-func CreateGetCommand() *cobra.Command {
+func CreateGetCommand(sh shell.Shell) *cobra.Command {
 	flags := struct {
 		group string
 	}{}
@@ -17,7 +18,7 @@ func CreateGetCommand() *cobra.Command {
 		Use:   "get",
 		Short: "Prints repositories of the provided group",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			settingsManager := settings.NewManager(config.ReadConfig())
+			settingsManager := settings.NewManager(config.ReadConfig(), sh)
 
 			sets, err := settingsManager.Read()
 			if err != nil {

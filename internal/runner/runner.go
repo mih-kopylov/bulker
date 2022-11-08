@@ -8,6 +8,7 @@ import (
 	"github.com/mih-kopylov/bulker/internal/model"
 	"github.com/mih-kopylov/bulker/internal/output"
 	"github.com/mih-kopylov/bulker/internal/settings"
+	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
@@ -20,8 +21,8 @@ type Runner interface {
 	Run(ctx context.Context, repos []settings.Repo, handler RepoHandler) (map[string]ProcessResult, error)
 }
 
-func NewRunner(conf *config.Config, filter *Filter, progress Progress, args []string) (Runner, error) {
-	manager := settings.NewManager(conf)
+func NewRunner(conf *config.Config, sh shell.Shell, filter *Filter, progress Progress, args []string) (Runner, error) {
+	manager := settings.NewManager(conf, sh)
 	if conf.RunMode == config.Sequential {
 		return &SequentialRunner{
 			manager:  manager,
@@ -42,13 +43,13 @@ func NewRunner(conf *config.Config, filter *Filter, progress Progress, args []st
 	return nil, fmt.Errorf("unsupported run mode %v", conf.RunMode)
 }
 
-func NewCommandRunner(filter *Filter, handler RepoHandler) func(
+func NewCommandRunner(filter *Filter, sh shell.Shell, handler RepoHandler) func(
 	cmd *cobra.Command,
 	args []string,
 ) error {
 	return func(cmd *cobra.Command, args []string) error {
 		conf := config.ReadConfig()
-		manager := settings.NewManager(conf)
+		manager := settings.NewManager(conf, sh)
 
 		sets, err := manager.Read()
 		if err != nil {
@@ -57,7 +58,7 @@ func NewCommandRunner(filter *Filter, handler RepoHandler) func(
 
 		repos := filter.FilterMatchingRepos(sets.Repos, sets.Groups)
 		progress := NewProgress(conf, len(repos))
-		newRunner, err := NewRunner(conf, filter, progress, args)
+		newRunner, err := NewRunner(conf, sh, filter, progress, args)
 		if err != nil {
 			return err
 		}
@@ -79,7 +80,7 @@ func NewCommandRunner(filter *Filter, handler RepoHandler) func(
 			return err
 		}
 
-		err = savePreviousGroup(maps.Keys(allReposResult))
+		err = savePreviousGroup(manager, maps.Keys(allReposResult))
 		if err != nil {
 			return err
 		}
@@ -93,7 +94,7 @@ func NewCommandRunner(filter *Filter, handler RepoHandler) func(
 	}
 }
 
-func NewCommandRunnerForExistingRepos(filter *Filter, handler RepoHandler) func(
+func NewCommandRunnerForExistingRepos(filter *Filter, sh shell.Shell, handler RepoHandler) func(
 	cmd *cobra.Command,
 	args []string,
 ) error {
@@ -106,7 +107,7 @@ func NewCommandRunnerForExistingRepos(filter *Filter, handler RepoHandler) func(
 		return handler(ctx, runContext)
 	}
 
-	return NewCommandRunner(filter, handlerWithRepoExistenceVerifier)
+	return NewCommandRunner(filter, sh, handlerWithRepoExistenceVerifier)
 }
 
 type RunContext struct {
@@ -130,10 +131,8 @@ func newRunContext(manager *settings.Manager, conf *config.Config, args []string
 }
 
 // savePreviousGroup saves a group with a constant name `previous`. If such one exists, it gets recreated
-func savePreviousGroup(repos []string) error {
-	settingsManager := settings.NewManager(config.ReadConfig())
-
-	sets, err := settingsManager.Read()
+func savePreviousGroup(manager *settings.Manager, repos []string) error {
+	sets, err := manager.Read()
 	if err != nil {
 		return err
 	}
@@ -157,7 +156,7 @@ func savePreviousGroup(repos []string) error {
 		}
 	}
 
-	err = settingsManager.Write(sets)
+	err = manager.Write(sets)
 	if err != nil {
 		return err
 	}

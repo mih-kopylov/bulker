@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/mih-kopylov/bulker/internal/config"
+	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -12,7 +13,7 @@ import (
 	"syscall"
 )
 
-func CreateRootCommand(applicationVersion string) *cobra.Command {
+func CreateRootCommand(applicationVersion string, sh shell.Shell) *cobra.Command {
 	var result = &cobra.Command{
 		Use:     "bulker",
 		Short:   "Runs different operations on a bunch of repositories in bulk mode",
@@ -71,23 +72,15 @@ func CreateRootCommand(applicationVersion string) *cobra.Command {
 	)
 	utils.BindFlag(result.PersistentFlags().Lookup("output"), "output")
 
-	result.AddCommand(CreateReposCommand())
-	result.AddCommand(CreateGitCommand())
-	result.AddCommand(CreateGroupsCommand())
-	result.AddCommand(CreateStatusCommand())
-	result.AddCommand(CreateRunCommand())
-	result.AddCommand(CreateOpenCommand())
-	result.AddCommand(CreateFilesCommand())
+	result.AddCommand(CreateReposCommand(sh))
+	result.AddCommand(CreateGitCommand(sh))
+	result.AddCommand(CreateGroupsCommand(sh))
+	result.AddCommand(CreateStatusCommand(sh))
+	result.AddCommand(CreateRunCommand(sh))
+	result.AddCommand(CreateOpenCommand(sh))
+	result.AddCommand(CreateFilesCommand(sh))
 
 	return result
-}
-
-func Execute(applicationVersion string) {
-	rootCmd := CreateRootCommand(applicationVersion)
-	err := rootCmd.Execute()
-	if err != nil {
-		logrus.Debugf("command failed: %v", err)
-	}
 }
 
 func init() {

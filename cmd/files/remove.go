@@ -4,12 +4,13 @@ import (
 	"context"
 	"github.com/mih-kopylov/bulker/internal/fileops"
 	"github.com/mih-kopylov/bulker/internal/runner"
+	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/spf13/cobra"
 	"strings"
 )
 
-func CreateRemoveCommand() *cobra.Command {
+func CreateRemoveCommand(sh shell.Shell) *cobra.Command {
 	var filter = runner.Filter{}
 	var flags = struct {
 		pattern string
@@ -19,7 +20,7 @@ func CreateRemoveCommand() *cobra.Command {
 		Use:   "remove",
 		Short: "Remove all files matching pattern",
 		RunE: runner.NewCommandRunnerForExistingRepos(
-			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
+			&filter, sh, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
 				type result struct {
 					Removed string
 				}

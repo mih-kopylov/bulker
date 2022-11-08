@@ -11,7 +11,7 @@ import (
 // RunCommand Runs a shell command in commandRootDirectory. If the commandRootDirectory is empty,
 // runs the command from the current working directory.
 // It returns combined stdout and stderr content, as it's visible in console
-func RunCommand(commandRootDirectory string, command string, arguments ...string) (string, error) {
+func (r *NativeShell) RunCommand(commandRootDirectory string, command string, arguments ...string) (string, error) {
 	cmd := exec.Command(command, arguments...)
 	cmd.Dir = commandRootDirectory
 	// this makes the child process ignore the SIGTERM for the bulker
@@ -26,5 +26,4 @@ func RunCommand(commandRootDirectory string, command string, arguments ...string
 	}
 
 	return string(output), nil
-
 }
