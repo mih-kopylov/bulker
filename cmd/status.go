@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"github.com/mih-kopylov/bulker/internal/gitops"
 	"github.com/mih-kopylov/bulker/internal/runner"
+	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/spf13/cobra"
 	"strings"
 )
 
-func CreateStatusCommand() *cobra.Command {
+func CreateStatusCommand(sh shell.Shell) *cobra.Command {
 	var filter = runner.Filter{}
 
 	flags := struct {
@@ -25,8 +26,9 @@ func CreateStatusCommand() *cobra.Command {
 * Dirty - the repository successfully cloned, but there are uncommitted changes
 * Missing - the repository is not cloned yet`,
 		RunE: runner.NewCommandRunner(
-			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
-				repoStatus, ref, err := gitops.Status(runContext.Repo)
+			&filter, sh, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
+				gitService := gitops.NewGitService(sh)
+				repoStatus, ref, err := gitService.Status(runContext.Repo)
 				if err != nil {
 					return nil, fmt.Errorf("failed to get status: %w", err)
 				}

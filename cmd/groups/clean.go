@@ -4,15 +4,16 @@ import (
 	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/output"
 	"github.com/mih-kopylov/bulker/internal/settings"
+	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/spf13/cobra"
 )
 
-func CreateCleanCommand() *cobra.Command {
+func CreateCleanCommand(sh shell.Shell) *cobra.Command {
 	var result = &cobra.Command{
 		Use:   "clean",
 		Short: "Removes all configured groups",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			settingsManager := settings.NewManager(config.ReadConfig())
+			settingsManager := settings.NewManager(config.ReadConfig(), sh)
 
 			sets, err := settingsManager.Read()
 			if err != nil {

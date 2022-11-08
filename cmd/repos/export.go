@@ -5,11 +5,12 @@ import (
 	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/output"
 	"github.com/mih-kopylov/bulker/internal/settings"
+	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/spf13/cobra"
 )
 
-func CreateExportCommand() *cobra.Command {
+func CreateExportCommand(sh shell.Shell) *cobra.Command {
 	var flags struct {
 		remote string
 	}
@@ -18,7 +19,7 @@ func CreateExportCommand() *cobra.Command {
 		Use:   "export",
 		Short: "Exports the repositories configuration into an external git repository",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			manager := settings.NewManager(config.ReadConfig())
+			manager := settings.NewManager(config.ReadConfig(), sh)
 			exportResult, err := manager.Export(flags.remote)
 			if err != nil {
 				return err

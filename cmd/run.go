@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func CreateRunCommand() *cobra.Command {
+func CreateRunCommand(sh shell.Shell) *cobra.Command {
 	var filter = runner.Filter{}
 
 	var result = &cobra.Command{
@@ -23,8 +23,8 @@ See https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap12.html#tag
 Example: "bulker run -- mvn -B -q clean"`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: runner.NewCommandRunnerForExistingRepos(
-			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
-				output, err := shell.RunCommand(runContext.Repo.Path, runContext.Args[0], runContext.Args[1:]...)
+			&filter, sh, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
+				output, err := sh.RunCommand(runContext.Repo.Path, runContext.Args[0], runContext.Args[1:]...)
 				if err != nil {
 					return nil, fmt.Errorf("failed to run %v: %v %w", runContext.Args, output, err)
 				}

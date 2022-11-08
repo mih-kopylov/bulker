@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"github.com/mih-kopylov/bulker/internal/gitops"
 	"github.com/mih-kopylov/bulker/internal/runner"
+	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/spf13/cobra"
 )
 
-func CreateCleanCommand() *cobra.Command {
+func CreateCleanCommand(sh shell.Shell) *cobra.Command {
 	var filter = runner.Filter{}
 	var flags struct {
 		mode gitops.GitMode
@@ -21,8 +22,9 @@ func CreateCleanCommand() *cobra.Command {
 First, it defines the default branch of the remote.
 Then, it loops over the branches and removes the ones that don't have differences with the default one'`,
 		RunE: runner.NewCommandRunnerForExistingRepos(
-			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
-				cleanResult, err := gitops.CleanBranches(runContext.Repo, flags.mode)
+			&filter, sh, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
+				gitService := gitops.NewGitService(sh)
+				cleanResult, err := gitService.CleanBranches(runContext.Repo, flags.mode)
 				if err != nil {
 					return nil, err
 				}

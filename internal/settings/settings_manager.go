@@ -15,11 +15,13 @@ import (
 
 type Manager struct {
 	conf *config.Config
+	sh   shell.Shell
 }
 
-func NewManager(conf *config.Config) *Manager {
+func NewManager(conf *config.Config, sh shell.Shell) *Manager {
 	return &Manager{
 		conf: conf,
+		sh:   sh,
 	}
 }
 
@@ -111,12 +113,12 @@ func (sm *Manager) Export(remoteRepoUrl string) (map[string]ExportImportStatus, 
 		return nil, err
 	}
 
-	_, err = shell.RunCommand(repoDir, "git", "add", ".")
+	_, err = sm.sh.RunCommand(repoDir, "git", "add", ".")
 	if err != nil {
 		return nil, err
 	}
 
-	statusOutput, err := shell.RunCommand(repoDir, "git", "status")
+	statusOutput, err := sm.sh.RunCommand(repoDir, "git", "status")
 	if err != nil {
 		return nil, err
 	}
@@ -129,12 +131,12 @@ func (sm *Manager) Export(remoteRepoUrl string) (map[string]ExportImportStatus, 
 		return result, nil
 	}
 
-	_, err = shell.RunCommand(repoDir, "git", "commit", "-m", "Export bulker repositories")
+	_, err = sm.sh.RunCommand(repoDir, "git", "commit", "-m", "Export bulker repositories")
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = shell.RunCommand(repoDir, "git", "push")
+	_, err = sm.sh.RunCommand(repoDir, "git", "push")
 	if err != nil {
 		return nil, err
 	}
@@ -194,7 +196,7 @@ func (sm *Manager) cloneRepo(remoteRepoUrl string) (repoDir string, cleanupFunc 
 		}
 	}
 
-	_, err = shell.RunCommand(repoDir, "git", "clone", remoteRepoUrl, ".")
+	_, err = sm.sh.RunCommand(repoDir, "git", "clone", remoteRepoUrl, ".")
 	if err != nil {
 		return "", cleanupFunc, nil
 	}

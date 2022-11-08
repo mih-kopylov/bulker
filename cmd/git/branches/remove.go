@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"github.com/mih-kopylov/bulker/internal/gitops"
 	"github.com/mih-kopylov/bulker/internal/runner"
+	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/spf13/cobra"
 )
 
-func CreateRemoveCommand() *cobra.Command {
+func CreateRemoveCommand(sh shell.Shell) *cobra.Command {
 	var filter = runner.Filter{}
 	var flags struct {
 		name string
@@ -20,8 +21,9 @@ func CreateRemoveCommand() *cobra.Command {
 		Use:   "remove",
 		Short: "Remove a branch",
 		RunE: runner.NewCommandRunnerForExistingRepos(
-			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
-				removeResult, err := gitops.RemoveBranch(runContext.Repo, flags.name, flags.mode)
+			&filter, sh, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
+				gitService := gitops.NewGitService(sh)
+				removeResult, err := gitService.RemoveBranch(runContext.Repo, flags.name, flags.mode)
 				if err != nil {
 					return nil, err
 				}

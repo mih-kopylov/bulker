@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"github.com/mih-kopylov/bulker/internal/gitops"
 	"github.com/mih-kopylov/bulker/internal/runner"
+	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/spf13/cobra"
 )
 
-func CreateCloneCommand() *cobra.Command {
+func CreateCloneCommand(sh shell.Shell) *cobra.Command {
 	var filter = runner.Filter{}
 	var flags = struct {
 		recreate bool
@@ -18,8 +19,9 @@ func CreateCloneCommand() *cobra.Command {
 		Use:   "clone",
 		Short: "Clones the configured repositories out if they have not been yet",
 		RunE: runner.NewCommandRunner(
-			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
-				cloneResult, err := gitops.CloneRepo(runContext.Repo, flags.recreate)
+			&filter, sh, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
+				gitService := gitops.NewGitService(sh)
+				cloneResult, err := gitService.CloneRepo(runContext.Repo, flags.recreate)
 				if err != nil {
 					return nil, fmt.Errorf("failed to clone: %w", err)
 				}

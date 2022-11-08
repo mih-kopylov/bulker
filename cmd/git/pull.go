@@ -4,18 +4,20 @@ import (
 	"context"
 	"github.com/mih-kopylov/bulker/internal/gitops"
 	"github.com/mih-kopylov/bulker/internal/runner"
+	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/spf13/cobra"
 )
 
-func CreatePullCommand() *cobra.Command {
+func CreatePullCommand(sh shell.Shell) *cobra.Command {
 	var filter = runner.Filter{}
 
 	var result = &cobra.Command{
 		Use:   "pull",
 		Short: "Pull changes from remote",
 		RunE: runner.NewCommandRunnerForExistingRepos(
-			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
-				err := gitops.Pull(runContext.Repo)
+			&filter, sh, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
+				gitService := gitops.NewGitService(sh)
+				err := gitService.Pull(runContext.Repo)
 				if err != nil {
 					return nil, err
 				}

@@ -7,11 +7,12 @@ import (
 	"github.com/mih-kopylov/bulker/internal/fileops"
 	"github.com/mih-kopylov/bulker/internal/gitops"
 	"github.com/mih-kopylov/bulker/internal/runner"
+	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/spf13/cobra"
 )
 
-func CreateCreateCommand() *cobra.Command {
+func CreateCreateCommand(sh shell.Shell) *cobra.Command {
 	var filter = runner.Filter{}
 	var flags struct {
 		name    string
@@ -22,15 +23,17 @@ func CreateCreateCommand() *cobra.Command {
 		Use:   "create",
 		Short: "Create a new branch and switch repository to it",
 		RunE: runner.NewCommandRunnerForExistingRepos(
-			&filter, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
+			&filter, sh, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
 				type result struct {
 					Status gitops.StatusResult
 					Create gitops.CreateResult
 					Ref    string
 				}
 
+				gitService := gitops.NewGitService(sh)
+
 				if flags.discard {
-					err := gitops.Discard(runContext.Repo)
+					err := gitService.Discard(runContext.Repo)
 					if errors.Is(err, fileops.ErrRepositoryNotCloned) {
 						return result{gitops.StatusMissing, "", ""}, nil
 					}
@@ -39,7 +42,7 @@ func CreateCreateCommand() *cobra.Command {
 					}
 				}
 
-				createResult, err := gitops.CreateBranch(runContext.Repo, flags.name)
+				createResult, err := gitService.CreateBranch(runContext.Repo, flags.name)
 				if err != nil {
 					if errors.Is(err, fileops.ErrRepositoryNotCloned) {
 						return result{gitops.StatusMissing, "", ""}, nil
@@ -47,7 +50,7 @@ func CreateCreateCommand() *cobra.Command {
 					return nil, fmt.Errorf("failed to create: %w", err)
 				}
 
-				_, err = gitops.Checkout(runContext.Repo, flags.name)
+				_, err = gitService.Checkout(runContext.Repo, flags.name)
 				if err != nil {
 					if errors.Is(err, fileops.ErrRepositoryNotCloned) {
 						return result{gitops.StatusMissing, "", ""}, nil
@@ -55,7 +58,7 @@ func CreateCreateCommand() *cobra.Command {
 					return nil, fmt.Errorf("failed to checkout: %w", err)
 				}
 
-				statusResult, ref, err := gitops.Status(runContext.Repo)
+				statusResult, ref, err := gitService.Status(runContext.Repo)
 				if err != nil {
 					return nil, fmt.Errorf("failed to get status: %w", err)
 				}
