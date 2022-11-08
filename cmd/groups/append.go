@@ -58,7 +58,7 @@ If the repo to be added already exists in the group, it will be ignored.`,
 				return err
 			}
 
-			err = output.Write("repo", entityInfoMap)
+			err = output.Write(cmd.OutOrStdout(), "repo", entityInfoMap)
 			if err != nil {
 				return err
 			}

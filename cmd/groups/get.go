@@ -33,7 +33,7 @@ func CreateGetCommand() *cobra.Command {
 			for _, repoName := range group.Repos {
 				entityInfoMap[repoName] = output.EntityInfo{Result: nil, Error: nil}
 			}
-			err = output.Write("repo", entityInfoMap)
+			err = output.Write(cmd.OutOrStdout(), "repo", entityInfoMap)
 			if err != nil {
 				return err
 			}

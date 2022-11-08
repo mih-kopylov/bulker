@@ -7,10 +7,10 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-type LineWriter struct {
+type LineFormatter struct {
 }
 
-func (w LineWriter) WriteMessage(value map[string]EntityInfo) string {
+func (w LineFormatter) FormatMessage(value map[string]EntityInfo) string {
 	buffer := &bytes.Buffer{}
 
 	keys := maps.Keys(value)

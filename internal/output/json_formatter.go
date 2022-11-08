@@ -7,11 +7,11 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-type JsonWriter struct {
+type JsonFormatter struct {
 	entityName string
 }
 
-func (w JsonWriter) WriteMessage(value map[string]EntityInfo) string {
+func (w JsonFormatter) FormatMessage(value map[string]EntityInfo) string {
 	// An empty slice is created in order to have an empty json when the slice is marshalled without any values
 	//goland:noinspection GoPreferNilSlice
 	valueToLog := []any{}

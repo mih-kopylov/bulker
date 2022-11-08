@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/spf13/viper"
+	"io"
 )
 
-type Writer interface {
-	WriteMessage(value map[string]EntityInfo) string
+type Formatter interface {
+	FormatMessage(value map[string]EntityInfo) string
 }
 
 type EntityInfo struct {
@@ -17,31 +18,35 @@ type EntityInfo struct {
 
 // Write consumes a map with keys are usually repository names, or any other entity names, like groups
 // and values are containers with either structures or errors
-func Write(entityName string, value map[string]EntityInfo) error {
-	writer, err := createWriter(entityName)
+func Write(writer io.Writer, entityName string, value map[string]EntityInfo) error {
+	formatter, err := createFormatter(entityName)
 	if err != nil {
 		return err
 	}
 
-	message := writer.WriteMessage(value)
-	fmt.Print(message)
+	message := formatter.FormatMessage(value)
+
+	_, err = fmt.Fprint(writer, message)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func createWriter(entityName string) (Writer, error) {
+func createFormatter(entityName string) (Formatter, error) {
 	outputFormat := config.OutputFormat(viper.GetString("output"))
 	if outputFormat == config.JsonOutputFormat {
-		return JsonWriter{entityName}, nil
+		return JsonFormatter{entityName}, nil
 	}
 	if outputFormat == config.LineOutputFormat {
-		return LineWriter{}, nil
+		return LineFormatter{}, nil
 	}
 	if outputFormat == config.LogOutputFormat {
-		return LogWriter{entityName}, nil
+		return LogFormatter{entityName}, nil
 	}
 	if outputFormat == config.TableOutputFormat {
-		return TableWriter{entityName}, nil
+		return TableFormatter{entityName}, nil
 	}
 
 	return nil, fmt.Errorf("unsupported output format: %v", outputFormat)

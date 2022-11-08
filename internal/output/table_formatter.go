@@ -8,11 +8,11 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-type TableWriter struct {
+type TableFormatter struct {
 	entityName string
 }
 
-func (w TableWriter) WriteMessage(value map[string]EntityInfo) string {
+func (w TableFormatter) FormatMessage(value map[string]EntityInfo) string {
 	if len(value) == 0 {
 		return ""
 	}
