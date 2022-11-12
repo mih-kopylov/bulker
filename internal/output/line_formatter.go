@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
+	"strings"
 )
 
 type LineFormatter struct {
@@ -41,5 +42,5 @@ func infoToString(info EntityInfo) string {
 			buffer.WriteString(fmt.Sprintf("%s=%s ", entryKey, entryValue))
 		}
 	}
-	return buffer.String()
+	return strings.TrimSpace(buffer.String())
 }
