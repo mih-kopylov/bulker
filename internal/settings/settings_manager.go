@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/shell"
+	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
@@ -34,8 +35,12 @@ func (sm *Manager) Read() (*Settings, error) {
 		return nil, err
 	}
 
-	fileContent, err := os.ReadFile(settingsFileName)
+	exists, err := utils.Exists(settingsFileName)
 	if err != nil {
+		return nil, err
+	}
+
+	if !exists {
 		newInstance := &Settings{}
 		err := sm.Write(newInstance)
 		if err != nil {
@@ -46,6 +51,7 @@ func (sm *Manager) Read() (*Settings, error) {
 	}
 
 	result := &Settings{}
+	fileContent, err := os.ReadFile(settingsFileName)
 	err = yaml.Unmarshal(fileContent, result)
 	if err != nil {
 		return nil, err
@@ -73,6 +79,11 @@ func (sm *Manager) Write(settings *Settings) error {
 	}
 
 	fileContent, err := yaml.Marshal(settings)
+	if err != nil {
+		return err
+	}
+
+	err = os.MkdirAll(filepath.Dir(settingsFileName), os.ModePerm)
 	if err != nil {
 		return err
 	}
