@@ -51,7 +51,12 @@ func (sm *Manager) Read() (*Settings, error) {
 	}
 
 	result := &Settings{}
+
 	fileContent, err := os.ReadFile(settingsFileName)
+	if err != nil {
+		return nil, err
+	}
+
 	err = yaml.Unmarshal(fileContent, result)
 	if err != nil {
 		return nil, err
