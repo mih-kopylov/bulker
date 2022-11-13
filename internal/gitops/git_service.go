@@ -7,6 +7,7 @@ import (
 	"github.com/mih-kopylov/bulker/internal/fileops"
 	"github.com/mih-kopylov/bulker/internal/model"
 	"github.com/mih-kopylov/bulker/internal/shell"
+	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/sirupsen/logrus"
 	"os"
 	"regexp"
@@ -22,36 +23,39 @@ func NewGitService(sh shell.Shell) GitService {
 }
 
 func (g *GitService) CloneRepo(repo *model.Repo, recreate bool) (CloneResult, error) {
-	_, err := os.Stat(repo.Path)
+	exists, err := utils.Exists(repo.Path)
+	if err != nil {
+		return CloneError, err
+	}
 
-	wasRecreated := false
+	emptyDir, _ := utils.EmptyDir(repo.Path)
 
-	if err == nil {
-		if !recreate {
-			output, err := g.sh.RunCommand(repo.Path, "git", "status")
+	originalDirectoryDeleted := false
+
+	if exists && !emptyDir {
+		if recreate {
+			err := os.RemoveAll(repo.Path)
 			if err != nil {
-				if strings.Contains(output, "not a git repository") {
-					return CloneError, fmt.Errorf("repository directory already exists, and it is not a repository")
-				}
-				return CloneError, fmt.Errorf("%v, %w", output, err)
+				return CloneError, fmt.Errorf("failed to delete directory for recreation: %w", err)
 			}
 
+			exists = false
+			emptyDir = false
+			originalDirectoryDeleted = true
+		} else {
+			_, _, err := g.Status(repo)
+			if err != nil {
+				return CloneError, err
+			}
 			return ClonedAlready, nil
 		}
-		err = os.RemoveAll(repo.Path)
+	}
+
+	if !exists {
+		err = os.MkdirAll(repo.Path, 0700)
 		if err != nil {
-			return CloneError, fmt.Errorf("failed to delete directory for recreation: %w", err)
+			return CloneError, fmt.Errorf("failed to create directory: directory=%v, error=%w", repo.Path, err)
 		}
-		wasRecreated = true
-	}
-
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		return CloneError, fmt.Errorf("expected ErrNotExist but another found: %w", err)
-	}
-
-	err = os.MkdirAll(repo.Path, 0700)
-	if err != nil {
-		return CloneError, fmt.Errorf("failed to create directory: directory=%v, error=%w", repo.Path, err)
 	}
 
 	output, err := g.sh.RunCommand(repo.Path, "git", "clone", repo.Url, ".")
@@ -59,7 +63,7 @@ func (g *GitService) CloneRepo(repo *model.Repo, recreate bool) (CloneResult, er
 		return CloneError, fmt.Errorf("failed to clone repository: %v, %w", output, err)
 	}
 
-	if wasRecreated {
+	if originalDirectoryDeleted {
 		return ClonedAgain, nil
 	}
 
