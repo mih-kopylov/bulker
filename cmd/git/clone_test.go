@@ -3,7 +3,6 @@ package git
 import (
 	"fmt"
 	"github.com/mih-kopylov/bulker/internal/settings"
-	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/mih-kopylov/bulker/internal/tests"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -19,22 +18,16 @@ func TestClone(t *testing.T) {
 			Url:  "https://example.com",
 		},
 	}
-	sh := shell.MockShell(
-		func(repoName string, command string, arguments []string) (string, error) {
-			if tests.ShellCommandEquals(command, arguments, "git status") {
-				return "OK", nil
-			}
-			if tests.ShellCommandEquals(command, arguments, "git clone https://example.com .") {
-				return "OK", nil
-			}
-
-			return "", fmt.Errorf("not mocked")
+	sh := tests.MockShellMap(
+		map[string]tests.MockResult{
+			"git status":                      {Output: "OK"},
+			"git clone https://example.com .": {Output: "OK"},
 		},
 	)
 	tests.PrepareBulker(t, sh, repos)
 
 	command := CreateCloneCommand(sh)
-	c, output, err := tests.ExecuteCommand(command, "-n", "repo")
+	c, output, err := tests.ExecuteCommand(command, "-n repo")
 	assert.NoError(t, err)
 	assert.Equal(t, "clone", c.Name())
 	assert.Equal(t, output, "repo: result=Cloned\n")
@@ -47,16 +40,10 @@ func TestClone_EmptyDirectoryExists(t *testing.T) {
 			Url:  "https://example.com",
 		},
 	}
-	sh := shell.MockShell(
-		func(repoName string, command string, arguments []string) (string, error) {
-			if tests.ShellCommandEquals(command, arguments, "git status") {
-				return "OK", nil
-			}
-			if tests.ShellCommandEquals(command, arguments, "git clone https://example.com .") {
-				return "OK", nil
-			}
-
-			return "", fmt.Errorf("not mocked")
+	sh := tests.MockShellMap(
+		map[string]tests.MockResult{
+			"git status":                      {Output: "OK"},
+			"git clone https://example.com .": {Output: "OK"},
 		},
 	)
 	tests.PrepareBulker(t, sh, repos)
@@ -64,7 +51,7 @@ func TestClone_EmptyDirectoryExists(t *testing.T) {
 	assert.NoError(t, err)
 
 	command := CreateCloneCommand(sh)
-	c, output, err := tests.ExecuteCommand(command, "-n", "repo")
+	c, output, err := tests.ExecuteCommand(command, "-n repo")
 	assert.NoError(t, err)
 	assert.Equal(t, "clone", c.Name())
 	assert.Equal(t, output, "repo: result=Cloned\n")
@@ -77,13 +64,9 @@ func TestClone_NotEmptyDirectoryExists(t *testing.T) {
 			Url:  "https://example.com",
 		},
 	}
-	sh := shell.MockShell(
-		func(repoName string, command string, arguments []string) (string, error) {
-			if tests.ShellCommandEquals(command, arguments, "git status") {
-				return "err", fmt.Errorf("not a repository")
-			}
-
-			return "", fmt.Errorf("not mocked")
+	sh := tests.MockShellMap(
+		map[string]tests.MockResult{
+			"git status": {Output: "err", Error: fmt.Errorf("not a repository")},
 		},
 	)
 	tests.PrepareBulker(t, sh, repos)
@@ -93,7 +76,7 @@ func TestClone_NotEmptyDirectoryExists(t *testing.T) {
 	assert.NoError(t, err)
 
 	command := CreateCloneCommand(sh)
-	c, output, err := tests.ExecuteCommand(command, "-n", "repo")
+	c, output, err := tests.ExecuteCommand(command, "-n repo")
 	assert.NoError(t, err)
 	assert.Equal(t, "clone", c.Name())
 	assert.Equal(t, output, "repo: failed to clone: failed to get git status: err, not a repository\n")
@@ -106,16 +89,12 @@ func TestClone_Recreate(t *testing.T) {
 			Url:  "https://example.com",
 		},
 	}
-	sh := shell.MockShell(
-		func(repoName string, command string, arguments []string) (string, error) {
-			if tests.ShellCommandEquals(command, arguments, "git status") {
-				return "On branch custom\nYour branch is up to date with 'origin/custom'.", nil
-			}
-			if tests.ShellCommandEquals(command, arguments, "git clone https://example.com .") {
-				return "OK", nil
-			}
-
-			return "", fmt.Errorf("not mocked")
+	sh := tests.MockShellMap(
+		map[string]tests.MockResult{
+			"git status": {
+				Output: "On branch custom\nYour branch is up to date with 'origin/custom'.",
+			},
+			"git clone https://example.com .": {Output: "OK"},
 		},
 	)
 	tests.PrepareBulker(t, sh, repos)
@@ -125,7 +104,7 @@ func TestClone_Recreate(t *testing.T) {
 	assert.NoError(t, err)
 
 	command := CreateCloneCommand(sh)
-	c, output, err := tests.ExecuteCommand(command, "-n", "repo", "--recreate")
+	c, output, err := tests.ExecuteCommand(command, "-n repo --recreate")
 	assert.NoError(t, err)
 	assert.Equal(t, "clone", c.Name())
 	assert.Equal(t, output, "repo: result=Re-cloned\n")

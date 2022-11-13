@@ -40,7 +40,7 @@ If -b <branchName> is defined, pushes the only branch. Otherwise pushes all bran
 					return nil, err
 				}
 
-				return "pushed successfully", nil
+				return "Pushed", nil
 			},
 		),
 	}

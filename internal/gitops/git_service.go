@@ -99,6 +99,9 @@ func (g *GitService) Push(repo *model.Repo, branch string, allBranches bool, for
 
 	arguments := []string{"push", "--set-upstream", remote}
 	if allBranches {
+		if force {
+			return errors.New("incompatible 'all' and 'force' modes")
+		}
 		arguments = append(arguments, "--all")
 	} else {
 		if branch == "" {

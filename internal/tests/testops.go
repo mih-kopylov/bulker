@@ -13,12 +13,12 @@ import (
 	"testing"
 )
 
-func ExecuteCommand(root *cobra.Command, args ...string) (c *cobra.Command, output string, err error) {
+func ExecuteCommand(root *cobra.Command, args string) (c *cobra.Command, output string, err error) {
 	buf := new(bytes.Buffer)
 	root.SetOut(buf)
 	root.SetErr(buf)
 
-	root.SetArgs(args)
+	root.SetArgs(strings.Split(args, " "))
 
 	c, err = root.ExecuteC()
 
@@ -43,10 +43,10 @@ func PrepareBulker(t *testing.T, sh shell.Shell, repos []settings.Repo) {
 	assert.NoError(t, err)
 }
 
-func ShellCommandEquals(actualCommand string, actualArguments []string, expected string) bool {
+func ShellCommandToString(command string, arguments []string) string {
 	buffer := bytes.Buffer{}
-	buffer.WriteString(actualCommand)
+	buffer.WriteString(command)
 	buffer.WriteString(" ")
-	buffer.WriteString(strings.Join(actualArguments, " "))
-	return buffer.String() == expected
+	buffer.WriteString(strings.Join(arguments, " "))
+	return buffer.String()
 }
