@@ -28,7 +28,7 @@ func CreateCommitCommand(sh shell.Shell) *cobra.Command {
 					return nil, err
 				}
 
-				return "Committed", nil
+				return "committed", nil
 			},
 		),
 	}

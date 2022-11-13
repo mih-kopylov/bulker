@@ -30,7 +30,7 @@ func TestClone(t *testing.T) {
 	c, output, err := tests.ExecuteCommand(command, "-n repo")
 	assert.NoError(t, err)
 	assert.Equal(t, "clone", c.Name())
-	assert.Equal(t, "repo: result=Cloned\n", output)
+	assert.Equal(t, "repo: result=cloned\n", output)
 }
 
 func TestClone_EmptyDirectoryExists(t *testing.T) {
@@ -54,7 +54,7 @@ func TestClone_EmptyDirectoryExists(t *testing.T) {
 	c, output, err := tests.ExecuteCommand(command, "-n repo")
 	assert.NoError(t, err)
 	assert.Equal(t, "clone", c.Name())
-	assert.Equal(t, "repo: result=Cloned\n", output)
+	assert.Equal(t, "repo: result=cloned\n", output)
 }
 
 func TestClone_NotEmptyDirectoryExists(t *testing.T) {
@@ -107,5 +107,5 @@ func TestClone_Recreate(t *testing.T) {
 	c, output, err := tests.ExecuteCommand(command, "-n repo --recreate")
 	assert.NoError(t, err)
 	assert.Equal(t, "clone", c.Name())
-	assert.Equal(t, "repo: result=Re-cloned\n", output)
+	assert.Equal(t, "repo: result=re-cloned\n", output)
 }

@@ -3,10 +3,10 @@ package gitops
 type CloneResult string
 
 const (
-	ClonedSuccessfully CloneResult = "Cloned"
-	ClonedAlready      CloneResult = "Already cloned"
-	ClonedAgain        CloneResult = "Re-cloned"
-	CloneError         CloneResult = "Error"
+	ClonedSuccessfully CloneResult = "cloned"
+	ClonedAlready      CloneResult = "already cloned"
+	ClonedAgain        CloneResult = "re-cloned"
+	CloneError         CloneResult = "error"
 )
 
 func (r *CloneResult) String() string {

@@ -3,10 +3,10 @@ package gitops
 type StatusResult string
 
 const (
-	StatusClean   StatusResult = "Clean"
-	StatusDirty   StatusResult = "Dirty"
-	StatusMissing StatusResult = "Missing"
-	StatusError   StatusResult = "Error"
+	StatusClean   StatusResult = "clean"
+	StatusDirty   StatusResult = "dirty"
+	StatusMissing StatusResult = "missing"
+	StatusError   StatusResult = "error"
 )
 
 func (r *StatusResult) String() string {

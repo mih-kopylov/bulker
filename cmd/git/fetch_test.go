@@ -30,5 +30,5 @@ func TestFetch(t *testing.T) {
 	c, output, err := tests.ExecuteCommand(command, "-n repo")
 	assert.NoError(t, err)
 	assert.Equal(t, "fetch", c.Name())
-	assert.Equal(t, output, "repo: result=Fetched\n")
+	assert.Equal(t, output, "repo: result=fetched\n")
 }
