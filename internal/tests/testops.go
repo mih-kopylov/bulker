@@ -2,9 +2,11 @@ package tests
 
 import (
 	"bytes"
+	"encoding/json"
 	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/settings"
 	"github.com/mih-kopylov/bulker/internal/shell"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -31,7 +33,7 @@ func PrepareBulker(t *testing.T, sh shell.Shell, repos []settings.Repo) {
 	viper.Set("settingsFileName", filepath.Join(testDirectory, "bulker_test_settings.yaml"))
 	viper.Set("runMode", "seq")
 	viper.Set("noProgress", "true")
-	viper.Set("output", "line")
+	viper.Set("output", "json")
 
 	conf := config.ReadConfig()
 	manager := settings.NewManager(conf, sh)
@@ -49,4 +51,12 @@ func ShellCommandToString(command string, arguments []string) string {
 	buffer.WriteString(" ")
 	buffer.WriteString(strings.Join(arguments, " "))
 	return buffer.String()
+}
+
+func ToJsonString(value any) string {
+	marshalled, err := json.Marshal(value)
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	return string(marshalled)
 }

@@ -51,7 +51,16 @@ func TestPush_Branch(t *testing.T) {
 	c, output, err := tests.ExecuteCommand(command, "-n repo -b branch-name")
 	assert.NoError(t, err)
 	assert.Equal(t, "push", c.Name())
-	assert.Equal(t, "repo: result=pushed\n", output)
+	assert.JSONEq(
+		t, tests.ToJsonString(
+			[]testResult{
+				{
+					Repo:   "repo",
+					Result: "pushed",
+				},
+			},
+		), output,
+	)
 }
 
 func TestPush_All(t *testing.T) {
@@ -75,7 +84,16 @@ func TestPush_All(t *testing.T) {
 	c, output, err := tests.ExecuteCommand(command, "-n repo --all")
 	assert.NoError(t, err)
 	assert.Equal(t, "push", c.Name())
-	assert.Equal(t, "repo: result=pushed\n", output)
+	assert.JSONEq(
+		t, tests.ToJsonString(
+			[]testResult{
+				{
+					Repo:   "repo",
+					Result: "pushed",
+				},
+			},
+		), output,
+	)
 }
 
 func TestPush_Branch_Force(t *testing.T) {
@@ -99,7 +117,16 @@ func TestPush_Branch_Force(t *testing.T) {
 	c, output, err := tests.ExecuteCommand(command, "-n repo -b my-branch -f")
 	assert.NoError(t, err)
 	assert.Equal(t, "push", c.Name())
-	assert.Equal(t, "repo: result=pushed\n", output)
+	assert.JSONEq(
+		t, tests.ToJsonString(
+			[]testResult{
+				{
+					Repo:   "repo",
+					Result: "pushed",
+				},
+			},
+		), output,
+	)
 }
 
 func TestPush_All_Force(t *testing.T) {

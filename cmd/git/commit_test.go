@@ -31,7 +31,16 @@ func TestCommit(t *testing.T) {
 	c, output, err := tests.ExecuteCommand(command, "-n repo -m message")
 	assert.NoError(t, err)
 	assert.Equal(t, "commit", c.Name())
-	assert.Equal(t, output, "repo: result=committed\n")
+	assert.JSONEq(
+		t, tests.ToJsonString(
+			[]testResult{
+				{
+					Repo:   "repo",
+					Result: "committed",
+				},
+			},
+		), output,
+	)
 }
 
 func TestCommit_Pattern(t *testing.T) {
@@ -55,5 +64,14 @@ func TestCommit_Pattern(t *testing.T) {
 	c, output, err := tests.ExecuteCommand(command, "-n repo -m message -p *.md")
 	assert.NoError(t, err)
 	assert.Equal(t, "commit", c.Name())
-	assert.Equal(t, output, "repo: result=committed\n")
+	assert.JSONEq(
+		t, tests.ToJsonString(
+			[]testResult{
+				{
+					Repo:   "repo",
+					Result: "committed",
+				},
+			},
+		), output,
+	)
 }
