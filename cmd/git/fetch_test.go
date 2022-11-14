@@ -3,10 +3,8 @@ package git
 import (
 	"github.com/mih-kopylov/bulker/internal/settings"
 	"github.com/mih-kopylov/bulker/internal/tests"
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"os"
-	"path/filepath"
 	"testing"
 )
 
@@ -23,7 +21,7 @@ func TestFetch(t *testing.T) {
 		},
 	)
 	tests.PrepareBulker(t, sh, repos)
-	err := os.Mkdir(filepath.Join(viper.GetString("reposDirectory"), "repo"), os.ModePerm)
+	err := os.Mkdir(tests.Path("repo"), os.ModePerm)
 	assert.NoError(t, err)
 
 	command := CreateFetchCommand(sh)

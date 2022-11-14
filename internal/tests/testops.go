@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/exp/slices"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -59,4 +60,9 @@ func ToJsonString(value any) string {
 		logrus.Fatal(err)
 	}
 	return string(marshalled)
+}
+
+func Path(parts ...string) string {
+	allParts := slices.Insert(parts, 0, viper.GetString("reposDirectory"))
+	return filepath.Join(allParts...)
 }

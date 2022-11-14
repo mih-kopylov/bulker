@@ -4,10 +4,8 @@ import (
 	"fmt"
 	"github.com/mih-kopylov/bulker/internal/settings"
 	"github.com/mih-kopylov/bulker/internal/tests"
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"os"
-	"path/filepath"
 	"testing"
 )
 
@@ -62,7 +60,7 @@ func TestClone_EmptyDirectoryExists(t *testing.T) {
 		},
 	)
 	tests.PrepareBulker(t, sh, repos)
-	err := os.Mkdir(filepath.Join(viper.GetString("reposDirectory"), "repo"), os.ModePerm)
+	err := os.Mkdir(tests.Path("repo"), os.ModePerm)
 	assert.NoError(t, err)
 
 	command := CreateCloneCommand(sh)
@@ -94,9 +92,9 @@ func TestClone_NotEmptyDirectoryExists(t *testing.T) {
 		},
 	)
 	tests.PrepareBulker(t, sh, repos)
-	err := os.Mkdir(filepath.Join(viper.GetString("reposDirectory"), "repo"), os.ModePerm)
+	err := os.Mkdir(tests.Path("repo"), os.ModePerm)
 	assert.NoError(t, err)
-	err = os.WriteFile(filepath.Join(viper.GetString("reposDirectory"), "repo", "file"), []byte("data"), os.ModePerm)
+	err = os.WriteFile(tests.Path("repo", "file"), []byte("data"), os.ModePerm)
 	assert.NoError(t, err)
 
 	command := CreateCloneCommand(sh)
@@ -131,9 +129,9 @@ func TestClone_Recreate(t *testing.T) {
 		},
 	)
 	tests.PrepareBulker(t, sh, repos)
-	err := os.Mkdir(filepath.Join(viper.GetString("reposDirectory"), "repo"), os.ModePerm)
+	err := os.Mkdir(tests.Path("repo"), os.ModePerm)
 	assert.NoError(t, err)
-	err = os.WriteFile(filepath.Join(viper.GetString("reposDirectory"), "repo", "file"), []byte("data"), os.ModePerm)
+	err = os.WriteFile(tests.Path("repo", "file"), []byte("data"), os.ModePerm)
 	assert.NoError(t, err)
 
 	command := CreateCloneCommand(sh)

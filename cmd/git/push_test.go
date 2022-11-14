@@ -3,10 +3,8 @@ package git
 import (
 	"github.com/mih-kopylov/bulker/internal/settings"
 	"github.com/mih-kopylov/bulker/internal/tests"
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"os"
-	"path/filepath"
 	"testing"
 )
 
@@ -21,7 +19,7 @@ func TestPush(t *testing.T) {
 		map[string]tests.MockResult{},
 	)
 	tests.PrepareBulker(t, sh, repos)
-	err := os.Mkdir(filepath.Join(viper.GetString("reposDirectory"), "repo"), os.ModePerm)
+	err := os.Mkdir(tests.Path("repo"), os.ModePerm)
 	assert.NoError(t, err)
 
 	command := CreatePushCommand(sh)
@@ -46,7 +44,7 @@ func TestPush_Branch(t *testing.T) {
 		},
 	)
 	tests.PrepareBulker(t, sh, repos)
-	err := os.Mkdir(filepath.Join(viper.GetString("reposDirectory"), "repo"), os.ModePerm)
+	err := os.Mkdir(tests.Path("repo"), os.ModePerm)
 	assert.NoError(t, err)
 
 	command := CreatePushCommand(sh)
@@ -79,7 +77,7 @@ func TestPush_All(t *testing.T) {
 		},
 	)
 	tests.PrepareBulker(t, sh, repos)
-	err := os.Mkdir(filepath.Join(viper.GetString("reposDirectory"), "repo"), os.ModePerm)
+	err := os.Mkdir(tests.Path("repo"), os.ModePerm)
 	assert.NoError(t, err)
 
 	command := CreatePushCommand(sh)
@@ -112,7 +110,7 @@ func TestPush_Branch_Force(t *testing.T) {
 		},
 	)
 	tests.PrepareBulker(t, sh, repos)
-	err := os.Mkdir(filepath.Join(viper.GetString("reposDirectory"), "repo"), os.ModePerm)
+	err := os.Mkdir(tests.Path("repo"), os.ModePerm)
 	assert.NoError(t, err)
 
 	command := CreatePushCommand(sh)
@@ -142,7 +140,7 @@ func TestPush_All_Force(t *testing.T) {
 		map[string]tests.MockResult{},
 	)
 	tests.PrepareBulker(t, sh, repos)
-	err := os.Mkdir(filepath.Join(viper.GetString("reposDirectory"), "repo"), os.ModePerm)
+	err := os.Mkdir(tests.Path("repo"), os.ModePerm)
 	assert.NoError(t, err)
 
 	command := CreatePushCommand(sh)

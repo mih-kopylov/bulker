@@ -3,14 +3,12 @@ package files
 import (
 	"github.com/mih-kopylov/bulker/internal/settings"
 	"github.com/mih-kopylov/bulker/internal/tests"
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"os"
-	"path/filepath"
 	"testing"
 )
 
-type testResult struct {
+type testCopyResult struct {
 	Repo   string `json:"repo"`
 	Source string `json:"source"`
 	Target string `json:"target"`
@@ -29,9 +27,9 @@ func TestCopy(t *testing.T) {
 		map[string]tests.MockResult{},
 	)
 	tests.PrepareBulker(t, sh, repos)
-	err := os.Mkdir(filepath.Join(viper.GetString("reposDirectory"), "repo"), os.ModePerm)
+	err := os.Mkdir(tests.Path("repo"), os.ModePerm)
 	assert.NoError(t, err)
-	err = os.WriteFile(filepath.Join(viper.GetString("reposDirectory"), "repo", "file.md"), []byte("hi"), os.ModePerm)
+	err = os.WriteFile(tests.Path("repo", "file.md"), []byte("hi"), os.ModePerm)
 	assert.NoError(t, err)
 
 	command := CreateCopyCommand(sh)
@@ -40,18 +38,18 @@ func TestCopy(t *testing.T) {
 	assert.Equal(t, "copy", c.Name())
 	assert.JSONEq(
 		t, tests.ToJsonString(
-			[]testResult{
+			[]testCopyResult{
 				{
 					Repo:   "repo",
 					Status: "copied",
-					Source: filepath.Join(viper.GetString("reposDirectory"), "repo", "file.md"),
-					Target: filepath.Join(viper.GetString("reposDirectory"), "repo", "file2.md"),
+					Source: tests.Path("repo", "file.md"),
+					Target: tests.Path("repo", "file2.md"),
 				},
 			},
 		), output,
 	)
 
-	file2Content, err := os.ReadFile(filepath.Join(viper.GetString("reposDirectory"), "repo", "file2.md"))
+	file2Content, err := os.ReadFile(tests.Path("repo", "file2.md"))
 	assert.NoError(t, err)
 	assert.Equal(t, []byte("hi"), file2Content)
 }
@@ -67,11 +65,11 @@ func TestCopy_TargetFileAlreadyExists(t *testing.T) {
 		map[string]tests.MockResult{},
 	)
 	tests.PrepareBulker(t, sh, repos)
-	err := os.Mkdir(filepath.Join(viper.GetString("reposDirectory"), "repo"), os.ModePerm)
+	err := os.Mkdir(tests.Path("repo"), os.ModePerm)
 	assert.NoError(t, err)
-	err = os.WriteFile(filepath.Join(viper.GetString("reposDirectory"), "repo", "file.md"), []byte("hi"), os.ModePerm)
+	err = os.WriteFile(tests.Path("repo", "file.md"), []byte("hi"), os.ModePerm)
 	assert.NoError(t, err)
-	err = os.WriteFile(filepath.Join(viper.GetString("reposDirectory"), "repo", "file2.md"), []byte("old"), os.ModePerm)
+	err = os.WriteFile(tests.Path("repo", "file2.md"), []byte("old"), os.ModePerm)
 	assert.NoError(t, err)
 
 	command := CreateCopyCommand(sh)
@@ -80,19 +78,19 @@ func TestCopy_TargetFileAlreadyExists(t *testing.T) {
 	assert.Equal(t, "copy", c.Name())
 	assert.JSONEq(
 		t, tests.ToJsonString(
-			[]testResult{
+			[]testCopyResult{
 				{
 					Repo:   "repo",
 					Status: "failed",
-					Source: filepath.Join(viper.GetString("reposDirectory"), "repo", "file.md"),
-					Target: filepath.Join(viper.GetString("reposDirectory"), "repo", "file2.md"),
+					Source: tests.Path("repo", "file.md"),
+					Target: tests.Path("repo", "file2.md"),
 					Error:  "target already exists",
 				},
 			},
 		), output,
 	)
 
-	file2Content, err := os.ReadFile(filepath.Join(viper.GetString("reposDirectory"), "repo", "file2.md"))
+	file2Content, err := os.ReadFile(tests.Path("repo", "file2.md"))
 	assert.NoError(t, err)
 	assert.Equal(t, []byte("old"), file2Content)
 }
@@ -108,11 +106,11 @@ func TestCopy_Force(t *testing.T) {
 		map[string]tests.MockResult{},
 	)
 	tests.PrepareBulker(t, sh, repos)
-	err := os.Mkdir(filepath.Join(viper.GetString("reposDirectory"), "repo"), os.ModePerm)
+	err := os.Mkdir(tests.Path("repo"), os.ModePerm)
 	assert.NoError(t, err)
-	err = os.WriteFile(filepath.Join(viper.GetString("reposDirectory"), "repo", "file.md"), []byte("hi"), os.ModePerm)
+	err = os.WriteFile(tests.Path("repo", "file.md"), []byte("hi"), os.ModePerm)
 	assert.NoError(t, err)
-	err = os.WriteFile(filepath.Join(viper.GetString("reposDirectory"), "repo", "file2.md"), []byte("old"), os.ModePerm)
+	err = os.WriteFile(tests.Path("repo", "file2.md"), []byte("old"), os.ModePerm)
 	assert.NoError(t, err)
 
 	command := CreateCopyCommand(sh)
@@ -121,18 +119,18 @@ func TestCopy_Force(t *testing.T) {
 	assert.Equal(t, "copy", c.Name())
 	assert.JSONEq(
 		t, tests.ToJsonString(
-			[]testResult{
+			[]testCopyResult{
 				{
 					Repo:   "repo",
 					Status: "copied",
-					Source: filepath.Join(viper.GetString("reposDirectory"), "repo", "file.md"),
-					Target: filepath.Join(viper.GetString("reposDirectory"), "repo", "file2.md"),
+					Source: tests.Path("repo", "file.md"),
+					Target: tests.Path("repo", "file2.md"),
 				},
 			},
 		), output,
 	)
 
-	file2Content, err := os.ReadFile(filepath.Join(viper.GetString("reposDirectory"), "repo", "file2.md"))
+	file2Content, err := os.ReadFile(tests.Path("repo", "file2.md"))
 	assert.NoError(t, err)
 	assert.Equal(t, []byte("hi"), file2Content)
 }
@@ -148,7 +146,7 @@ func TestCopy_SourceRequired(t *testing.T) {
 		map[string]tests.MockResult{},
 	)
 	tests.PrepareBulker(t, sh, repos)
-	err := os.Mkdir(filepath.Join(viper.GetString("reposDirectory"), "repo"), os.ModePerm)
+	err := os.Mkdir(tests.Path("repo"), os.ModePerm)
 	assert.NoError(t, err)
 
 	command := CreateCopyCommand(sh)
@@ -169,7 +167,7 @@ func TestCopy_TargetRequired(t *testing.T) {
 		map[string]tests.MockResult{},
 	)
 	tests.PrepareBulker(t, sh, repos)
-	err := os.Mkdir(filepath.Join(viper.GetString("reposDirectory"), "repo"), os.ModePerm)
+	err := os.Mkdir(tests.Path("repo"), os.ModePerm)
 	assert.NoError(t, err)
 
 	command := CreateCopyCommand(sh)
