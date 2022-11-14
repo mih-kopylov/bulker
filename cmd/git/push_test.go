@@ -26,7 +26,9 @@ func TestPush(t *testing.T) {
 
 	command := CreatePushCommand(sh)
 	c, _, err := tests.ExecuteCommand(command, "-n repo")
-	assert.Error(t, err, "either 'branch' or 'all' flags should be set")
+	if assert.Error(t, err) {
+		assert.Equal(t, "either 'branch' or 'all' flags should be set", err.Error())
+	}
 	assert.Equal(t, "push", c.Name())
 }
 
@@ -145,6 +147,8 @@ func TestPush_All_Force(t *testing.T) {
 
 	command := CreatePushCommand(sh)
 	c, _, err := tests.ExecuteCommand(command, "-n repo --all -f")
-	assert.Error(t, err, "only one branch is allowed to be force pushed")
+	if assert.Error(t, err) {
+		assert.Equal(t, "only one branch is allowed to be force pushed", err.Error())
+	}
 	assert.Equal(t, "push", c.Name())
 }
