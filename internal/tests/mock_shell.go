@@ -39,3 +39,7 @@ func MockShellMap(handlerValues map[string]MockResult) shell.Shell {
 		},
 	)
 }
+
+func MockShellEmpty() shell.Shell {
+	return MockShellMap(map[string]MockResult{})
+}

@@ -3,6 +3,7 @@ package files
 import (
 	"github.com/mih-kopylov/bulker/internal/settings"
 	"github.com/mih-kopylov/bulker/internal/tests"
+	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
@@ -23,9 +24,7 @@ func TestCopy(t *testing.T) {
 			Url:  "https://example.com",
 		},
 	}
-	sh := tests.MockShellMap(
-		map[string]tests.MockResult{},
-	)
+	sh := tests.MockShellEmpty()
 	tests.PrepareBulker(t, sh, repos)
 	err := os.Mkdir(tests.Path("repo"), os.ModePerm)
 	assert.NoError(t, err)
@@ -61,9 +60,7 @@ func TestCopy_TargetFileAlreadyExists(t *testing.T) {
 			Url:  "https://example.com",
 		},
 	}
-	sh := tests.MockShellMap(
-		map[string]tests.MockResult{},
-	)
+	sh := tests.MockShellEmpty()
 	tests.PrepareBulker(t, sh, repos)
 	err := os.Mkdir(tests.Path("repo"), os.ModePerm)
 	assert.NoError(t, err)
@@ -95,6 +92,35 @@ func TestCopy_TargetFileAlreadyExists(t *testing.T) {
 	assert.Equal(t, []byte("old"), file2Content)
 }
 
+func TestCopy_SourceNotFound(t *testing.T) {
+	repos := []settings.Repo{
+		{
+			Name: "repo",
+			Url:  "https://example.com",
+		},
+	}
+	sh := tests.MockShellEmpty()
+	tests.PrepareBulker(t, sh, repos)
+	err := os.Mkdir(tests.Path("repo"), os.ModePerm)
+	assert.NoError(t, err)
+	err = os.WriteFile(tests.Path("repo", "file1.md"), []byte("hi"), os.ModePerm)
+	assert.NoError(t, err)
+
+	command := CreateCopyCommand(sh)
+	c, output, err := tests.ExecuteCommand(command, "-n repo --source file.md --target file2.md")
+	assert.NoError(t, err)
+	assert.Equal(t, "copy", c.Name())
+	assert.JSONEq(
+		t, tests.ToJsonString(
+			[]testCopyResult{},
+		), output,
+	)
+
+	exists, err := utils.Exists(tests.Path("repo", "file2.md"))
+	assert.NoError(t, err)
+	assert.False(t, exists)
+}
+
 func TestCopy_Force(t *testing.T) {
 	repos := []settings.Repo{
 		{
@@ -102,9 +128,7 @@ func TestCopy_Force(t *testing.T) {
 			Url:  "https://example.com",
 		},
 	}
-	sh := tests.MockShellMap(
-		map[string]tests.MockResult{},
-	)
+	sh := tests.MockShellEmpty()
 	tests.PrepareBulker(t, sh, repos)
 	err := os.Mkdir(tests.Path("repo"), os.ModePerm)
 	assert.NoError(t, err)
@@ -142,9 +166,7 @@ func TestCopy_SourceRequired(t *testing.T) {
 			Url:  "https://example.com",
 		},
 	}
-	sh := tests.MockShellMap(
-		map[string]tests.MockResult{},
-	)
+	sh := tests.MockShellEmpty()
 	tests.PrepareBulker(t, sh, repos)
 	err := os.Mkdir(tests.Path("repo"), os.ModePerm)
 	assert.NoError(t, err)
@@ -163,9 +185,7 @@ func TestCopy_TargetRequired(t *testing.T) {
 			Url:  "https://example.com",
 		},
 	}
-	sh := tests.MockShellMap(
-		map[string]tests.MockResult{},
-	)
+	sh := tests.MockShellEmpty()
 	tests.PrepareBulker(t, sh, repos)
 	err := os.Mkdir(tests.Path("repo"), os.ModePerm)
 	assert.NoError(t, err)

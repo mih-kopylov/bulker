@@ -15,9 +15,7 @@ func TestPush(t *testing.T) {
 			Url:  "https://example.com",
 		},
 	}
-	sh := tests.MockShellMap(
-		map[string]tests.MockResult{},
-	)
+	sh := tests.MockShellEmpty()
 	tests.PrepareBulker(t, sh, repos)
 	err := os.Mkdir(tests.Path("repo"), os.ModePerm)
 	assert.NoError(t, err)
@@ -136,9 +134,7 @@ func TestPush_All_Force(t *testing.T) {
 			Url:  "https://example.com",
 		},
 	}
-	sh := tests.MockShellMap(
-		map[string]tests.MockResult{},
-	)
+	sh := tests.MockShellEmpty()
 	tests.PrepareBulker(t, sh, repos)
 	err := os.Mkdir(tests.Path("repo"), os.ModePerm)
 	assert.NoError(t, err)
