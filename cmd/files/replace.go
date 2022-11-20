@@ -11,6 +11,7 @@ import (
 	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/spf13/cobra"
 	"path/filepath"
+	"strings"
 )
 
 func CreateReplaceCommand(sh shell.Shell) *cobra.Command {
@@ -50,7 +51,7 @@ func CreateReplaceCommand(sh shell.Shell) *cobra.Command {
 					buffer.WriteString(fmt.Sprintf("%v :: %v\n", relFileName, replacementResult.Count))
 				}
 
-				return buffer.String(), nil
+				return strings.TrimSpace(buffer.String()), nil
 			},
 		),
 	}
