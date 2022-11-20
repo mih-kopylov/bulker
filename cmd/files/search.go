@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 	"path/filepath"
+	"strings"
 )
 
 func CreateSearchCommand(sh shell.Shell) *cobra.Command {
@@ -54,7 +55,7 @@ func CreateSearchCommand(sh shell.Shell) *cobra.Command {
 						buffer.WriteString(fmt.Sprintf("%s\n", relFileName))
 					}
 
-					return buffer.String(), nil
+					return strings.TrimSpace(buffer.String()), nil
 				} else {
 					// result with files content
 					result := make(map[string][]string)
@@ -67,12 +68,20 @@ func CreateSearchCommand(sh shell.Shell) *cobra.Command {
 						result[relFileName] = item.Matches
 					}
 
+					w := &bytes.Buffer{}
+					encoder := yaml.NewEncoder(w)
+					encoder.SetIndent(2)
+					err := encoder.Encode(result)
+					if err != nil {
+						return nil, err
+					}
+
 					resultBytes, err := yaml.Marshal(result)
 					if err != nil {
 						return nil, err
 					}
 
-					return string(resultBytes), nil
+					return strings.TrimSpace(string(resultBytes)), nil
 				}
 			},
 		),

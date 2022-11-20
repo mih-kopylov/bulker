@@ -115,21 +115,38 @@ func TestRemove_Doublestar(t *testing.T) {
 	assert.False(t, exists)
 }
 
-func TestRename_FilesRequired(t *testing.T) {
-	repos := []settings.Repo{
+func TestRemove_RequiredFlags(t *testing.T) {
+	cases := []struct {
+		name    string
+		args    string
+		message string
+	}{
 		{
-			Name: "repo",
-			Url:  "https://example.com",
+			name:    "files",
+			args:    "-n repo",
+			message: "required flag(s) \"files\" not set",
 		},
 	}
-	sh := tests.MockShellEmpty()
-	tests.PrepareBulker(t, sh, repos)
-	err := os.Mkdir(tests.Path("repo"), os.ModePerm)
-	assert.NoError(t, err)
+	for _, test := range cases {
+		t.Run(
+			test.name, func(t *testing.T) {
+				repos := []settings.Repo{
+					{
+						Name: "repo",
+						Url:  "https://example.com",
+					},
+				}
+				sh := tests.MockShellEmpty()
+				tests.PrepareBulker(t, sh, repos)
+				err := os.Mkdir(tests.Path("repo"), os.ModePerm)
+				assert.NoError(t, err)
 
-	command := CreateRemoveCommand(sh)
-	_, _, err = tests.ExecuteCommand(command, "-n repo")
-	if assert.Error(t, err) {
-		assert.Equal(t, "required flag(s) \"files\" not set", err.Error())
+				command := CreateRemoveCommand(sh)
+				_, _, err = tests.ExecuteCommand(command, test.args)
+				if assert.Error(t, err) {
+					assert.Equal(t, test.message, err.Error())
+				}
+			},
+		)
 	}
 }
