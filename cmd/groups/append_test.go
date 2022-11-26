@@ -60,13 +60,17 @@ func TestAppend_GroupNotExists(t *testing.T) {
 
 	command := CreateAppendCommand(sh)
 	_, _, err := tests.ExecuteCommand(command, "-g 1 -n repo")
-	assert.Error(t, err)
+	if assert.Error(t, err) {
+		assert.Equal(t, "group is not found", err.Error())
+	}
 
 	manager := settings.NewManager(config.ReadConfig(), sh)
 	sets, err := manager.Read()
 	if assert.NoError(t, err) {
 		group, err := sets.GetGroup("1")
-		assert.Error(t, err)
+		if assert.Error(t, err) {
+			assert.Equal(t, "group is not found", err.Error())
+		}
 
 		group, err = sets.GetGroup("2")
 		if assert.NoError(t, err) {
