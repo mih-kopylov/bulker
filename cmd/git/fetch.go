@@ -22,7 +22,7 @@ func CreateFetchCommand(sh shell.Shell) *cobra.Command {
 					return nil, err
 				}
 
-				return "fetched successfully", nil
+				return "fetched", nil
 			},
 		),
 	}

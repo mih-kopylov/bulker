@@ -3,9 +3,9 @@ package gitops
 type CheckoutResult string
 
 const (
-	CheckoutOk       CheckoutResult = "Success"
-	CheckoutNotFound CheckoutResult = "Not Found"
-	CheckoutError    CheckoutResult = "Error"
+	CheckoutOk       CheckoutResult = "success"
+	CheckoutNotFound CheckoutResult = "not found"
+	CheckoutError    CheckoutResult = "error"
 )
 
 func (r *CheckoutResult) String() string {

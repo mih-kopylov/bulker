@@ -30,6 +30,11 @@ If the repo to be removed does not exist in the group, it will be ignored.`,
 				return err
 			}
 
+			group, err := sets.GetGroup(flags.group)
+			if err != nil {
+				return err
+			}
+
 			repos, err := utils.GetReposFromStdInOrDefault(flags.repos)
 			if err != nil {
 				return err
@@ -38,7 +43,7 @@ If the repo to be removed does not exist in the group, it will be ignored.`,
 			entityInfoMap := map[string]output.EntityInfo{}
 
 			for _, repoName := range repos {
-				err := sets.RemoveRepoFromGroup(flags.group, repoName)
+				err := sets.RemoveRepoFromGroup(group, repoName)
 				if err != nil {
 					if errors.Is(err, settings.ErrRepoAlreadyRemoved) {
 						logrus.

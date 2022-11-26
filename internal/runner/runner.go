@@ -144,13 +144,13 @@ func savePreviousGroup(manager *settings.Manager, repos []string) error {
 		}
 	}
 
-	err = sets.AddGroup(settings.PreviousGroupName)
+	group, err := sets.AddGroup(settings.PreviousGroupName)
 	if err != nil {
 		return err
 	}
 
 	for _, repoName := range repos {
-		err := sets.AddRepoToGroup(settings.PreviousGroupName, repoName)
+		err := sets.AddRepoToGroup(group, repoName)
 		if err != nil {
 			return err
 		}

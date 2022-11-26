@@ -30,6 +30,11 @@ If the repo to be added already exists in the group, it will be ignored.`,
 				return err
 			}
 
+			group, err := sets.GetGroup(flags.group)
+			if err != nil {
+				return err
+			}
+
 			repos, err := utils.GetReposFromStdInOrDefault(flags.repos)
 			if err != nil {
 				return err
@@ -38,7 +43,7 @@ If the repo to be added already exists in the group, it will be ignored.`,
 			entityInfoMap := map[string]output.EntityInfo{}
 
 			for _, repoName := range repos {
-				err := sets.AddRepoToGroup(flags.group, repoName)
+				err := sets.AddRepoToGroup(group, repoName)
 				if err != nil {
 					if errors.Is(err, settings.ErrRepoAlreadyAdded) {
 						logrus.

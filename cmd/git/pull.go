@@ -22,7 +22,7 @@ func CreatePullCommand(sh shell.Shell) *cobra.Command {
 					return nil, err
 				}
 
-				return "pulled successfully", nil
+				return "pulled", nil
 			},
 		),
 	}
