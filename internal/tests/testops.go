@@ -29,6 +29,10 @@ func ExecuteCommand(root *cobra.Command, args string) (c *cobra.Command, output 
 }
 
 func PrepareBulker(t *testing.T, sh shell.Shell, repos []settings.Repo) {
+	PrepareBulkerWithGroups(t, sh, repos, nil)
+}
+
+func PrepareBulkerWithGroups(t *testing.T, sh shell.Shell, repos []settings.Repo, groups []settings.Group) {
 	testDirectory := t.TempDir()
 	viper.Set("reposDirectory", testDirectory)
 	viper.Set("settingsFileName", filepath.Join(testDirectory, "bulker_test_settings.yaml"))
@@ -40,7 +44,7 @@ func PrepareBulker(t *testing.T, sh shell.Shell, repos []settings.Repo) {
 	manager := settings.NewManager(conf, sh)
 	s := &settings.Settings{
 		Repos:  repos,
-		Groups: nil,
+		Groups: groups,
 	}
 	err := manager.Write(s)
 	assert.NoError(t, err)

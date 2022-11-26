@@ -30,7 +30,7 @@ func CreateCreateCommand(sh shell.Shell) *cobra.Command {
 				return err
 			}
 
-			err = sets.AddGroup(flags.group)
+			group, err := sets.AddGroup(flags.group)
 			if err != nil {
 				if !errors.Is(err, settings.ErrGroupAlreadyExists) || !flags.force {
 					return fmt.Errorf("group already exists, use --force to recreate")
@@ -41,7 +41,7 @@ func CreateCreateCommand(sh shell.Shell) *cobra.Command {
 					return err
 				}
 
-				err = sets.AddGroup(flags.group)
+				group, err = sets.AddGroup(flags.group)
 				if err != nil {
 					return err
 				}
@@ -55,7 +55,7 @@ func CreateCreateCommand(sh shell.Shell) *cobra.Command {
 			}
 
 			for _, repoName := range repos {
-				err := sets.AddRepoToGroup(flags.group, repoName)
+				err := sets.AddRepoToGroup(group, repoName)
 				if err != nil {
 					entityInfoMap[repoName] = output.EntityInfo{Result: nil, Error: err}
 				} else {

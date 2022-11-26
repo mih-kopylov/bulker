@@ -108,9 +108,9 @@ func (s *Settings) RemoveGroup(group string) error {
 	return nil
 }
 
-func (s *Settings) AddGroup(group string) error {
+func (s *Settings) AddGroup(group string) (*Group, error) {
 	if s.GroupExists(group) {
-		return ErrGroupAlreadyExists
+		return nil, ErrGroupAlreadyExists
 	}
 
 	newGroup := Group{
@@ -120,17 +120,12 @@ func (s *Settings) AddGroup(group string) error {
 
 	s.Groups = append(s.Groups, newGroup)
 
-	return nil
+	return &newGroup, nil
 }
 
-func (s *Settings) AddRepoToGroup(groupName string, repoName string) error {
+func (s *Settings) AddRepoToGroup(group *Group, repoName string) error {
 	if !s.RepoExists(repoName) {
 		return ErrRepoNotSupported
-	}
-
-	group, err := s.GetGroup(groupName)
-	if err != nil {
-		return err
 	}
 
 	if slices.Contains(group.Repos, repoName) {
