@@ -74,16 +74,16 @@ func (s *Settings) getRepoIndex(name string) int {
 	)
 }
 
-func (s *Settings) getGroupIndex(group string) int {
+func (s *Settings) getGroupIndex(groupName string) int {
 	return slices.IndexFunc(
 		s.Groups, func(g Group) bool {
-			return g.Name == group
+			return g.Name == groupName
 		},
 	)
 }
 
-func (s *Settings) GetGroup(group string) (*Group, error) {
-	groupIndex := s.getGroupIndex(group)
+func (s *Settings) GetGroup(groupName string) (*Group, error) {
+	groupIndex := s.getGroupIndex(groupName)
 
 	if groupIndex < 0 {
 		return nil, ErrGroupNotFound
@@ -93,12 +93,12 @@ func (s *Settings) GetGroup(group string) (*Group, error) {
 
 }
 
-func (s *Settings) GroupExists(group string) bool {
-	return s.getGroupIndex(group) >= 0
+func (s *Settings) GroupExists(groupName string) bool {
+	return s.getGroupIndex(groupName) >= 0
 }
 
-func (s *Settings) RemoveGroup(group string) error {
-	groupIndex := s.getGroupIndex(group)
+func (s *Settings) RemoveGroup(groupName string) error {
+	groupIndex := s.getGroupIndex(groupName)
 
 	if groupIndex < 0 {
 		return ErrGroupNotFound
@@ -108,19 +108,24 @@ func (s *Settings) RemoveGroup(group string) error {
 	return nil
 }
 
-func (s *Settings) AddGroup(group string) (*Group, error) {
-	if s.GroupExists(group) {
+func (s *Settings) AddGroup(groupName string) (*Group, error) {
+	if s.GroupExists(groupName) {
 		return nil, ErrGroupAlreadyExists
 	}
 
-	newGroup := Group{
-		Name:  group,
+	group := Group{
+		Name:  groupName,
 		Repos: []string{},
 	}
 
-	s.Groups = append(s.Groups, newGroup)
+	s.Groups = append(s.Groups, group)
 
-	return &newGroup, nil
+	storedGroup, err := s.GetGroup(group.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	return storedGroup, nil
 }
 
 func (s *Settings) AddRepoToGroup(group *Group, repoName string) error {

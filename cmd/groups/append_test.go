@@ -45,7 +45,6 @@ func TestAppend(t *testing.T) {
 	group, err := sets.GetGroup("1")
 	assert.NoError(t, err)
 	assert.Equal(t, []string{"repo"}, group.Repos)
-
 }
 
 func TestAppend_GroupNotExists(t *testing.T) {
@@ -77,7 +76,6 @@ func TestAppend_GroupNotExists(t *testing.T) {
 			assert.Equal(t, []string{}, group.Repos)
 		}
 	}
-
 }
 
 func TestAppend_RepoNotExists(t *testing.T) {
