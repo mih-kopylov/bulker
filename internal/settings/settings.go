@@ -142,14 +142,9 @@ func (s *Settings) AddRepoToGroup(group *Group, repoName string) error {
 	return nil
 }
 
-func (s *Settings) RemoveRepoFromGroup(groupName string, repoName string) error {
+func (s *Settings) RemoveRepoFromGroup(group *Group, repoName string) error {
 	if !s.RepoExists(repoName) {
 		return ErrRepoNotSupported
-	}
-
-	group, err := s.GetGroup(groupName)
-	if err != nil {
-		return err
 	}
 
 	repoIndex := slices.Index(group.Repos, repoName)

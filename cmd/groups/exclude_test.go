@@ -8,56 +8,53 @@ import (
 	"testing"
 )
 
-type testResult struct {
-	Repo   string `json:"repo"`
-	Result string `json:"result,omitempty"`
-	Error  string `json:"error,omitempty"`
-}
-
-func TestAppend(t *testing.T) {
+func TestExclude(t *testing.T) {
 	repos := []settings.Repo{
 		{Name: "repo", Url: "https://example.com"},
 	}
 	groups := []settings.Group{
-		{Name: "1", Repos: []string{}},
+		{Name: "1", Repos: []string{"repo"}},
 	}
 	sh := tests.MockShellEmpty()
 	tests.PrepareBulkerWithGroups(t, sh, repos, groups)
 
-	command := CreateAppendCommand(sh)
+	command := CreateExcludeCommand(sh)
 	c, output, err := tests.ExecuteCommand(command, "-g 1 -n repo")
-	assert.NoError(t, err)
-	assert.Equal(t, "append", c.Name())
-	assert.JSONEq(
-		t, tests.ToJsonString(
-			[]testResult{
-				{
-					Repo:   "repo",
-					Result: "added",
+	if assert.NoError(t, err) {
+		assert.Equal(t, "exclude", c.Name())
+		assert.JSONEq(
+			t, tests.ToJsonString(
+				[]testResult{
+					{
+						Repo:   "repo",
+						Result: "removed",
+					},
 				},
-			},
-		), output,
-	)
+			), output,
+		)
+	}
 
 	manager := settings.NewManager(config.ReadConfig(), sh)
 	sets, err := manager.Read()
-	assert.NoError(t, err)
-	group, err := sets.GetGroup("1")
-	assert.NoError(t, err)
-	assert.Equal(t, []string{"repo"}, group.Repos)
+	if assert.NoError(t, err) {
+		group, err := sets.GetGroup("1")
+		if assert.NoError(t, err) {
+			assert.Equal(t, []string{}, group.Repos)
+		}
+	}
 }
 
-func TestAppend_GroupNotExists(t *testing.T) {
+func TestExclude_GroupNotExists(t *testing.T) {
 	repos := []settings.Repo{
 		{Name: "repo", Url: "https://example.com"},
 	}
 	groups := []settings.Group{
-		{Name: "2", Repos: []string{}},
+		{Name: "2", Repos: []string{"repo"}},
 	}
 	sh := tests.MockShellEmpty()
 	tests.PrepareBulkerWithGroups(t, sh, repos, groups)
 
-	command := CreateAppendCommand(sh)
+	command := CreateExcludeCommand(sh)
 	_, _, err := tests.ExecuteCommand(command, "-g 1 -n repo")
 	if assert.Error(t, err) {
 		assert.Equal(t, "group is not found", err.Error())
@@ -73,12 +70,12 @@ func TestAppend_GroupNotExists(t *testing.T) {
 
 		group, err := sets.GetGroup("2")
 		if assert.NoError(t, err) {
-			assert.Equal(t, []string{}, group.Repos)
+			assert.Equal(t, []string{"repo"}, group.Repos)
 		}
 	}
 }
 
-func TestAppend_RepoNotExists(t *testing.T) {
+func TestExclude_RepoNotExists(t *testing.T) {
 	repos := []settings.Repo{
 		{Name: "repo", Url: "https://example.com"},
 	}
@@ -88,7 +85,7 @@ func TestAppend_RepoNotExists(t *testing.T) {
 	sh := tests.MockShellEmpty()
 	tests.PrepareBulkerWithGroups(t, sh, repos, groups)
 
-	command := CreateAppendCommand(sh)
+	command := CreateExcludeCommand(sh)
 	_, output, err := tests.ExecuteCommand(command, "-g 1 -n repo1")
 	if assert.NoError(t, err) {
 		assert.JSONEq(
@@ -113,17 +110,17 @@ func TestAppend_RepoNotExists(t *testing.T) {
 	}
 }
 
-func TestAppend_RepoAlreadyExists(t *testing.T) {
+func TestExclude_RepoNotInGroup(t *testing.T) {
 	repos := []settings.Repo{
 		{Name: "repo", Url: "https://example.com"},
 	}
 	groups := []settings.Group{
-		{Name: "1", Repos: []string{"repo"}},
+		{Name: "1", Repos: []string{}},
 	}
 	sh := tests.MockShellEmpty()
 	tests.PrepareBulkerWithGroups(t, sh, repos, groups)
 
-	command := CreateAppendCommand(sh)
+	command := CreateExcludeCommand(sh)
 	_, output, err := tests.ExecuteCommand(command, "-g 1 -n repo")
 	if assert.NoError(t, err) {
 		assert.JSONEq(
@@ -131,7 +128,7 @@ func TestAppend_RepoAlreadyExists(t *testing.T) {
 				[]testResult{
 					{
 						Repo:   "repo",
-						Result: "adding skipped",
+						Result: "removing skipped",
 					},
 				},
 			), output,
@@ -143,12 +140,12 @@ func TestAppend_RepoAlreadyExists(t *testing.T) {
 	if assert.NoError(t, err) {
 		group, err := sets.GetGroup("1")
 		if assert.NoError(t, err) {
-			assert.Equal(t, []string{"repo"}, group.Repos)
+			assert.Equal(t, []string{}, group.Repos)
 		}
 	}
 }
 
-func TestAppend_NoRepoPassed(t *testing.T) {
+func TestExclude_NoRepoPassed(t *testing.T) {
 	repos := []settings.Repo{
 		{Name: "repo", Url: "https://example.com"},
 	}
@@ -158,7 +155,7 @@ func TestAppend_NoRepoPassed(t *testing.T) {
 	sh := tests.MockShellEmpty()
 	tests.PrepareBulkerWithGroups(t, sh, repos, groups)
 
-	command := CreateAppendCommand(sh)
+	command := CreateExcludeCommand(sh)
 	_, output, err := tests.ExecuteCommand(command, "-g 1")
 	if assert.NoError(t, err) {
 		assert.JSONEq(
@@ -178,7 +175,7 @@ func TestAppend_NoRepoPassed(t *testing.T) {
 	}
 }
 
-func TestAppend_RequiredFlags(t *testing.T) {
+func TestExclude_RequiredFlags(t *testing.T) {
 	cases := []struct {
 		name    string
 		args    string
@@ -205,7 +202,7 @@ func TestAppend_RequiredFlags(t *testing.T) {
 				sh := tests.MockShellEmpty()
 				tests.PrepareBulkerWithGroups(t, sh, repos, groups)
 
-				command := CreateAppendCommand(sh)
+				command := CreateExcludeCommand(sh)
 				_, _, err := tests.ExecuteCommand(command, test.args)
 				if assert.Error(t, err) {
 					assert.Equal(t, test.message, err.Error())
