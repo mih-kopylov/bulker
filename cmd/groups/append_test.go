@@ -26,25 +26,28 @@ func TestAppend(t *testing.T) {
 
 	command := CreateAppendCommand(sh)
 	c, output, err := tests.ExecuteCommand(command, "-g 1 -n repo")
-	assert.NoError(t, err)
-	assert.Equal(t, "append", c.Name())
-	assert.JSONEq(
-		t, tests.ToJsonString(
-			[]testResult{
-				{
-					Repo:   "repo",
-					Result: "added",
+	if assert.NoError(t, err) {
+		assert.Equal(t, "append", c.Name())
+		assert.JSONEq(
+			t, tests.ToJsonString(
+				[]testResult{
+					{
+						Repo:   "repo",
+						Result: "added",
+					},
 				},
-			},
-		), output,
-	)
+			), output,
+		)
+	}
 
 	manager := settings.NewManager(config.ReadConfig(), sh)
 	sets, err := manager.Read()
-	assert.NoError(t, err)
-	group, err := sets.GetGroup("1")
-	assert.NoError(t, err)
-	assert.Equal(t, []string{"repo"}, group.Repos)
+	if assert.NoError(t, err) {
+		group, err := sets.GetGroup("1")
+		if assert.NoError(t, err) {
+			assert.Equal(t, []string{"repo"}, group.Repos)
+		}
+	}
 }
 
 func TestAppend_GroupNotExists(t *testing.T) {
