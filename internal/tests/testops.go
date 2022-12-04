@@ -35,7 +35,7 @@ func PrepareBulker(t *testing.T, sh shell.Shell, repos []settings.Repo) {
 func PrepareBulkerWithGroups(t *testing.T, sh shell.Shell, repos []settings.Repo, groups []settings.Group) {
 	testDirectory := t.TempDir()
 	viper.Set("reposDirectory", testDirectory)
-	viper.Set("settingsFileName", filepath.Join(testDirectory, "bulker_test_settings.yaml"))
+	viper.Set("settingsFileName", filepath.Join(testDirectory, "test_bulker_settings.yaml"))
 	viper.Set("runMode", "seq")
 	viper.Set("noProgress", "true")
 	viper.Set("output", "json")
