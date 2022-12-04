@@ -45,15 +45,6 @@ func (rm *RunMode) Type() string {
 	return "RunMode"
 }
 
-type OutputFormat string
-
-const (
-	JsonOutputFormat  OutputFormat = "json"
-	LineOutputFormat  OutputFormat = "line"
-	LogOutputFormat   OutputFormat = "log"
-	TableOutputFormat OutputFormat = "table"
-)
-
 func ReadConfig() *Config {
 	config := &Config{}
 
