@@ -2,8 +2,11 @@ package config
 
 import (
 	"fmt"
+	"github.com/mitchellh/mapstructure"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v3"
+	"os"
 )
 
 type Config struct {
@@ -42,15 +45,6 @@ func (rm *RunMode) Type() string {
 	return "RunMode"
 }
 
-type OutputFormat string
-
-const (
-	JsonOutputFormat  OutputFormat = "json"
-	LineOutputFormat  OutputFormat = "line"
-	LogOutputFormat   OutputFormat = "log"
-	TableOutputFormat OutputFormat = "table"
-)
-
 func ReadConfig() *Config {
 	config := &Config{}
 
@@ -60,4 +54,24 @@ func ReadConfig() *Config {
 	}
 
 	return config
+}
+
+func WriteConfig(conf *Config, fileName string) error {
+	var confMap map[string]any
+	err := mapstructure.Decode(conf, &confMap)
+	if err != nil {
+		return err
+	}
+
+	confBytes, err := yaml.Marshal(confMap)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(fileName, confBytes, os.ModePerm)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

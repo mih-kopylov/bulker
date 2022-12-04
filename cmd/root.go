@@ -64,8 +64,10 @@ func CreateRootCommand(applicationVersion string, sh shell.Shell) *cobra.Command
 	)
 	utils.BindFlag(result.PersistentFlags().Lookup("no-progress"), "noProgress")
 
-	result.PersistentFlags().String(
-		"output", string(config.TableOutputFormat), fmt.Sprintf(
+	var output = config.TableOutputFormat
+	result.PersistentFlags().Var(
+		&output,
+		"output", fmt.Sprintf(
 			"Set commands output format. Available formats: %v, %v, %v, %v", config.LogOutputFormat,
 			config.LineOutputFormat, config.JsonOutputFormat, config.TableOutputFormat,
 		),
@@ -79,6 +81,7 @@ func CreateRootCommand(applicationVersion string, sh shell.Shell) *cobra.Command
 	result.AddCommand(CreateRunCommand(sh))
 	result.AddCommand(CreateOpenCommand(sh))
 	result.AddCommand(CreateFilesCommand(sh))
+	result.AddCommand(CreateConfigureCommand())
 
 	return result
 }
