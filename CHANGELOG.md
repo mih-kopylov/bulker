@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2022-12-05
+
 ### Added
 
 - `force` flag for `git push` command
@@ -20,7 +22,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `repo` to `name` flag name to mention repository names in `groups create`, `groups append`, `groups exclude` commands
 
 ## [0.9.0] - 2022-11-04
-
 
 ### Added
 
