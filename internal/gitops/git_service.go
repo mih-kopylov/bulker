@@ -208,14 +208,7 @@ func (g *GitService) CleanBranches(repo *model.Repo, mode GitMode) (string, erro
 		return "", err
 	}
 
-	output, err := g.sh.RunCommand(
-		repo.Path, "git", "symbolic-ref", fmt.Sprintf("refs/remotes/%v/HEAD", remote),
-	)
-	if err != nil {
-		return "", err
-	}
-
-	defaultRemoteBranch, err := parseBranch(output)
+	defaultRemoteBranch, err := g.getDefaultRemoteBranch(repo, remote)
 	if err != nil {
 		return "", err
 	}
@@ -345,6 +338,28 @@ func (g *GitService) parseBranches(consoleOutputString string) ([]Branch, error)
 	}
 
 	return result, nil
+}
+
+func (g *GitService) getDefaultRemoteBranch(repo *model.Repo, remote string) (*Branch, error) {
+	output, err := g.sh.RunCommand(
+		repo.Path, "git", "remote", "show", remote,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to show remote: %v, %w", output, err)
+	}
+
+	reg, err := regexp.Compile("HEAD branch: (.+)")
+	if err != nil {
+		return nil, err
+	}
+
+	var branchName string
+	err = scanRegexp(output, reg, &branchName)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Branch{Name: branchName, Remote: remote}, nil
 }
 
 func (g *GitService) parseHeadRef(statusResult string) (string, error) {
