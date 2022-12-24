@@ -4,7 +4,7 @@ Runs different operations on a bunch of repositories in bulk mode
 
 [![Release](https://img.shields.io/github/v/release/mih-kopylov/bulker?style=for-the-badge)](https://github.com/mih-kopylov/bulker/releases/latest)
 [![GitHub license](https://img.shields.io/github/license/mih-kopylov/bulker?style=for-the-badge)](https://github.com/mih-kopylov/bulker/blob/master/LICENSE)
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/mih-kopylov/bulker/build?style=for-the-badge)](https://github.com/mih-kopylov/bulker/actions/workflows/build.yml)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/mih-kopylov/bulker/build.yml?style=for-the-badge)](https://github.com/mih-kopylov/bulker/actions/workflows/build.yml)
 [![Go Doc](https://img.shields.io/badge/godoc-reference-blue.svg?style=for-the-badge)](http://godoc.org/github.com/mih-kopylov/bulker)
 [![Go Report Card](https://goreportcard.com/badge/github.com/mih-kopylov/bulker?style=for-the-badge)](https://goreportcard.com/report/github.com/mih-kopylov/bulker)
 
