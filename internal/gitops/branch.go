@@ -1,6 +1,7 @@
 package gitops
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -11,6 +12,10 @@ const (
 	RefHeadPrefix   = RefPrefix + "heads/"
 	RefRemotePrefix = RefPrefix + "remotes/"
 	Head            = "HEAD"
+)
+
+var (
+	ErrDetachedHead = errors.New("detached head")
 )
 
 type Branch struct {
@@ -48,7 +53,9 @@ func parseBranch(fullBranchName string) (*Branch, error) {
 	branchName := ""
 	branchRemote := ""
 
-	if strings.HasPrefix(fullBranchName, RefHeadPrefix) {
+	if strings.HasPrefix(fullBranchName, "(HEAD detached at") {
+		return nil, ErrDetachedHead
+	} else if strings.HasPrefix(fullBranchName, RefHeadPrefix) {
 		reg, err := regexp.Compile(RefHeadPrefix + "(.+)")
 		if err != nil {
 			return nil, err

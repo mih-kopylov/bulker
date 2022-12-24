@@ -325,9 +325,16 @@ func (g *GitService) GetBranches(repo *model.Repo, mode GitMode, pattern string)
 
 func (g *GitService) parseBranches(consoleOutputString string) ([]Branch, error) {
 	var result []Branch
-	for _, outputBranchName := range strings.Fields(consoleOutputString) {
+	for _, outputBranchName := range strings.FieldsFunc(
+		consoleOutputString, func(r rune) bool {
+			return r == '\n'
+		},
+	) {
 		branch, err := parseBranch(outputBranchName)
 		if err != nil {
+			if errors.Is(err, ErrDetachedHead) {
+				continue
+			}
 			return nil, err
 		}
 
