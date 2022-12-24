@@ -201,22 +201,25 @@ func (sm *Manager) Import(remoteRepoUrl string) (map[string]ExportImportStatus, 
 const exportImportFileName = "repos.yaml"
 
 func (sm *Manager) cloneRepo(remoteRepoUrl string) (repoDir string, cleanupFunc func(), err error) {
-	repoDir, err = os.MkdirTemp("", "bulker_remote_repo_*")
+	repoDirectory, err := os.MkdirTemp("", "bulker_remote_repo_*")
 	if err != nil {
-		return "", nil, err
+		return "", nil, fmt.Errorf("failed to create temp directory: %w", err)
 	}
 	cleanupFunc = func() {
-		err := os.RemoveAll(repoDir)
+		logrus.WithField("directory", repoDirectory).Debug("temporary directory deleted")
+		err := os.RemoveAll(repoDirectory)
 		if err != nil {
-			logrus.Warnf("can't remove temp directory %v: %v", repoDir, err)
+			logrus.Warnf("can't remove temp directory %v: %v", repoDirectory, err)
 		}
 	}
+	logrus.WithField("repo", remoteRepoUrl).WithField("directory", repoDirectory).Debug("temporary directory created")
 
-	_, err = sm.sh.RunCommand(repoDir, "git", "clone", remoteRepoUrl, ".")
+	output, err := sm.sh.RunCommand(repoDirectory, "git", "clone", remoteRepoUrl, ".")
 	if err != nil {
-		return "", cleanupFunc, nil
+		logrus.WithField("repo", remoteRepoUrl).WithField("output", output).Debug("clone failed")
+		return "", cleanupFunc, fmt.Errorf("failed to clone repository: %w", err)
 	}
-	return repoDir, cleanupFunc, err
+	return repoDirectory, cleanupFunc, nil
 }
 
 func prepareResult(previousModel *exportModel, newModel *exportModel) map[string]ExportImportStatus {
@@ -245,16 +248,16 @@ func readExistingModel(exportFileName string) (*exportModel, error) {
 	fileBytes, err := os.ReadFile(exportFileName)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return &exportModel{1, modelDataV1{Repos: map[string]modelDataV1Repo{}}}, nil
+			return nil, fmt.Errorf("file %s not found", exportFileName)
 		}
 
-		return nil, err
+		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
 
 	var readVersionModel map[string]any
 	err = yaml.Unmarshal(fileBytes, &readVersionModel)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to unmarshall file content: %w", err)
 	}
 
 	version := readVersionModel["version"].(int)
@@ -262,7 +265,7 @@ func readExistingModel(exportFileName string) (*exportModel, error) {
 	data := readVersionModel["data"]
 	dataBytes, err := yaml.Marshal(data)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to marshall data: %w", err)
 	}
 
 	switch version {
