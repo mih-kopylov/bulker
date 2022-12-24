@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Getting defualt remote branch
+- Getting branches when repository is in detached HEAD state
 
 ## [0.10.0] - 2022-12-05
 
