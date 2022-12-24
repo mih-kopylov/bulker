@@ -28,3 +28,14 @@ func TestValueToMap_CamelCase(t *testing.T) {
 		}, result,
 	)
 }
+
+func TestValueToMap_PrivateProperty(t *testing.T) {
+	type a struct {
+		messageCamelCase string
+	}
+	defer func() {
+		rec := recover()
+		assert.NotNilf(t, rec, "expected to panic")
+	}()
+	_ = valueToMap(a{"Hi"})
+}
