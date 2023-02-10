@@ -36,7 +36,7 @@ jobs:
         uses: dominikh/staticcheck-action@v1.3.0
         with:
           install-go: false
-          version: v0.3.3
+          version: v0.4.0
       - name: Run tests
         run: go test ./...
       - name: Build
