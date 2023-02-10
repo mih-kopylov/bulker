@@ -33,9 +33,10 @@ jobs:
           go install golang.org/x/vuln/cmd/govulncheck@latest
           govulncheck ./...
       - name: Run static analysis
-        uses: dominikh/staticcheck-action@v1.2.0
+        uses: dominikh/staticcheck-action@v1.3.0
         with:
           install-go: false
+          version: v0.3.3
       - name: Run tests
         run: go test ./...
       - name: Build
