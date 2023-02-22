@@ -1,6 +1,6 @@
 module github.com/mih-kopylov/bulker
 
-go 1.18
+go 1.20
 
 require (
 	github.com/alitto/pond v1.8.3
