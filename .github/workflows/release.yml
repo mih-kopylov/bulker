@@ -16,6 +16,7 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version-file: "go.mod"
+          check-latest: true
       - name: Create a release
         uses: goreleaser/goreleaser-action@v4
         with:
@@ -32,6 +33,7 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version-file: "go.mod"
+          check-latest: true
       - name: Checkout wiki repository
         uses: actions/checkout@v3
         with:

@@ -13,6 +13,7 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version-file: "go.mod"
+          check-latest: true
       - name: Upgrade dependencies
         run: |
           go get -u -t ./...
