@@ -11,40 +11,6 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v3
-      - name: Configure golang
-        uses: actions/setup-go@v3
-        with:
-          go-version-file: "go.mod"
-          check-latest: true
-      - name: Verify dependencies
-        run: go mod verify
-      - name: Analyze with go vet
-        run: go vet ./...
-      - name: Analyze with gocyclo
-        run: |
-          go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
-          gocyclo -over 15 .
-          gocyclo -top 15 .
-      - name: Analyze for vulnerabilities
-        run: |
-          go install golang.org/x/vuln/cmd/govulncheck@latest
-          govulncheck ./...
-      - name: Run static analysis
-        uses: dominikh/staticcheck-action@v1.3.0
-        with:
-          install-go: false
-      - name: Run tests
-        run: go test ./...
-      - name: Build
-        uses: goreleaser/goreleaser-action@v4
-        with:
-          args: build --snapshot --single-target
-      - name: Upload built artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: bulker_linux_amd64
-          path: ./dist/bulker_linux_amd64_v1/bulker
+    uses: mih-kopylov/workflows/.github/workflows/build.yml@master
+    with:
+      docker: false
