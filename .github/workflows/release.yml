@@ -4,49 +4,15 @@ on:
   push:
     tags:
       - '*'
+
 jobs:
   create-release:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Configure golang
-        uses: actions/setup-go@v3
-        with:
-          go-version-file: "go.mod"
-          check-latest: true
-      - name: Create a release
-        uses: goreleaser/goreleaser-action@v4
-        with:
-          args: release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    uses: mih-kopylov/workflows/.github/workflows/release.yml@master
+    with:
+      docker: false
 
   build-wiki:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v3
-      - name: Configure golang
-        uses: actions/setup-go@v3
-        with:
-          go-version-file: "go.mod"
-          check-latest: true
-      - name: Checkout wiki repository
-        uses: actions/checkout@v3
-        with:
-          repository: ${{github.repository}}.wiki
-          path: dist/docs
-      - name: Build docs
-        run: |
-          go run ./app/docs
-      - name: Commit files
-        run: |
-          cd dist/docs
-          git config user.email "mih-kopylov@users.noreply.github.com"
-          git config user.name "Mikhail Kopylov"
-          git add .
-          git diff --staged --quiet || git commit -m "[CI] Generate documentation"
-          git push origin master
+    needs: create-release
+    uses: mih-kopylov/workflows/.github/workflows/build-wiki.yml@master
+    with:
+      app: ./app/docs
