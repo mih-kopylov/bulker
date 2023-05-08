@@ -7,3 +7,5 @@ on:
 jobs:
   update-dependencies:
     uses: mih-kopylov/workflows/.github/workflows/update-dependencies.yml@master
+    secrets:
+      token: ${{ secrets.UPDATE_DEPENDENCIES_PAT }}
