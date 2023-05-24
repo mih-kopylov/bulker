@@ -1,0 +1,16 @@
+string: stringValue
+stringInQuotes: "stringInQuotes"
+number: 15
+numberNegative: -15
+booleanTrue: true
+booleanFalse: false
+null: null
+tilda: ~
+nested:
+  string: nestedStringValue
+arrayString:
+  - one
+  - two
+arrayObject:
+  - key1: value1
+  - key2: value2

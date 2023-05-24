@@ -1,0 +1,23 @@
+{
+  "string": "stringValue",
+  "number": 15,
+  "numberNegative": -15,
+  "booleanTrue": true,
+  "booleanFalse": false,
+  "null": null,
+  "nested": {
+    "string": "nestedStringValue"
+  },
+  "arrayString": [
+    "one",
+    "two"
+  ],
+  "arrayObject": [
+    {
+      "key1": "value1"
+    },
+    {
+      "key2": "value2"
+    }
+  ]
+}

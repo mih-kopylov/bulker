@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<record>
+    <string>stringValue</string>
+    <number>15</number>
+    <numberNegative>-15</numberNegative>
+    <booleanTrue>true</booleanTrue>
+    <booleanFalse>false</booleanFalse>
+    <null>null</null>
+    <nested>
+        <string>nestedStringValue</string>
+    </nested>
+    <duplicate>duplicate1</duplicate>
+    <duplicate>duplicate2</duplicate>
+    <empty/>
+</record>

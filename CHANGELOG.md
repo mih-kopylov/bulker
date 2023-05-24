@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `properties get` command for XML, JSON and YAML
+
 ### Fixed
 
 - Getting defualt remote branch

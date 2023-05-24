@@ -82,6 +82,7 @@ func CreateRootCommand(applicationVersion string, sh shell.Shell) *cobra.Command
 	result.AddCommand(CreateOpenCommand(sh))
 	result.AddCommand(CreateFilesCommand(sh))
 	result.AddCommand(CreateConfigureCommand())
+	result.AddCommand(CreatePropertiesCommand(sh))
 
 	return result
 }
