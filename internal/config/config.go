@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
 	"os"
+	"path/filepath"
 )
 
 type Config struct {
@@ -64,6 +65,11 @@ func WriteConfig(conf *Config, fileName string) error {
 	}
 
 	confBytes, err := yaml.Marshal(confMap)
+	if err != nil {
+		return err
+	}
+
+	err = os.MkdirAll(filepath.Dir(fileName), os.ModePerm)
 	if err != nil {
 		return err
 	}
