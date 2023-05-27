@@ -31,7 +31,9 @@ func (r *ParallelRunner) Run(
 	pool := pond.New(r.config.MaxWorkers, len(repos))
 	defer pool.StopAndWait()
 	ch := make(chan repoProcessResult)
-	logrus.WithField("mode", r.config.RunMode).Debug("processing repositories")
+	logrus.WithField("mode", r.config.RunMode).
+		WithField("workers", r.config.MaxWorkers).
+		Debug("processing repositories")
 	for _, repo := range repos {
 		runContext := newRunContext(r.manager, r.config, r.args, repo)
 		pool.Submit(
