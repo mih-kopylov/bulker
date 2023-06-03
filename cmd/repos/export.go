@@ -27,16 +27,16 @@ func CreateExportCommand(sh shell.Shell) *cobra.Command {
 
 			entityInfoMap := map[string]output.EntityInfo{}
 			for repo, status := range exportResult {
-				var statusString string
 				switch status {
-				case settings.ExportImportStatusCompleted:
-					statusString = "exported"
 				case settings.ExportImportStatusUpToDate:
-					statusString = "up to date"
+					//omit in the result
+				case settings.ExportImportStatusAdded:
+					entityInfoMap[repo] = output.EntityInfo{Result: "exported"}
+				case settings.ExportImportStatusRemoved:
+					entityInfoMap[repo] = output.EntityInfo{Result: "removal exported"}
 				default:
-					statusString = fmt.Sprintf("status %v is not supported", status)
+					entityInfoMap[repo] = output.EntityInfo{Error: fmt.Errorf("status %v is not supported", status)}
 				}
-				entityInfoMap[repo] = output.EntityInfo{Result: statusString}
 			}
 
 			err = output.Write(cmd.OutOrStdout(), "repo", entityInfoMap)

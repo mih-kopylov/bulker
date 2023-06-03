@@ -224,21 +224,16 @@ func (sm *Manager) cloneRepo(remoteRepoUrl string) (repoDir string, cleanupFunc 
 
 func prepareResult(previousModel *exportModel, newModel *exportModel) map[string]ExportImportStatus {
 	result := map[string]ExportImportStatus{}
-	for repoName, repo := range newModel.Data.Repos {
-		if previousModel.Version != newModel.Version {
-			result[repoName] = ExportImportStatusCompleted
+	for repoName := range newModel.Data.Repos {
+		if _, exists := previousModel.Data.Repos[repoName]; exists {
+			result[repoName] = ExportImportStatusUpToDate
 		} else {
-			existingRepo := modelDataV1Repo{}
-			for existingRepoIterName, existingRepoIter := range previousModel.Data.Repos {
-				if existingRepoIterName == repoName {
-					existingRepo = existingRepoIter
-				}
-			}
-			if existingRepo.Equals(repo) {
-				result[repoName] = ExportImportStatusUpToDate
-			} else {
-				result[repoName] = ExportImportStatusCompleted
-			}
+			result[repoName] = ExportImportStatusAdded
+		}
+	}
+	for repoName := range previousModel.Data.Repos {
+		if _, exists := newModel.Data.Repos[repoName]; !exists {
+			result[repoName] = ExportImportStatusRemoved
 		}
 	}
 	return result
