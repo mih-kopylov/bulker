@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `git branches stale` command
+
 ### Fixed
 
 - Directory creation for `configure` command

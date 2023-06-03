@@ -20,7 +20,7 @@ func CreateCleanCommand(sh shell.Shell) *cobra.Command {
 		Short: "Remove all branches that are merged to default one",
 		Long: `Remove all branches that are merged to default one.
 First, it defines the default branch of the remote.
-Then, it loops over the branches and removes the ones that don't have differences with the default one'`,
+Then, it loops over the branches and removes the ones that don't have differences with the default one`,
 		RunE: runner.NewCommandRunnerForExistingRepos(
 			&filter, sh, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
 				gitService := gitops.NewGitService(sh)

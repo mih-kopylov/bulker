@@ -18,6 +18,7 @@ func CreateBranchesCommand(sh shell.Shell) *cobra.Command {
 	result.AddCommand(branches.CreateCreateCommand(sh))
 	result.AddCommand(branches.CreateRemoveCommand(sh))
 	result.AddCommand(branches.CreateCleanCommand(sh))
+	result.AddCommand(branches.CreateStaleCommand(sh))
 
 	return result
 }
