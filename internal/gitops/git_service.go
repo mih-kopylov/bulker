@@ -2,16 +2,18 @@ package gitops
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"github.com/mih-kopylov/bulker/internal/fileops"
 	"github.com/mih-kopylov/bulker/internal/model"
 	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/mih-kopylov/bulker/internal/utils"
+	"github.com/pkg/errors"
+	"github.com/samber/lo"
 	"github.com/sirupsen/logrus"
 	"os"
 	"regexp"
 	"strings"
+	"time"
 )
 
 type GitService struct {
@@ -323,13 +325,63 @@ func (g *GitService) GetBranches(repo *model.Repo, mode GitMode, pattern string)
 
 }
 
+func (g *GitService) GetDefaultBranch(repo *model.Repo) (*Branch, error) {
+	remote, err := g.getTheOnlyRemote(repo)
+	if err != nil {
+		return nil, err
+	}
+
+	return g.getDefaultRemoteBranch(repo, remote)
+}
+
+// GetUnmergedBranches returns branches that are not merged to `ref`
+func (g *GitService) GetUnmergedBranches(repo *model.Repo, mode GitMode, ref string) ([]Branch, error) {
+	branches, err := g.getUnmergedBranches(repo, ref)
+	if err != nil {
+		return nil, err
+	}
+
+	if !mode.Includes(GitModeLocal) {
+		branches = lo.Filter(
+			branches, func(item Branch, _ int) bool {
+				return !item.IsLocal()
+			},
+		)
+	}
+	if !mode.Includes(GitModeRemote) {
+		branches = lo.Filter(
+			branches, func(item Branch, _ int) bool {
+				return item.IsLocal()
+			},
+		)
+	}
+
+	return branches, nil
+}
+
+// GetUnmergedCommits returns commits from branch `branch` that are not merged to ref `ref`.
+// The commits are ordered by `committedAt` attribute
+// Returns an error when `branch` and `ref` don't have a common parent
+func (g *GitService) GetUnmergedCommits(repo *model.Repo, branch Branch, ref string) ([]Commit, error) {
+	output, err := g.sh.RunCommand(
+		repo.Path, "git", "--no-pager", "log", branch.Short(), "--not", ref,
+		"--pretty=fuller",
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get unmerged commits: %v, %w", output, err)
+	}
+
+	return g.parseCommits(output)
+}
+
 func (g *GitService) parseBranches(consoleOutputString string) ([]Branch, error) {
 	var result []Branch
-	for _, outputBranchName := range strings.FieldsFunc(
+	outputBranchNames := strings.FieldsFunc(
 		consoleOutputString, func(r rune) bool {
 			return r == '\n'
 		},
-	) {
+	)
+	for _, outputBranchName := range outputBranchNames {
 		branch, err := parseBranch(outputBranchName)
 		if err != nil {
 			if errors.Is(err, ErrDetachedHead) {
@@ -345,6 +397,60 @@ func (g *GitService) parseBranches(consoleOutputString string) ([]Branch, error)
 	}
 
 	return result, nil
+}
+
+func (g *GitService) parseCommits(consoleOutputString string) ([]Commit, error) {
+	commitRegexp := regexp.MustCompile(
+		`commit\s+(\w+?)\n?.*
+Author:\s+(.+?) <(.+?)>
+AuthorDate:\s+(.+?)
+Commit:\s+(.+?) <(.+?)>
+CommitDate:\s+(.+?)
+`,
+	)
+
+	var commits []Commit
+	submatches := commitRegexp.FindAllStringSubmatch(consoleOutputString, -1)
+	if submatches == nil {
+		return nil, errors.New("failed to parse commits from console output")
+	}
+	for _, submatch := range submatches {
+		commitId := submatch[1]
+		authorName := submatch[2]
+		authorEmail := submatch[3]
+		authorDate := submatch[4]
+		commitName := submatch[5]
+		commitEmail := submatch[6]
+		commitDate := submatch[7]
+
+		authorDateTime, err := time.Parse("Mon Jan 2 15:04:05 2006 -0700", authorDate)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to parse author date from commit")
+		}
+
+		commitDateTime, err := time.Parse("Mon Jan 2 15:04:05 2006 -0700", commitDate)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to parse commit date from commit")
+		}
+
+		commit := Commit{
+			Id:         commitId,
+			AuthorDate: authorDateTime,
+			Author: CommitUser{
+				Name:  authorName,
+				Email: authorEmail,
+			},
+			CommitDate: commitDateTime,
+			Committer: CommitUser{
+				Name:  commitName,
+				Email: commitEmail,
+			},
+		}
+
+		commits = append(commits, commit)
+	}
+
+	return commits, nil
 }
 
 func (g *GitService) getDefaultRemoteBranch(repo *model.Repo, remote string) (*Branch, error) {
@@ -391,6 +497,15 @@ func (g *GitService) parseHeadRef(statusResult string) (string, error) {
 	}
 
 	return "", fmt.Errorf("can't parse status result for head reference: %v", statusResult)
+}
+
+func (g *GitService) getUnmergedBranches(repo *model.Repo, ref string) ([]Branch, error) {
+	output, err := g.sh.RunCommand(repo.Path, "git", "branch", "-a", "--format=%(refname)", "--no-merged", ref)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get branches: %v, %w", output, err)
+	}
+
+	return g.parseBranches(output)
 }
 
 func (g *GitService) cleanLocalBranches(repo *model.Repo, defaultRemoteBranch *Branch, result *bytes.Buffer) error {

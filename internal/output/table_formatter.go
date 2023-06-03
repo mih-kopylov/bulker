@@ -23,6 +23,7 @@ func (w TableFormatter) FormatMessage(value map[string]EntityInfo) string {
 	buffer := &bytes.Buffer{}
 
 	t := table.New(buffer)
+	t.SetDividers(table.UnicodeRoundedDividers)
 
 	var headerRow []string
 	headerRow = append(headerRow, w.entityName)

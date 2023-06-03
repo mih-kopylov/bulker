@@ -21,7 +21,7 @@ func CreateListCommand(sh shell.Shell) *cobra.Command {
 		Use:   "list",
 		Short: "Prints a list of repository branches",
 		Long: `Prints a list of repository branches.
-If a repository doesn't have any branch matching pattern, the repository will be omitted in the result'`,
+If a repository doesn't have any branch matching pattern, the repository will be omitted in the result`,
 		RunE: runner.NewCommandRunnerForExistingRepos(
 			&filter, sh, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
 				gitService := gitops.NewGitService(sh)
