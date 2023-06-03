@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Show repositories that were removed during import/export
+- Omit repositories that were not changed during import/export
+
 ## [0.12.0] - 2022-06-03
 
 ### Added

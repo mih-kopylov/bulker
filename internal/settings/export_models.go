@@ -5,10 +5,9 @@ import "golang.org/x/exp/slices"
 type ExportImportStatus int
 
 const (
-	// ExportImportStatusCompleted means the operation completed successfully
-	ExportImportStatusCompleted ExportImportStatus = iota
-	// ExportImportStatusUpToDate means there was no change
-	ExportImportStatusUpToDate
+	ExportImportStatusUpToDate ExportImportStatus = iota
+	ExportImportStatusAdded
+	ExportImportStatusRemoved
 )
 
 type exportModel struct {
