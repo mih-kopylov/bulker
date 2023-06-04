@@ -10,6 +10,7 @@ import (
 func CreateConfigureCommand() *cobra.Command {
 	flags := struct {
 		configFileName string
+		gitMode        config.GitMode
 	}{}
 
 	var result = &cobra.Command{
@@ -17,6 +18,7 @@ func CreateConfigureCommand() *cobra.Command {
 		Short: "Configures bulker and saves the configuration to file for future calls",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			conf := config.ReadConfig()
+			conf.GitMode = flags.gitMode
 			err := config.WriteConfig(conf, flags.configFileName)
 			if err != nil {
 				return err
@@ -37,6 +39,7 @@ func CreateConfigureCommand() *cobra.Command {
 	}
 
 	result.Flags().StringVarP(&flags.configFileName, "save", "s", utils.AbsPathify("$HOME/.bulker/bulker.yaml"), "")
+	config.AddGitModeFlag(&flags.gitMode, result.Flags())
 
 	return result
 }

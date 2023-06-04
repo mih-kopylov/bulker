@@ -33,7 +33,7 @@ func TestRemove_Local(t *testing.T) {
 	assert.NoError(t, err)
 
 	command := CreateRemoveCommand(sh)
-	c, output, err := tests.ExecuteCommand(command, "-n repo -b br")
+	c, output, err := tests.ExecuteCommand(command, "-n repo -b br -m all")
 	assert.NoError(t, err)
 	assert.Equal(t, "remove", c.Name())
 	assert.JSONEq(
@@ -66,7 +66,7 @@ func TestRemove_Remote(t *testing.T) {
 	assert.NoError(t, err)
 
 	command := CreateRemoveCommand(sh)
-	c, output, err := tests.ExecuteCommand(command, "-n repo -b br")
+	c, output, err := tests.ExecuteCommand(command, "-n repo -b br -m all")
 	assert.NoError(t, err)
 	assert.Equal(t, "remove", c.Name())
 	assert.JSONEq(
@@ -182,7 +182,7 @@ func TestRemove_FailedToRemove(t *testing.T) {
 	assert.NoError(t, err)
 
 	command := CreateRemoveCommand(sh)
-	c, output, err := tests.ExecuteCommand(command, "-n repo -b br")
+	c, output, err := tests.ExecuteCommand(command, "-n repo -b br -m all")
 	assert.NoError(t, err)
 	assert.Equal(t, "remove", c.Name())
 	assert.JSONEq(

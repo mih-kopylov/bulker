@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"github.com/mitchellh/mapstructure"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -18,32 +17,7 @@ type Config struct {
 	MaxWorkers       int          `mapstructure:"maxWorkers"`
 	NoProgress       bool         `mapstructure:"noProgress"`
 	Output           OutputFormat `mapstructure:"output"`
-}
-
-// RunMode implements Value in spf13/pflag for custom flag type
-type RunMode string
-
-const (
-	Parallel   RunMode = "par"
-	Sequential RunMode = "seq"
-)
-
-func (rm *RunMode) String() string {
-	return string(*rm)
-}
-
-func (rm *RunMode) Set(v string) error {
-	switch v {
-	case string(Parallel), string(Sequential):
-		*rm = RunMode(v)
-		return nil
-	default:
-		return fmt.Errorf("must be either '%s' or '%s'", Parallel, Sequential)
-	}
-}
-
-func (rm *RunMode) Type() string {
-	return "RunMode"
+	GitMode          GitMode      `mapstructure:"gitMode"`
 }
 
 func ReadConfig() *Config {

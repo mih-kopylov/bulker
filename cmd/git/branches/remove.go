@@ -3,6 +3,7 @@ package branches
 import (
 	"context"
 	"fmt"
+	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/gitops"
 	"github.com/mih-kopylov/bulker/internal/runner"
 	"github.com/mih-kopylov/bulker/internal/shell"
@@ -15,7 +16,7 @@ func CreateRemoveCommand(sh shell.Shell) *cobra.Command {
 	var filter = runner.Filter{}
 	var flags struct {
 		name string
-		mode gitops.GitMode
+		mode config.GitMode
 	}
 
 	var result = &cobra.Command{
@@ -54,13 +55,6 @@ func CreateRemoveCommand(sh shell.Shell) *cobra.Command {
 	result.Flags().StringVarP(&flags.name, "branch", "b", "", "Name of the branch to remove")
 	utils.MarkFlagRequiredOrFail(result.Flags(), "branch")
 
-	flags.mode = gitops.GitModeAll
-	result.Flags().VarP(
-		&flags.mode, "mode", "m", fmt.Sprintf(
-			"Type of branches to process. "+
-				"Available types are: %s, %s, %s", gitops.GitModeAll, gitops.GitModeLocal, gitops.GitModeRemote,
-		),
-	)
-
+	config.AddGitModeFlag(&flags.mode, result.Flags())
 	return result
 }
