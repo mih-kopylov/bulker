@@ -169,37 +169,23 @@ func (g *GitService) CreateBranch(repo *model.Repo, name string) (CreateResult, 
 	return CreateOk, nil
 }
 
-func (g *GitService) RemoveBranch(repo *model.Repo, name string, mode GitMode) (string, error) {
-	branches, err := g.GetBranches(repo, mode, name)
-	if err != nil {
-		return "", err
-	}
-
-	if len(branches) == 0 {
-		return "", fmt.Errorf("branch not found")
-	}
-
-	buffer := bytes.Buffer{}
-	for _, branch := range branches {
-		if branch.IsLocal() {
-			output, err := g.sh.RunCommand(repo.Path, "git", "branch", "-D", name)
-			if err != nil {
-				if strings.Contains(output, "checked out at") {
-					return "", fmt.Errorf("the branch is checked out")
-				}
-				return "", fmt.Errorf("failed to remove local branch: %v %w", output, err)
+func (g *GitService) RemoveBranch(repo *model.Repo, branch Branch) error {
+	if branch.IsLocal() {
+		output, err := g.sh.RunCommand(repo.Path, "git", "branch", "-D", branch.Short())
+		if err != nil {
+			if strings.Contains(output, "checked out at") {
+				return fmt.Errorf("the branch is checked out")
 			}
-			buffer.WriteString(fmt.Sprintf("%v: removed\n", branch.Short()))
-		} else {
-			output, err := g.sh.RunCommand(repo.Path, "git", "push", branch.Remote, "--delete", branch.Name)
-			if err != nil {
-				return "", fmt.Errorf("failed to remove remove branch: %v %w", output, err)
-			}
-			buffer.WriteString(fmt.Sprintf("%v: removed\n", branch.Short()))
+			return fmt.Errorf("failed to remove local branch: %v %w", output, err)
+		}
+	} else {
+		output, err := g.sh.RunCommand(repo.Path, "git", "push", branch.Remote, "--delete", branch.Name)
+		if err != nil {
+			return fmt.Errorf("failed to remove remote branch: %v %w", output, err)
 		}
 	}
 
-	return strings.TrimSpace(buffer.String()), nil
+	return nil
 }
 
 func (g *GitService) CleanBranches(repo *model.Repo, mode GitMode) (string, error) {

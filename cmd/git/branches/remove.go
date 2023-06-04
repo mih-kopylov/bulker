@@ -8,6 +8,7 @@ import (
 	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/spf13/cobra"
+	"strings"
 )
 
 func CreateRemoveCommand(sh shell.Shell) *cobra.Command {
@@ -23,12 +24,26 @@ func CreateRemoveCommand(sh shell.Shell) *cobra.Command {
 		RunE: runner.NewCommandRunnerForExistingRepos(
 			&filter, sh, func(ctx context.Context, runContext *runner.RunContext) (interface{}, error) {
 				gitService := gitops.NewGitService(sh)
-				removeResult, err := gitService.RemoveBranch(runContext.Repo, flags.name, flags.mode)
+				branches, err := gitService.GetBranches(runContext.Repo, flags.mode, flags.name)
 				if err != nil {
 					return nil, err
 				}
 
-				return removeResult, nil
+				var removeResult []string
+				for _, branch := range branches {
+					err := gitService.RemoveBranch(runContext.Repo, branch)
+					if err != nil {
+						removeResult = append(removeResult, fmt.Sprintf("%v: %v", branch.Short(), err.Error()))
+					} else {
+						removeResult = append(removeResult, fmt.Sprintf("%v: removed", branch.Short()))
+					}
+				}
+
+				if len(removeResult) == 0 {
+					return nil, nil
+				}
+
+				return strings.Join(removeResult, "\n"), nil
 
 			},
 		),
