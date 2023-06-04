@@ -22,6 +22,6 @@ on:
 
 jobs:
   automerge:
-    uses: mih-kopylov/workflows/.github/workflows/automerge.yml@master
+    uses: mih-kopylov/workflows/.github/workflows/automerge.yml@automerge
     secrets:
       token: ${{ secrets.UPDATE_DEPENDENCIES_PAT }}
