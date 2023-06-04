@@ -3,6 +3,7 @@ package gitops
 import (
 	"bytes"
 	"fmt"
+	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/fileops"
 	"github.com/mih-kopylov/bulker/internal/model"
 	"github.com/mih-kopylov/bulker/internal/shell"
@@ -152,7 +153,7 @@ func (g *GitService) Status(repo *model.Repo) (StatusResult, string, error) {
 }
 
 func (g *GitService) CreateBranch(repo *model.Repo, name string) (CreateResult, error) {
-	branches, err := g.GetBranches(repo, GitModeAll, name)
+	branches, err := g.GetBranches(repo, config.GitModeAll, name)
 	if err != nil {
 		return CreateError, err
 	}
@@ -188,7 +189,7 @@ func (g *GitService) RemoveBranch(repo *model.Repo, branch Branch) error {
 	return nil
 }
 
-func (g *GitService) CleanBranches(repo *model.Repo, mode GitMode) (string, error) {
+func (g *GitService) CleanBranches(repo *model.Repo, mode config.GitMode) (string, error) {
 	result := bytes.Buffer{}
 
 	remote, err := g.getTheOnlyRemote(repo)
@@ -201,13 +202,13 @@ func (g *GitService) CleanBranches(repo *model.Repo, mode GitMode) (string, erro
 		return "", err
 	}
 
-	if mode.Includes(GitModeLocal) {
+	if mode.Includes(config.GitModeLocal) {
 		err := g.cleanLocalBranches(repo, defaultRemoteBranch, &result)
 		if err != nil {
 			return "", err
 		}
 	}
-	if mode.Includes(GitModeRemote) {
+	if mode.Includes(config.GitModeRemote) {
 		err := g.cleanRemoteBranches(repo, remote, defaultRemoteBranch, &result)
 		if err != nil {
 			return "", err
@@ -236,7 +237,7 @@ func (g *GitService) Commit(repo *model.Repo, pattern string, message string) er
 }
 
 func (g *GitService) Checkout(repo *model.Repo, ref string) (CheckoutResult, error) {
-	branches, err := g.GetBranches(repo, GitModeAll, ref)
+	branches, err := g.GetBranches(repo, config.GitModeAll, ref)
 	if err != nil {
 		return CheckoutError, err
 	}
@@ -274,7 +275,7 @@ func (g *GitService) Discard(repo *model.Repo) error {
 	return nil
 }
 
-func (g *GitService) GetBranches(repo *model.Repo, mode GitMode, pattern string) ([]Branch, error) {
+func (g *GitService) GetBranches(repo *model.Repo, mode config.GitMode, pattern string) ([]Branch, error) {
 	reg, err := regexp.Compile("^" + pattern + "$")
 	if err != nil {
 		return nil, err
@@ -321,20 +322,20 @@ func (g *GitService) GetDefaultBranch(repo *model.Repo) (*Branch, error) {
 }
 
 // GetUnmergedBranches returns branches that are not merged to `ref`
-func (g *GitService) GetUnmergedBranches(repo *model.Repo, mode GitMode, ref string) ([]Branch, error) {
+func (g *GitService) GetUnmergedBranches(repo *model.Repo, mode config.GitMode, ref string) ([]Branch, error) {
 	branches, err := g.getUnmergedBranches(repo, ref)
 	if err != nil {
 		return nil, err
 	}
 
-	if !mode.Includes(GitModeLocal) {
+	if !mode.Includes(config.GitModeLocal) {
 		branches = lo.Filter(
 			branches, func(item Branch, _ int) bool {
 				return !item.IsLocal()
 			},
 		)
 	}
-	if !mode.Includes(GitModeRemote) {
+	if !mode.Includes(config.GitModeRemote) {
 		branches = lo.Filter(
 			branches, func(item Branch, _ int) bool {
 				return item.IsLocal()

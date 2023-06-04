@@ -2,7 +2,7 @@ package branches
 
 import (
 	"context"
-	"fmt"
+	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/gitops"
 	"github.com/mih-kopylov/bulker/internal/runner"
 	"github.com/mih-kopylov/bulker/internal/shell"
@@ -13,7 +13,7 @@ import (
 func CreateListCommand(sh shell.Shell) *cobra.Command {
 	var filter = runner.Filter{}
 	var flags struct {
-		mode    gitops.GitMode
+		mode    config.GitMode
 		pattern string
 	}
 
@@ -46,13 +46,7 @@ If a repository doesn't have any branch matching pattern, the repository will be
 
 	filter.AddCommandFlags(result)
 
-	flags.mode = gitops.GitModeAll
-	result.Flags().VarP(
-		&flags.mode, "mode", "m", fmt.Sprintf(
-			"Type of branches to process. "+
-				"Available types are: %s, %s, %s", gitops.GitModeAll, gitops.GitModeLocal, gitops.GitModeRemote,
-		),
-	)
+	config.AddGitModeFlag(&flags.mode, result.Flags())
 	result.Flags().StringVarP(&flags.pattern, "pattern", "p", ".*", "Regexp pattern of the branches to show")
 
 	return result

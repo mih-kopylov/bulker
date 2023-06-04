@@ -3,6 +3,7 @@ package gitops
 import (
 	"errors"
 	"fmt"
+	"github.com/mih-kopylov/bulker/internal/config"
 	"regexp"
 	"strings"
 )
@@ -41,12 +42,12 @@ func (b *Branch) IsLocal() bool {
 	return b.Remote == ""
 }
 
-func (b *Branch) GetGitMode() GitMode {
+func (b *Branch) GetGitMode() config.GitMode {
 	if b.IsLocal() {
-		return GitModeLocal
+		return config.GitModeLocal
 	}
 
-	return GitModeRemote
+	return config.GitModeRemote
 }
 
 func parseBranch(fullBranchName string) (*Branch, error) {

@@ -2,7 +2,7 @@ package branches
 
 import (
 	"context"
-	"fmt"
+	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/gitops"
 	"github.com/mih-kopylov/bulker/internal/runner"
 	"github.com/mih-kopylov/bulker/internal/shell"
@@ -12,7 +12,7 @@ import (
 func CreateCleanCommand(sh shell.Shell) *cobra.Command {
 	var filter = runner.Filter{}
 	var flags struct {
-		mode gitops.GitMode
+		mode config.GitMode
 	}
 
 	var result = &cobra.Command{
@@ -34,20 +34,13 @@ Then, it loops over the branches and removes the ones that don't have difference
 				}
 
 				return cleanResult, nil
-
 			},
 		),
 	}
 
 	filter.AddCommandFlags(result)
 
-	flags.mode = gitops.GitModeAll
-	result.Flags().VarP(
-		&flags.mode, "mode", "m", fmt.Sprintf(
-			"Type of branches to process. Available types are: %s, %s, %s", gitops.GitModeAll, gitops.GitModeLocal,
-			gitops.GitModeRemote,
-		),
-	)
+	config.AddGitModeFlag(&flags.mode, result.Flags())
 
 	return result
 }

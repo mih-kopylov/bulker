@@ -2,7 +2,7 @@ package branches
 
 import (
 	"context"
-	"fmt"
+	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/gitops"
 	"github.com/mih-kopylov/bulker/internal/runner"
 	"github.com/mih-kopylov/bulker/internal/shell"
@@ -18,7 +18,7 @@ import (
 func CreateStaleCommand(sh shell.Shell) *cobra.Command {
 	var filter = runner.Filter{}
 	var flags struct {
-		mode gitops.GitMode
+		mode config.GitMode
 		ref  string
 		age  string
 	}
@@ -102,13 +102,7 @@ than specified age.`,
 
 	filter.AddCommandFlags(result)
 
-	flags.mode = gitops.GitModeAll
-	result.Flags().VarP(
-		&flags.mode, "mode", "m", fmt.Sprintf(
-			`Type of branches to process. Available types are: %s, %s, %s`, gitops.GitModeAll, gitops.GitModeLocal,
-			gitops.GitModeRemote,
-		),
-	)
+	config.AddGitModeFlag(&flags.mode, result.Flags())
 	result.Flags().StringVarP(
 		&flags.ref, "ref", "r", "",
 		`Git reference to compare branches with. If not set, the default repository branch is set`,

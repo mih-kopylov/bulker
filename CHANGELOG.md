@@ -7,10 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Ability to configure default `--mode` flag value for git commands
+
 ### Changed
 
 - Show repositories that were removed during import/export
 - Omit repositories that were not changed during import/export
+- Default value for `--mode` flag value is `local`, for safety
 
 ## [0.12.0] - 2022-06-03
 

@@ -1,6 +1,10 @@
-package gitops
+package config
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/mih-kopylov/bulker/internal/utils"
+	"github.com/spf13/pflag"
+)
 
 type GitMode string
 
@@ -34,3 +38,19 @@ const (
 	GitModeLocal  GitMode = "local"
 	GitModeRemote GitMode = "remote"
 )
+
+func AddGitModeFlag(storage *GitMode, flagSet *pflag.FlagSet) {
+	defaultMode := ReadConfig().GitMode
+	if defaultMode == "" {
+		defaultMode = GitModeLocal
+	}
+	*storage = defaultMode
+
+	flagSet.VarP(
+		storage, "mode", "m", fmt.Sprintf(
+			"Git work mode. Whether to process local repository or remote or both. Available types are: %s, %s, %s",
+			GitModeAll, GitModeLocal, GitModeRemote,
+		),
+	)
+	utils.BindFlag(flagSet.Lookup("mode"), "gitMode")
+}
