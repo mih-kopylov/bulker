@@ -69,14 +69,14 @@ func (sm *Manager) Write(settings *Settings) error {
 	settingsFileName := sm.conf.SettingsFileName
 
 	// make sure all data is sorted alphabetically
-	slices.SortFunc(
-		settings.Repos, func(a Repo, b Repo) bool {
-			return strings.Compare(a.Name, b.Name) < 0
+	slices.SortStableFunc(
+		settings.Repos, func(a Repo, b Repo) int {
+			return strings.Compare(a.Name, b.Name)
 		},
 	)
-	slices.SortFunc(
-		settings.Groups, func(a Group, b Group) bool {
-			return strings.Compare(a.Name, b.Name) < 0
+	slices.SortStableFunc(
+		settings.Groups, func(a Group, b Group) int {
+			return strings.Compare(a.Name, b.Name)
 		},
 	)
 	for _, group := range settings.Groups {
