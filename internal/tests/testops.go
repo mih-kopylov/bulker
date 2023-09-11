@@ -3,6 +3,9 @@ package tests
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"github.com/go-git/go-git/v5"
+	config2 "github.com/go-git/go-git/v5/config"
 	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/settings"
 	"github.com/mih-kopylov/bulker/internal/shell"
@@ -69,4 +72,74 @@ func ToJsonString(value any) string {
 func Path(parts ...string) string {
 	allParts := slices.Insert(parts, 0, viper.GetString("reposDirectory"))
 	return filepath.Join(allParts...)
+}
+
+func CreateBareGitRepository(repoName string) (string, error) {
+	repoPath := Path(repoName)
+	repo, err := git.PlainInit(repoPath, true)
+	if err != nil {
+		return "", err
+	}
+
+	conf, err := repo.Config()
+	if err != nil {
+		return "", err
+	}
+
+	conf.User.Name = "test"
+	conf.User.Email = "test@example.com"
+	err = repo.SetConfig(conf)
+	if err != nil {
+		return "", err
+	}
+
+	//print configs
+	localConfig, _ := repo.ConfigScoped(config2.LocalScope)
+	println("local", localConfig.User.Name, localConfig.User.Email)
+	globalConfig, _ := repo.ConfigScoped(config2.GlobalScope)
+	println("global", globalConfig.User.Name, globalConfig.User.Email)
+	systemConfig, _ := repo.ConfigScoped(config2.SystemScope)
+	println("system", systemConfig.User.Name, systemConfig.User.Email)
+
+	return repoPath, nil
+}
+
+func GetFileContent(repoPath string, fileName string) (string, error) {
+	repository, err := git.PlainOpen(repoPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to open git repo: repoPath=%v, err=%w", repoPath, err)
+	}
+
+	headReference, err := repository.Head()
+	if err != nil {
+		return "", fmt.Errorf("failed to get repo HEAD: repoPath=%v, err=%w", repoPath, err)
+	}
+
+	headHash := headReference.Hash()
+
+	commit, err := repository.CommitObject(headHash)
+	if err != nil {
+		return "", fmt.Errorf(
+			"failed to find HEAD commit: repoPath=%v, commit=%v, err=%w", repoPath,
+			headHash.String(), err,
+		)
+	}
+
+	file, err := commit.File(fileName)
+	if err != nil {
+		return "", fmt.Errorf(
+			"failed to find file in commit: repoPath=%v, commit=%v, file=%v, err=%w", repoPath,
+			headHash.String(), fileName, err,
+		)
+	}
+
+	fileContent, err := file.Contents()
+	if err != nil {
+		return "", fmt.Errorf(
+			"failed to get file content: repoPath=%v, commit=%v, file=%v, err=%w", repoPath,
+			headHash.String(), fileName, err,
+		)
+	}
+
+	return fileContent, nil
 }
