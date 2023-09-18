@@ -5,6 +5,7 @@ package shell
 import (
 	"fmt"
 	"os/exec"
+	"strings"
 	"syscall"
 )
 
@@ -23,7 +24,10 @@ func (r *NativeShell) RunCommand(commandRootDirectory string, command string, ar
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return string(output), fmt.Errorf("command failed: %w", err)
+		return string(output), fmt.Errorf(
+			"command failed: command=%v %v, output=%v, err=%w", command, strings.Join(arguments, " "),
+			string(output), err,
+		)
 	}
 
 	return string(output), nil

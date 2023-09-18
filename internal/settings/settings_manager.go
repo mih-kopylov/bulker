@@ -14,6 +14,8 @@ import (
 	"strings"
 )
 
+const currentVersion = 1
+
 type Manager struct {
 	conf *config.Config
 	sh   shell.Shell
@@ -119,9 +121,22 @@ func (sm *Manager) Export(remoteRepoUrl string) (map[string]ExportImportStatus, 
 	}
 
 	exportFileName := filepath.Join(repoDir, exportImportFileName)
-	fileModel, err := readExistingModel(exportFileName)
+	var fileModel *exportModel
+	fileExists, err := utils.Exists(exportFileName)
 	if err != nil {
 		return nil, err
+	}
+
+	if fileExists {
+		fileModel, err = readExistingModel(exportFileName)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		fileModel = &exportModel{
+			Version: currentVersion,
+			Data:    modelDataV1{map[string]modelDataV1Repo{}},
+		}
 	}
 
 	err = os.WriteFile(exportFileName, jsonBytes, os.ModePerm)
@@ -152,8 +167,9 @@ func (sm *Manager) Export(remoteRepoUrl string) (map[string]ExportImportStatus, 
 		return nil, err
 	}
 
-	_, err = sm.sh.RunCommand(repoDir, "git", "push")
+	output, err := sm.sh.RunCommand(repoDir, "git", "push")
 	if err != nil {
+		logrus.Errorf("push failed: %v, %v", output, err)
 		return nil, err
 	}
 
@@ -287,7 +303,7 @@ func fromSettings(settings *Settings) *exportModel {
 		}
 	}
 
-	return &exportModel{1, data}
+	return &exportModel{currentVersion, data}
 }
 
 func toSettings(em *exportModel) (*Settings, error) {
