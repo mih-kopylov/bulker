@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.13.0] - 2022-06-04
+### Fixed
+
+- Export repositories list to an empty repository 
+
+## [0.13.0] - 2023-06-04
 
 ### Added
 
@@ -19,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Omit repositories that were not changed during import/export
 - Default value for `--mode` flag value is `local`, for safety
 
-## [0.12.0] - 2022-06-03
+## [0.12.0] - 2023-06-03
 
 ### Added
 
@@ -29,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Directory creation for `configure` command
 
-## [0.11.0] - 2022-05-25
+## [0.11.0] - 2023-05-25
 
 ### Added
 
