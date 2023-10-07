@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Show `url` and `tags` in `repo list` command
+
 ### Fixed
 
 - Keys order in the `table` and `line` output formats
