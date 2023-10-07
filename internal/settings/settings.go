@@ -62,6 +62,16 @@ func (s *Settings) RemoveRepo(name string) error {
 	return nil
 }
 
+func (s *Settings) GetRepo(name string) (*Repo, error) {
+	repoIndex := s.getRepoIndex(name)
+	if repoIndex < 0 {
+		return nil, ErrRepoNotFound
+	}
+
+	repo := s.Repos[repoIndex]
+	return &repo, nil
+}
+
 func (s *Settings) RepoExists(name string) bool {
 	return s.getRepoIndex(name) >= 0
 }
