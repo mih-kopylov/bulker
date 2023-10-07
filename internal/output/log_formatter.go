@@ -35,14 +35,15 @@ func (w LogFormatter) FormatMessage(value map[string]EntityInfo) string {
 }
 
 func addLoggerEntries(entry *logrus.Entry, value interface{}) *logrus.Entry {
+	keys := valueKeys(value)
 	valueMap := valueToMap(value)
 
 	if valueMap == nil {
 		return entry
 	}
 
-	for entryKey, entryValue := range valueMap {
-		entry = entry.WithField(entryKey, entryValue)
+	for _, key := range keys {
+		entry = entry.WithField(key, valueMap[key])
 	}
 
 	return entry

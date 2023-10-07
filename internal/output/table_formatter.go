@@ -76,7 +76,7 @@ func (w TableFormatter) FormatMessage(value map[string]EntityInfo) string {
 func getEntityKeys(value map[string]EntityInfo) []string {
 	for _, entryValue := range value {
 		if entryValue.Result != nil {
-			return maps.Keys(valueToMap(entryValue.Result))
+			return valueKeys(entryValue.Result)
 		}
 	}
 	return nil

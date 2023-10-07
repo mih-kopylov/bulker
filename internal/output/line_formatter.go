@@ -36,10 +36,11 @@ func infoToString(info EntityInfo) string {
 		buffer.WriteString(" ")
 	}
 	if info.Result != nil {
+		keys := valueKeys(info.Result)
 		valueMap := valueToMap(info.Result)
 
-		for entryKey, entryValue := range valueMap {
-			buffer.WriteString(fmt.Sprintf("%s=%s ", entryKey, entryValue))
+		for _, key := range keys {
+			buffer.WriteString(fmt.Sprintf("%s=%s ", key, valueMap[key]))
 		}
 	}
 	return strings.TrimSpace(buffer.String())
