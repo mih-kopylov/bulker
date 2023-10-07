@@ -54,12 +54,17 @@ func createFormatter(entityName string) (Formatter, error) {
 	return nil, fmt.Errorf("unsupported output format: %v", outputFormat)
 }
 
-func valueToMap(value interface{}) map[string]interface{} {
+type keyValue struct {
+	key   string
+	value any
+}
+
+func valueToList(value any) []keyValue {
 	if value == nil {
 		return nil
 	}
 
-	result := map[string]interface{}{}
+	var result []keyValue
 
 	valueType := reflect.Indirect(reflect.ValueOf(value))
 	if valueType.Kind() == reflect.Map {
@@ -67,19 +72,69 @@ func valueToMap(value interface{}) map[string]interface{} {
 			entryKey := fmt.Sprintf("%v", mapKey.Interface())
 			mapValue := valueType.MapIndex(mapKey)
 			entryValue := mapValue.Interface()
-			result[entryKey] = entryValue
+			result = append(
+				result, keyValue{
+					key:   entryKey,
+					value: entryValue,
+				},
+			)
 		}
 	} else if valueType.Kind() == reflect.Struct {
 		for i := 0; i < valueType.NumField(); i++ {
 			entryKey := valueType.Type().Field(i).Name
 			entryKeyCamelCase := strings.ToLower(entryKey[:1]) + entryKey[1:]
 			entryValue := valueType.Field(i).Interface()
-			result[entryKeyCamelCase] = entryValue
+			result = append(
+				result, keyValue{
+					key:   entryKeyCamelCase,
+					value: entryValue,
+				},
+			)
 		}
 	} else {
 		if fmt.Sprintf("%v", value) != "" {
-			result["result"] = value
+			result = append(
+				result, keyValue{
+					key:   "result",
+					value: value,
+				},
+			)
 		}
+	}
+
+	return result
+}
+
+func valueToMap(value any) map[string]any {
+	list := valueToList(value)
+	if list == nil {
+		return nil
+	}
+
+	result := map[string]any{}
+
+	for _, iter := range list {
+		result[iter.key] = iter.value
+	}
+
+	return result
+}
+
+// valueKeys returns the value keys in the source order.
+//
+// If the value is Struct, the result is ordered in the same way as in the source file.
+//
+// If the value is map, the order may differ because of the nature of the map.
+func valueKeys(value any) []string {
+	list := valueToList(value)
+	if list == nil {
+		return nil
+	}
+
+	var result []string
+
+	for _, iter := range list {
+		result = append(result, iter.key)
 	}
 
 	return result
