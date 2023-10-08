@@ -35,7 +35,7 @@ the repository won't be printed.
 
 Examples.
 
-The command below will print verison of the parent pom in all repositories that have pom.xml in root directory:
+The command below will print version of the parent pom in all repositories that have pom.xml in root directory:
 
     bulker props get -f pom.xml -p $.parent.version
 
