@@ -49,7 +49,7 @@ func CreateRemoveCommand(sh shell.Shell) *cobra.Command {
 		},
 	}
 
-	result.Flags().StringVar(&flags.name, "name", "", "Name of the repository")
+	result.Flags().StringVarP(&flags.name, "name", "n", "", "Name of the repository")
 	utils.MarkFlagRequiredOrFail(result.Flags(), "name")
 
 	return result

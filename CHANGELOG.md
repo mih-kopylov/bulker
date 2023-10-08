@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Shortcuts for `--name` parameter in `repos add` and `repos remove` commands
+
+### Changed
+
+- Make `--name` parameter optional for `repos add` command
+
 ## [0.14.0] - 2023-10-07
 
 ### Changed
