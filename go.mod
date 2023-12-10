@@ -7,18 +7,18 @@ require (
 	github.com/aquasecurity/table v1.8.0
 	github.com/bmatcuk/doublestar/v4 v4.6.1
 	github.com/buger/jsonparser v1.1.1
-	github.com/go-git/go-git/v5 v5.10.1
+	github.com/go-git/go-git/v5 v5.11.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/pkg/errors v0.9.1
-	github.com/samber/lo v1.38.1
+	github.com/samber/lo v1.39.0
 	github.com/schollz/progressbar/v3 v3.14.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
-	github.com/spf13/viper v1.17.0
+	github.com/spf13/viper v1.18.1
 	github.com/stretchr/testify v1.8.4
-	golang.org/x/exp v0.0.0-20231127185646-65229373498e
+	golang.org/x/exp v0.0.0-20231206192017-f3f8817b8deb
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -47,13 +47,13 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/sagikazarmark/locafero v0.3.0 // indirect
+	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/skeema/knownhosts v1.2.1 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
-	github.com/spf13/afero v1.10.0 // indirect
-	github.com/spf13/cast v1.5.1 // indirect
+	github.com/spf13/afero v1.11.0 // indirect
+	github.com/spf13/cast v1.6.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
