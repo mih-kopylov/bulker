@@ -2,7 +2,7 @@ package settings
 
 import (
 	"errors"
-	"golang.org/x/exp/slices"
+	"slices"
 )
 
 type Settings struct {

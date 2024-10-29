@@ -2,9 +2,10 @@ package output
 
 import (
 	"bytes"
+	"maps"
+	"slices"
+
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 )
 
 // LogFormatter Formats the information with a regular logging
@@ -15,8 +16,7 @@ type LogFormatter struct {
 func (w LogFormatter) FormatMessage(value map[string]EntityInfo) string {
 	buffer := &bytes.Buffer{}
 
-	keys := maps.Keys(value)
-	slices.Sort(keys)
+	keys := slices.Sorted(maps.Keys(value))
 
 	for _, key := range keys {
 		logger := logrus.New()

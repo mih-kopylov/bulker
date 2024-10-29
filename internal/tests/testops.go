@@ -4,6 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
+	"slices"
+	"strings"
+	"testing"
+
 	"github.com/go-git/go-git/v5"
 	config2 "github.com/go-git/go-git/v5/config"
 	"github.com/mih-kopylov/bulker/internal/config"
@@ -13,10 +18,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/exp/slices"
-	"path/filepath"
-	"strings"
-	"testing"
 )
 
 func ExecuteCommand(root *cobra.Command, args string) (c *cobra.Command, output string, err error) {

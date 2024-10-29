@@ -3,15 +3,16 @@ package settings
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
+	"slices"
+	"strings"
+
 	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 const currentVersion = 1

@@ -1,11 +1,12 @@
 package runner
 
 import (
+	"regexp"
+	"slices"
+	"strings"
+
 	"github.com/mih-kopylov/bulker/internal/settings"
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/slices"
-	"regexp"
-	"strings"
 )
 
 type Filter struct {

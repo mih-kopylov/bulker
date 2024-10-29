@@ -3,8 +3,8 @@ package output
 import (
 	"bytes"
 	"fmt"
-	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
+	"maps"
+	"slices"
 	"strings"
 )
 
@@ -14,8 +14,7 @@ type LineFormatter struct {
 func (w LineFormatter) FormatMessage(value map[string]EntityInfo) string {
 	buffer := &bytes.Buffer{}
 
-	keys := maps.Keys(value)
-	slices.Sort(keys)
+	keys := slices.Sorted(maps.Keys(value))
 
 	for _, key := range keys {
 		infoString := infoToString(value[key])
