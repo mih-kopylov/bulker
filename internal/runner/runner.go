@@ -3,6 +3,12 @@ package runner
 import (
 	"context"
 	"fmt"
+	"io"
+	"maps"
+	"path/filepath"
+	"slices"
+	"time"
+
 	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/fileops"
 	"github.com/mih-kopylov/bulker/internal/model"
@@ -11,10 +17,6 @@ import (
 	"github.com/mih-kopylov/bulker/internal/shell"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/maps"
-	"io"
-	"path/filepath"
-	"time"
 )
 
 type Runner interface {
@@ -80,7 +82,7 @@ func NewCommandRunner(filter *Filter, sh shell.Shell, handler RepoHandler) func(
 			return err
 		}
 
-		err = savePreviousGroup(manager, maps.Keys(allReposResult))
+		err = savePreviousGroup(manager, slices.Collect(maps.Keys(allReposResult)))
 		if err != nil {
 			return err
 		}

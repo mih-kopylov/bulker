@@ -2,9 +2,10 @@ package output
 
 import (
 	"encoding/json"
+	"maps"
+	"slices"
+
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 )
 
 type JsonFormatter struct {
@@ -16,8 +17,7 @@ func (w JsonFormatter) FormatMessage(value map[string]EntityInfo) string {
 	//goland:noinspection GoPreferNilSlice
 	valueToLog := []any{}
 
-	keys := maps.Keys(value)
-	slices.Sort(keys)
+	keys := slices.Sorted(maps.Keys(value))
 
 	for _, key := range keys {
 		entry := createValueToLogEntry(w.entityName, key, value[key])

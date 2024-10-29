@@ -1,6 +1,8 @@
 package settings
 
-import "golang.org/x/exp/slices"
+import (
+	"slices"
+)
 
 type ExportImportStatus int
 

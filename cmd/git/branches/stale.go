@@ -2,6 +2,11 @@ package branches
 
 import (
 	"context"
+	"maps"
+	"slices"
+	"sort"
+	"time"
+
 	"github.com/mih-kopylov/bulker/internal/config"
 	"github.com/mih-kopylov/bulker/internal/gitops"
 	"github.com/mih-kopylov/bulker/internal/runner"
@@ -9,10 +14,7 @@ import (
 	"github.com/mih-kopylov/bulker/internal/utils"
 	"github.com/samber/lo"
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/maps"
 	"gopkg.in/yaml.v3"
-	"sort"
-	"time"
 )
 
 func CreateStaleCommand(sh shell.Shell) *cobra.Command {
@@ -122,7 +124,7 @@ func getStaleBranchAuthors(commits []gitops.Commit, maxCount int) []string {
 		authorCount[commit.Author.String()]++
 	}
 
-	authors := maps.Keys(authorCount)
+	authors := slices.Collect(maps.Keys(authorCount))
 	sort.SliceStable(
 		authors, func(i, j int) bool {
 			return authorCount[authors[i]] > authorCount[authors[j]]

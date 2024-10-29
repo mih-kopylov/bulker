@@ -3,9 +3,10 @@ package output
 import (
 	"bytes"
 	"fmt"
+	"maps"
+	"slices"
+
 	"github.com/aquasecurity/table"
-	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 )
 
 type TableFormatter struct {
@@ -17,8 +18,7 @@ func (w TableFormatter) FormatMessage(value map[string]EntityInfo) string {
 		return ""
 	}
 
-	keys := maps.Keys(value)
-	slices.Sort(keys)
+	keys := slices.Sorted(maps.Keys(value))
 
 	buffer := &bytes.Buffer{}
 
