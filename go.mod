@@ -7,7 +7,7 @@ require (
 	github.com/aquasecurity/table v1.8.0
 	github.com/bmatcuk/doublestar/v4 v4.7.1
 	github.com/buger/jsonparser v1.1.1
-	github.com/go-git/go-git/v5 v5.13.0
+	github.com/go-git/go-git/v5 v5.13.1
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/pkg/errors v0.9.1
